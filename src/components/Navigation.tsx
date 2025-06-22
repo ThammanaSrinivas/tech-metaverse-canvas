@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import ThemeToggle from './ThemeToggle';
@@ -18,9 +17,14 @@ const Navigation: React.FC = () => {
   const navItems = [
     { name: 'Home', href: '#home' },
     { name: 'About', href: '#about' },
+    { name: 'Technical Skills', href: '#technical-skills' },
     { name: 'Projects', href: '#projects' },
     { name: 'Contact', href: '#contact' },
   ];
+
+  const openGitHub = () => {
+    window.open('https://github.com/ThammanaSrinivas/tech-metaverse-canvas', '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <motion.nav
@@ -36,7 +40,8 @@ const Navigation: React.FC = () => {
         <div className="flex items-center justify-between">
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="text-2xl font-bold gradient-text"
+            className="text-2xl font-bold gradient-text cursor-pointer"
+            onClick={openGitHub}
           >
             Portfolio
           </motion.div>

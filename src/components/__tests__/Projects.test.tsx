@@ -37,12 +37,10 @@ describe('Projects', () => {
   it('renders project cards', () => {
     render(<Projects />);
     
-    expect(screen.getByText('Neural Network Visualizer')).toBeInTheDocument();
-    expect(screen.getByText('Metaverse Portfolio')).toBeInTheDocument();
-    expect(screen.getByText('AI Art Generator')).toBeInTheDocument();
-    expect(screen.getByText('Cryptocurrency Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('AR Shopping Experience')).toBeInTheDocument();
-    expect(screen.getByText('Blockchain Voting System')).toBeInTheDocument();
+    expect(screen.getByText('Random Android Project')).toBeInTheDocument();
+    expect(screen.getByText('Tech Metaverse Canvas')).toBeInTheDocument();
+    expect(screen.getByText('Habitica MCP Server')).toBeInTheDocument();
+    expect(screen.getByText('Spring MVC Practice CRUD RESTful API')).toBeInTheDocument();
   });
 
   it('opens project demo when demo button is clicked', () => {
@@ -52,7 +50,7 @@ describe('Projects', () => {
     fireEvent.click(demoButtons[0]);
     
     expect(mockOpen).toHaveBeenCalledWith(
-      'https://demo.neural-network-visualizer.com',
+      'https://github.com/randomAndroidProject/randomAndroidProject',
       '_blank',
       'noopener,noreferrer'
     );
@@ -61,11 +59,11 @@ describe('Projects', () => {
   it('opens project source when source button is clicked', () => {
     render(<Projects />);
     
-    const codeButtons = screen.getAllByText('Code');
-    fireEvent.click(codeButtons[0]);
+    const sourceButtons = screen.getAllByText('Code');
+    fireEvent.click(sourceButtons[0]);
     
     expect(mockOpen).toHaveBeenCalledWith(
-      'https://github.com/yourusername/neural-network-visualizer',
+      'https://github.com/randomAndroidProject/randomAndroidProject',
       '_blank',
       'noopener,noreferrer'
     );
@@ -87,20 +85,21 @@ describe('Projects', () => {
   it('displays project technologies as badges', () => {
     render(<Projects />);
     
+    expect(screen.getAllByText('Android').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Java').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Kotlin').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('XML').length).toBeGreaterThan(0);
     expect(screen.getAllByText('React').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Three.js').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Python').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('WebGL').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Next.js').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('R3F').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('TypeScript').length).toBeGreaterThan(0);
   });
 
   it('shows project descriptions', () => {
     render(<Projects />);
     
-    expect(screen.getByText(/Interactive 3D visualization of neural networks/)).toBeInTheDocument();
-    expect(screen.getByText(/Immersive 3D portfolio website/)).toBeInTheDocument();
-    expect(screen.getByText(/Web application for generating AI art/)).toBeInTheDocument();
+    expect(screen.getByText(/Android application demonstrating modern Android development practices/)).toBeInTheDocument();
+    expect(screen.getByText(/Immersive 3D portfolio website with virtual reality support/)).toBeInTheDocument();
+    expect(screen.getByText(/Server implementation for Habitica integration/)).toBeInTheDocument();
+    expect(screen.getByText(/Complete CRUD operations with RESTful API design/)).toBeInTheDocument();
   });
 
   it('has correct section structure', () => {

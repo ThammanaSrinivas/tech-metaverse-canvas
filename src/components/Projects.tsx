@@ -8,62 +8,42 @@ const Projects: React.FC = () => {
   const projects = [
     {
       id: 1,
-      title: "Neural Network Visualizer",
-      description: "Interactive 3D visualization of neural networks with real-time training data.",
+      title: "Random Android Project",
+      description: "Android application demonstrating modern Android development practices and UI/UX design.",
       image: "/placeholder.svg",
-      technologies: ["React", "Three.js", "Python", "WebGL"],
-      github: "https://github.com/yourusername/neural-network-visualizer",
-      demo: "https://demo.neural-network-visualizer.com",
+      technologies: ["Android", "Java", "Kotlin", "XML"],
+      github: "https://github.com/randomAndroidProject/randomAndroidProject",
+      demo: "https://github.com/randomAndroidProject/randomAndroidProject",
       featured: true
     },
     {
       id: 2,
-      title: "Metaverse Portfolio",
-      description: "Immersive 3D portfolio website with virtual reality support.",
+      title: "Tech Metaverse Canvas",
+      description: "Immersive 3D portfolio website with virtual reality support and modern web technologies.",
       image: "/placeholder.svg",
-      technologies: ["Next.js", "R3F", "WebXR", "GSAP"],
-      github: "https://github.com/yourusername/metaverse-portfolio",
-      demo: "https://metaverse-portfolio.com",
+      technologies: ["React", "TypeScript", "Three.js", "Vite"],
+      github: "https://github.com/ThammanaSrinivas/tech-metaverse-canvas",
+      demo: "https://github.com/ThammanaSrinivas/tech-metaverse-canvas",
       featured: true
     },
     {
       id: 3,
-      title: "AI Art Generator",
-      description: "Web application for generating AI art with custom style transfer.",
+      title: "Habitica MCP Server",
+      description: "Server implementation for Habitica integration with MCP protocol support.",
       image: "/placeholder.svg",
-      technologies: ["TypeScript", "TensorFlow.js", "Canvas API"],
-      github: "https://github.com/yourusername/ai-art-generator",
-      demo: "https://ai-art-generator.com",
-      featured: false
-    },
-    {
-      id: 4,
-      title: "Cryptocurrency Dashboard",
-      description: "Real-time crypto tracking dashboard with advanced analytics.",
-      image: "/placeholder.svg",
-      technologies: ["React", "Node.js", "Socket.io", "Chart.js"],
-      github: "https://github.com/yourusername/crypto-dashboard",
-      demo: "https://crypto-dashboard.com",
-      featured: false
-    },
-    {
-      id: 5,
-      title: "AR Shopping Experience",
-      description: "Augmented reality shopping app for furniture placement.",
-      image: "/placeholder.svg",
-      technologies: ["React Native", "AR.js", "Three.js"],
-      github: "https://github.com/yourusername/ar-shopping",
-      demo: "https://ar-shopping.com",
+      technologies: ["Node.js", "JavaScript", "MCP", "API"],
+      github: "https://github.com/ThammanaSrinivas/habitica-mcp-server",
+      demo: "https://github.com/ThammanaSrinivas/habitica-mcp-server",
       featured: true
     },
     {
-      id: 6,
-      title: "Blockchain Voting System",
-      description: "Secure and transparent voting system built on blockchain.",
+      id: 4,
+      title: "Spring MVC Practice CRUD RESTful API",
+      description: "Complete CRUD operations with RESTful API design using Spring MVC framework.",
       image: "/placeholder.svg",
-      technologies: ["Solidity", "Web3.js", "React", "Ethereum"],
-      github: "https://github.com/yourusername/blockchain-voting",
-      demo: "https://blockchain-voting.com",
+      technologies: ["Spring", "Java", "REST", "MySQL"],
+      github: "https://github.com/ThammanaSrinivas/SpringMVCPracticeCRUDRestfulAPI",
+      demo: "https://github.com/ThammanaSrinivas/SpringMVCPracticeCRUDRestfulAPI",
       featured: false
     }
   ];

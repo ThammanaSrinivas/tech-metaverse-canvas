@@ -76,7 +76,7 @@ const Hero: React.FC = () => {
     <section 
       ref={containerRef}
       id="home" 
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-background via-background/95 to-background/90"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-background via-background/95 to-background/90 pt-20 md:pt-24"
     >
       {/* Particle Effect */}
       <ParticleEffect />
