@@ -196,15 +196,15 @@ const FloatingGeometry: React.FC = () => {
     <Float speed={1} rotationIntensity={1} floatIntensity={0.5}>
       <mesh ref={meshRef} position={[2, 0, 0]}>
         <icosahedronGeometry args={[1.5, 1]} />
-        <meshStandardMaterial
-          color="#bf00ff"
-          wireframe
-          transparent
+      <meshStandardMaterial
+        color="#bf00ff"
+        wireframe
+        transparent
           opacity={0.7}
           emissive="#bf00ff"
           emissiveIntensity={0.3}
-        />
-      </mesh>
+      />
+    </mesh>
     </Float>
   );
 };

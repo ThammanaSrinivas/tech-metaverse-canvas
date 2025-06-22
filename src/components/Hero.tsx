@@ -4,6 +4,7 @@ import Scene3D from './Scene3D';
 import ParticleEffect from './ParticleEffect';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, Mouse, ArrowRight } from 'lucide-react';
+import { animationUtils } from '@/lib/utils';
 
 const Hero: React.FC = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -18,15 +19,26 @@ const Hero: React.FC = () => {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: (e.clientX - window.innerWidth / 2) * 0.01,
-        y: (e.clientY - window.innerHeight / 2) * 0.01,
-      });
+      if (containerRef.current) {
+        const position = animationUtils.getMousePosition(e, containerRef.current);
+        setMousePosition(position);
+      }
     };
 
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
+
+  const scrollToProjects = () => {
+    const projectsSection = document.getElementById('projects');
+    if (projectsSection) {
+      projectsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const downloadResume = () => {
+    window.open('https://drive.google.com/drive/folders/1IBzvupAZQm3L6FZDAeirg0MpKIThNcQS', '_blank');
+  };
 
   const textVariants = {
     hidden: { opacity: 0, y: 50 },
@@ -137,18 +149,20 @@ const Hero: React.FC = () => {
         >
           <Button
             size="lg"
+            onClick={scrollToProjects}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             className="group bg-primary hover:bg-primary/80 text-primary-foreground neon-glow px-8 py-4 text-lg font-semibold transition-all duration-300 transform hover:scale-105"
           >
             <span className="flex items-center gap-2">
-              View Projects
+            View Projects
               <ArrowRight className={`w-5 h-5 transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`} />
             </span>
           </Button>
           <Button
             variant="outline"
             size="lg"
+            onClick={downloadResume}
             className="border-primary/50 text-primary hover:bg-primary/10 px-8 py-4 text-lg font-semibold transition-all duration-300 transform hover:scale-105 backdrop-blur-sm"
           >
             Download Resume
@@ -177,13 +191,13 @@ const Hero: React.FC = () => {
             className="text-center p-6 rounded-2xl bg-background/50 backdrop-blur-sm border border-neon-green/20 hover:border-neon-green/40 transition-all duration-300"
             whileHover={{ scale: 1.05, y: -5 }}
           >
-            <div className="text-4xl font-bold text-neon-green neon-text mb-2">100%</div>
-            <div className="text-sm text-muted-foreground font-medium">Client Satisfaction</div>
+            <div className="text-4xl font-bold text-neon-green neon-text mb-2">Full Stack</div>
+            <div className="text-sm text-muted-foreground font-medium">Development</div>
           </motion.div>
         </motion.div>
       </motion.div>
 
-      {/* Enhanced scroll indicator */}
+      {/* Single scroll indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -193,7 +207,8 @@ const Hero: React.FC = () => {
         <motion.div
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="flex flex-col items-center gap-2"
+          className="flex flex-col items-center gap-2 cursor-pointer"
+          onClick={scrollToProjects}
         >
           <Mouse className="w-6 h-6 text-primary/60" />
           <motion.div

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { Mail, Linkedin, Github, MapPin, FileText } from 'lucide-react';
+import { validationUtils } from '@/lib/utils';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -27,6 +28,35 @@ const Contact: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form data
+    if (!validationUtils.isValidName(formData.name)) {
+      toast({
+        title: "Invalid Name",
+        description: "Please enter a valid name (at least 2 characters).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validationUtils.isValidEmail(formData.email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validationUtils.isValidMessage(formData.message)) {
+      toast({
+        title: "Invalid Message",
+        description: "Please enter a message with at least 10 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     // Simulate form submission
@@ -44,28 +74,32 @@ const Contact: React.FC = () => {
     {
       title: "Email",
       value: "hello@portfolio.dev",
-      icon: "📧",
+      icon: Mail,
       link: "mailto:hello@portfolio.dev"
     },
     {
       title: "LinkedIn",
       value: "/in/yourprofile",
-      icon: "💼",
+      icon: Linkedin,
       link: "https://linkedin.com/in/yourprofile"
     },
     {
       title: "GitHub",
       value: "/yourusername",
-      icon: "🐙",
+      icon: Github,
       link: "https://github.com/yourusername"
     },
     {
       title: "Location",
       value: "San Francisco, CA",
-      icon: "📍",
+      icon: MapPin,
       link: null
     }
   ];
+
+  const downloadResume = () => {
+    window.open('https://drive.google.com/drive/folders/1IBzvupAZQm3L6FZDAeirg0MpKIThNcQS', '_blank');
+  };
 
   return (
     <section id="contact" className="py-20 px-6">
@@ -177,46 +211,53 @@ const Contact: React.FC = () => {
             </div>
 
             <div className="grid gap-4">
-              {contactInfo.map((info, index) => (
-                <motion.div
-                  key={info.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <Card className="glass-card border-primary/20 hover:border-primary/50 transition-all duration-300">
-                    <CardContent className="p-6">
-                      <div className="flex items-center space-x-4">
-                        <div className="text-2xl">{info.icon}</div>
-                        <div>
-                          <h4 className="font-semibold text-foreground">{info.title}</h4>
-                          {info.link ? (
-                            <a
-                              href={info.link}
-                              className="text-primary hover:text-primary/80 transition-colors"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {info.value}
-                            </a>
-                          ) : (
-                            <p className="text-muted-foreground">{info.value}</p>
-                          )}
+              {contactInfo.map((info, index) => {
+                const IconComponent = info.icon;
+                return (
+                  <motion.div
+                    key={info.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <Card className="glass-card border-primary/20 hover:border-primary/50 transition-all duration-300">
+                      <CardContent className="p-6">
+                        <div className="flex items-center space-x-4">
+                          <div className="text-2xl text-primary">
+                            <IconComponent className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-foreground">{info.title}</h4>
+                            {info.link ? (
+                              <a
+                                href={info.link}
+                                className="text-primary hover:text-primary/80 transition-colors"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {info.value}
+                              </a>
+                            ) : (
+                              <p className="text-muted-foreground">{info.value}</p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
 
             <div className="pt-8">
               <h4 className="text-xl font-bold mb-4 text-foreground">Download Resume</h4>
               <Button
                 variant="outline"
-                className="border-primary text-primary hover:bg-primary/10 px-6 py-3 font-semibold"
+                onClick={downloadResume}
+                className="border-primary text-primary hover:bg-primary/10 px-6 py-3 font-semibold flex items-center gap-2"
               >
-                📄 Download PDF
+                <FileText className="w-5 h-5" />
+                Download PDF
               </Button>
             </div>
           </motion.div>

@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { projectUtils } from '@/lib/utils';
 
 const Projects: React.FC = () => {
   const [filter, setFilter] = useState('all');
@@ -16,8 +16,8 @@ const Projects: React.FC = () => {
       image: "/placeholder.svg",
       category: "web-app",
       technologies: ["React", "Three.js", "Python", "WebGL"],
-      github: "#",
-      demo: "#",
+      github: "https://github.com/yourusername/neural-network-visualizer",
+      demo: "https://demo.neural-network-visualizer.com",
       featured: true
     },
     {
@@ -27,8 +27,8 @@ const Projects: React.FC = () => {
       image: "/placeholder.svg",
       category: "portfolio",
       technologies: ["Next.js", "R3F", "WebXR", "GSAP"],
-      github: "#",
-      demo: "#",
+      github: "https://github.com/yourusername/metaverse-portfolio",
+      demo: "https://metaverse-portfolio.com",
       featured: true
     },
     {
@@ -38,8 +38,8 @@ const Projects: React.FC = () => {
       image: "/placeholder.svg",
       category: "web-app",
       technologies: ["TypeScript", "TensorFlow.js", "Canvas API"],
-      github: "#",
-      demo: "#",
+      github: "https://github.com/yourusername/ai-art-generator",
+      demo: "https://ai-art-generator.com",
       featured: false
     },
     {
@@ -49,8 +49,8 @@ const Projects: React.FC = () => {
       image: "/placeholder.svg",
       category: "dashboard",
       technologies: ["React", "Node.js", "Socket.io", "Chart.js"],
-      github: "#",
-      demo: "#",
+      github: "https://github.com/yourusername/crypto-dashboard",
+      demo: "https://crypto-dashboard.com",
       featured: false
     },
     {
@@ -60,8 +60,8 @@ const Projects: React.FC = () => {
       image: "/placeholder.svg",
       category: "mobile",
       technologies: ["React Native", "AR.js", "Three.js"],
-      github: "#",
-      demo: "#",
+      github: "https://github.com/yourusername/ar-shopping",
+      demo: "https://ar-shopping.com",
       featured: true
     },
     {
@@ -71,8 +71,8 @@ const Projects: React.FC = () => {
       image: "/placeholder.svg",
       category: "blockchain",
       technologies: ["Solidity", "Web3.js", "React", "Ethereum"],
-      github: "#",
-      demo: "#",
+      github: "https://github.com/yourusername/blockchain-voting",
+      demo: "https://blockchain-voting.com",
       featured: false
     }
   ];
@@ -86,9 +86,7 @@ const Projects: React.FC = () => {
     { id: 'blockchain', name: 'Blockchain' }
   ];
 
-  const filteredProjects = filter === 'all' 
-    ? projects 
-    : projects.filter(project => project.category === filter);
+  const filteredProjects = projectUtils.filterProjects(projects, filter);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -109,6 +107,14 @@ const Projects: React.FC = () => {
         duration: 0.5,
       },
     },
+  };
+
+  const openProjectLink = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const openGitHubProfile = () => {
+    window.open('https://github.com/yourusername', '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -183,10 +189,19 @@ const Projects: React.FC = () => {
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="absolute bottom-4 left-4 right-4 flex gap-2">
-                      <Button size="sm" className="bg-primary hover:bg-primary/80">
+                      <Button 
+                        size="sm" 
+                        className="bg-primary hover:bg-primary/80"
+                        onClick={() => openProjectLink(project.demo)}
+                      >
                         Demo
                       </Button>
-                      <Button size="sm" variant="outline" className="border-white text-white hover:bg-white hover:text-black">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="border-white text-white hover:bg-white hover:text-black"
+                        onClick={() => openProjectLink(project.github)}
+                      >
                         Code
                       </Button>
                     </div>
@@ -229,6 +244,7 @@ const Projects: React.FC = () => {
           <Button
             size="lg"
             variant="outline"
+            onClick={openGitHubProfile}
             className="border-primary text-primary hover:bg-primary/10 px-8 py-4 text-lg font-semibold"
           >
             View All Projects on GitHub

@@ -1,21 +1,10 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
 import { motion } from 'framer-motion';
 
 const ThemeToggle: React.FC = () => {
-  const { theme, setTheme, effectiveTheme } = useTheme();
-
-  const toggleTheme = () => {
-    if (theme === 'system') {
-      setTheme('light');
-    } else if (theme === 'light') {
-      setTheme('dark');
-    } else {
-      setTheme('system');
-    }
-  };
+  const { theme, effectiveTheme, toggleTheme } = useTheme();
 
   const getIcon = () => {
     if (theme === 'system') {
