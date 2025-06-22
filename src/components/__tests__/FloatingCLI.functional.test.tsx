@@ -236,8 +236,8 @@ describe('FloatingCLI Functional Tests', () => {
     it('adapts to mobile viewport', () => {
       mockUseIsMobile.mockReturnValue(true);
       render(<FloatingCLI testMode />);
-      expect(screen.getByText('S1')).toBeInTheDocument();
-      expect(screen.getByText('Dev Workflow')).toBeInTheDocument();
+      expect(screen.getByText('Step 1: Write Code')).toBeInTheDocument();
+      expect(screen.getByText('Development Workflow')).toBeInTheDocument();
     });
 
     it('handles mobile navigation correctly', () => {
@@ -245,7 +245,7 @@ describe('FloatingCLI Functional Tests', () => {
       render(<FloatingCLI testMode />);
       const nextButton = screen.getByTitle('Next Step');
       fireEvent.click(nextButton);
-      expect(screen.getByText('S2')).toBeInTheDocument();
+      expect(screen.getByText('Step 2: Run Unit & Functional Tests')).toBeInTheDocument();
     });
   });
 

@@ -31,3 +31,7 @@ coverage/
 *.test.js
 *.test.ts
 *.test.tsx
+
+# Firebase local state and cache
+.firebase/
+.firebase/hosting.*.cache

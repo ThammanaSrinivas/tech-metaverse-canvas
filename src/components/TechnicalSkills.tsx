@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,7 @@ import {
 const TechnicalSkills: React.FC = () => {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['Programming Languages']));
 
-  const skillCategories = [
+  const skillCategories = useMemo(() => [
     {
       name: 'Programming Languages',
       icon: Code2,
@@ -74,9 +74,9 @@ const TechnicalSkills: React.FC = () => {
         { name: 'WebSockets', icon: '🔌', level: 'Intermediate' },
       ]
     }
-  ];
+  ], []);
 
-  const containerVariants = {
+  const containerVariants = useMemo(() => ({
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -84,9 +84,9 @@ const TechnicalSkills: React.FC = () => {
         staggerChildren: 0.1,
       },
     },
-  };
+  }), []);
 
-  const itemVariants = {
+  const itemVariants = useMemo(() => ({
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
@@ -95,9 +95,9 @@ const TechnicalSkills: React.FC = () => {
         duration: 0.5,
       },
     },
-  };
+  }), []);
 
-  const contentVariants = {
+  const contentVariants = useMemo(() => ({
     collapsed: { 
       height: 0,
       opacity: 0,
@@ -108,26 +108,28 @@ const TechnicalSkills: React.FC = () => {
       opacity: 1,
       transition: { duration: 0.3, ease: "easeInOut" }
     }
-  };
+  }), []);
 
-  const getLevelColor = (level: string) => {
+  const getLevelColor = useCallback((level: string) => {
     switch (level) {
       case 'Advanced': return 'text-green-500';
       case 'Intermediate': return 'text-yellow-500';
       case 'Beginner': return 'text-blue-500';
       default: return 'text-gray-500';
     }
-  };
+  }, []);
 
-  const toggleCategory = (categoryName: string) => {
-    const newExpanded = new Set(expandedCategories);
-    if (newExpanded.has(categoryName)) {
-      newExpanded.delete(categoryName);
-    } else {
-      newExpanded.add(categoryName);
-    }
-    setExpandedCategories(newExpanded);
-  };
+  const toggleCategory = useCallback((categoryName: string) => {
+    setExpandedCategories(prev => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(categoryName)) {
+        newExpanded.delete(categoryName);
+      } else {
+        newExpanded.add(categoryName);
+      }
+      return newExpanded;
+    });
+  }, []);
 
   return (
     <section id="technical-skills" className="py-20 px-6" role="region" aria-label="Technical Skills">
@@ -239,4 +241,4 @@ const TechnicalSkills: React.FC = () => {
   );
 };
 
-export default TechnicalSkills; 
+export default React.memo(TechnicalSkills); 
