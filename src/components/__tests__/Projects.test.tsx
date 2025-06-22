@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import Projects from '../Projects';
 
@@ -20,14 +20,11 @@ vi.mock('lucide-react', () => ({
 
 // Mock window.open
 const mockOpen = vi.fn();
-Object.defineProperty(window, 'open', {
-  value: mockOpen,
-  writable: true,
-});
+window.open = mockOpen;
 
 describe('Projects', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mockOpen.mockClear();
   });
 
   it('renders projects section with title', () => {
@@ -37,66 +34,41 @@ describe('Projects', () => {
     expect(screen.getByText(/A showcase of innovative projects/)).toBeInTheDocument();
   });
 
-  it('renders filter buttons', () => {
-    render(<Projects />);
-    
-    expect(screen.getByText('All Projects')).toBeInTheDocument();
-    expect(screen.getByText('Web Apps')).toBeInTheDocument();
-    expect(screen.getByText('Portfolio')).toBeInTheDocument();
-    expect(screen.getByText('Dashboards')).toBeInTheDocument();
-    expect(screen.getByText('Mobile')).toBeInTheDocument();
-    expect(screen.getByText('Blockchain')).toBeInTheDocument();
-  });
-
   it('renders project cards', () => {
     render(<Projects />);
     
     expect(screen.getByText('Neural Network Visualizer')).toBeInTheDocument();
     expect(screen.getByText('Metaverse Portfolio')).toBeInTheDocument();
     expect(screen.getByText('AI Art Generator')).toBeInTheDocument();
+    expect(screen.getByText('Cryptocurrency Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('AR Shopping Experience')).toBeInTheDocument();
+    expect(screen.getByText('Blockchain Voting System')).toBeInTheDocument();
   });
 
-  it('filters projects when category button is clicked', () => {
+  it('opens project demo when demo button is clicked', () => {
     render(<Projects />);
     
-    const webAppsButton = screen.getByText('Web Apps');
-    fireEvent.click(webAppsButton);
+    const demoButtons = screen.getAllByText('Demo');
+    fireEvent.click(demoButtons[0]);
     
-    // Should still show projects (filtering logic would be tested in component)
-    expect(screen.getByText('Neural Network Visualizer')).toBeInTheDocument();
+    expect(mockOpen).toHaveBeenCalledWith(
+      'https://demo.neural-network-visualizer.com',
+      '_blank',
+      'noopener,noreferrer'
+    );
   });
 
-  it('opens project demo when demo button is clicked', async () => {
+  it('opens project source when source button is clicked', () => {
     render(<Projects />);
     
-    // Wait for demo buttons to be available
-    await waitFor(() => {
-      const demoButtons = screen.getAllByText('Demo');
-      if (demoButtons.length > 0) {
-        fireEvent.click(demoButtons[0]);
-        expect(mockOpen).toHaveBeenCalledWith(
-          'https://demo.neural-network-visualizer.com',
-          '_blank',
-          'noopener,noreferrer'
-        );
-      }
-    });
-  });
-
-  it('opens project source when source button is clicked', async () => {
-    render(<Projects />);
+    const codeButtons = screen.getAllByText('Code');
+    fireEvent.click(codeButtons[0]);
     
-    await waitFor(() => {
-      const codeButtons = screen.getAllByText('Code');
-      if (codeButtons.length > 0) {
-        fireEvent.click(codeButtons[0]);
-        expect(mockOpen).toHaveBeenCalledWith(
-          'https://github.com/yourusername/neural-network-visualizer',
-          '_blank',
-          'noopener,noreferrer'
-        );
-      }
-    });
+    expect(mockOpen).toHaveBeenCalledWith(
+      'https://github.com/yourusername/neural-network-visualizer',
+      '_blank',
+      'noopener,noreferrer'
+    );
   });
 
   it('opens GitHub profile when view all projects button is clicked', () => {
@@ -106,7 +78,7 @@ describe('Projects', () => {
     fireEvent.click(viewAllButton);
     
     expect(mockOpen).toHaveBeenCalledWith(
-      'https://github.com/yourusername',
+      'https://github.com/ThammanaSrinivas',
       '_blank',
       'noopener,noreferrer'
     );
@@ -115,21 +87,18 @@ describe('Projects', () => {
   it('displays project technologies as badges', () => {
     render(<Projects />);
     
-    // Use getAllByText for duplicate elements
-    const reactBadges = screen.getAllByText('React');
-    expect(reactBadges.length).toBeGreaterThan(0);
-    
-    const threeJsBadges = screen.getAllByText('Three.js');
-    expect(threeJsBadges.length).toBeGreaterThan(0);
-    
-    expect(screen.getByText('Python')).toBeInTheDocument();
-    expect(screen.getByText('TypeScript')).toBeInTheDocument();
+    expect(screen.getAllByText('React').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Three.js').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Python').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('WebGL').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Next.js').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('R3F').length).toBeGreaterThan(0);
   });
 
   it('shows project descriptions', () => {
     render(<Projects />);
     
-    expect(screen.getByText(/Interactive 3D visualization/)).toBeInTheDocument();
+    expect(screen.getByText(/Interactive 3D visualization of neural networks/)).toBeInTheDocument();
     expect(screen.getByText(/Immersive 3D portfolio website/)).toBeInTheDocument();
     expect(screen.getByText(/Web application for generating AI art/)).toBeInTheDocument();
   });
@@ -137,14 +106,14 @@ describe('Projects', () => {
   it('has correct section structure', () => {
     render(<Projects />);
     
-    const section = document.querySelector('section[id="projects"]');
-    expect(section).toBeInTheDocument();
+    const section = screen.getByRole('region', { hidden: true });
+    expect(section).toHaveAttribute('id', 'projects');
   });
 
   it('renders with proper styling classes', () => {
     render(<Projects />);
     
-    const section = document.querySelector('section');
+    const section = screen.getByRole('region', { hidden: true });
     expect(section).toHaveClass('py-20', 'px-6');
   });
 

@@ -34,6 +34,7 @@ vi.mock('lucide-react', () => ({
   ChevronDown: () => <div data-testid="chevron-down">ChevronDown</div>,
   Mouse: () => <div data-testid="mouse">Mouse</div>,
   ArrowRight: () => <div data-testid="arrow-right">ArrowRight</div>,
+  FileText: () => <div data-testid="file-text">FileText</div>,
 }));
 
 // Mock utils
@@ -90,13 +91,13 @@ describe('Hero', () => {
     renderWithRouter(<Hero />);
     
     expect(screen.getByText('View Projects')).toBeInTheDocument();
-    expect(screen.getByText('Download Resume')).toBeInTheDocument();
+    expect(screen.getByText('View Resume')).toBeInTheDocument();
   });
 
   it('renders experience stats', () => {
     renderWithRouter(<Hero />);
     
-    expect(screen.getByText('5+')).toBeInTheDocument();
+    expect(screen.getByText('3+')).toBeInTheDocument();
     expect(screen.getByText('Years Experience')).toBeInTheDocument();
     expect(screen.getByText('System')).toBeInTheDocument();
     expect(screen.getByText('Architecture')).toBeInTheDocument();
@@ -117,7 +118,7 @@ describe('Hero', () => {
   it('opens resume link when Download Resume button is clicked', () => {
     renderWithRouter(<Hero />);
     
-    const downloadResumeButton = screen.getByText('Download Resume');
+    const downloadResumeButton = screen.getByText('View Resume');
     fireEvent.click(downloadResumeButton);
     
     expect(mockOpen).toHaveBeenCalledWith(

@@ -64,11 +64,11 @@ describe('Contact', () => {
   it('renders contact information', () => {
     render(<Contact />);
     
-    expect(screen.getByText('Get in Touch')).toBeInTheDocument();
-    // Use more specific selectors for duplicate text
+    const emailElements = screen.getAllByText('Email');
+    expect(emailElements.length).toBeGreaterThan(0);
     expect(screen.getByText('LinkedIn')).toBeInTheDocument();
     expect(screen.getByText('GitHub')).toBeInTheDocument();
-    expect(screen.getByText('Download Resume')).toBeInTheDocument();
+    expect(screen.getByText('View Resume')).toBeInTheDocument();
   });
 
   it('validates form inputs', async () => {
@@ -146,7 +146,7 @@ describe('Contact', () => {
 
   it('opens resume link when download button is clicked', async () => {
     render(<Contact />);
-    const downloadButton = screen.getByText('Download PDF');
+    const downloadButton = screen.getByText('View Resume');
     fireEvent.click(downloadButton);
     await waitFor(() => {
       expect(mockOpen).toHaveBeenCalledWith(

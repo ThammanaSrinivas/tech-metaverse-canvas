@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Linkedin, Github, MapPin, FileText } from 'lucide-react';
 import { validationUtils } from '@/lib/utils';
+import ResumeButton from './ui/ResumeButton';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -73,33 +74,29 @@ const Contact: React.FC = () => {
   const contactInfo = [
     {
       title: "Email",
-      value: "hello@portfolio.dev",
+      value: "sreenivast84@gmail.com",
       icon: Mail,
-      link: "mailto:hello@portfolio.dev"
+      link: "mailto:sreenivast84@gmail.com"
     },
     {
       title: "LinkedIn",
-      value: "/in/yourprofile",
+      value: "/evolvedaily",
       icon: Linkedin,
-      link: "https://linkedin.com/in/yourprofile"
+      link: "https://www.linkedin.com/in/evolvedaily/"
     },
     {
       title: "GitHub",
-      value: "/yourusername",
+      value: "/ThammanaSrinivas",
       icon: Github,
-      link: "https://github.com/yourusername"
+      link: "https://github.com/ThammanaSrinivas"
     },
     {
       title: "Location",
-      value: "San Francisco, CA",
+      value: "Chennai, India",
       icon: MapPin,
       link: null
     }
   ];
-
-  const downloadResume = () => {
-    window.open('https://drive.google.com/file/d/1dl6EqMYEaTCljbrqoKPbaH48pccvPxcX/view?usp=sharing', '_blank');
-  };
 
   return (
     <section id="contact" className="py-20 px-6">
@@ -250,15 +247,8 @@ const Contact: React.FC = () => {
             </div>
 
             <div className="pt-8">
-              <h4 className="text-xl font-bold mb-4 text-foreground">Download Resume</h4>
-              <Button
-                variant="outline"
-                onClick={downloadResume}
-                className="border-primary text-primary hover:bg-primary/10 px-6 py-3 font-semibold flex items-center gap-2"
-              >
-                <FileText className="w-5 h-5" />
-                Download PDF
-              </Button>
+              <h4 className="text-xl font-bold mb-4 text-foreground">Resume</h4>
+              <ResumeButton size="md" />
             </div>
           </motion.div>
         </div>

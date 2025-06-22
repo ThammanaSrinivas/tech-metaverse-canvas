@@ -5,13 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run test:all && npm run test:coverage && vite build",
     "build:dev": "vite build --mode development",
-    "lint": "eslint .",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:unit": "vitest run --reporter=verbose src/components/__tests__/*.test.tsx src/contexts/__tests__/*.test.tsx src/lib/*.test.ts",
+    "test:functional": "vitest run --reporter=verbose src/components/__tests__/*.functional.test.tsx",
+    "test:performance": "vitest run --reporter=verbose src/components/__tests__/*.performance.test.tsx",
+    "test:all": "npm run test:unit && npm run test:functional && npm run test:performance",
+    "test:coverage": "vitest run --coverage --reporter=verbose",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

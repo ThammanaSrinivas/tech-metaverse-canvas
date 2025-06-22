@@ -1,18 +1,57 @@
-# Welcome to your Lovable project
+# Tech Metaverse Canvas Portfolio
 
-## Project info
+A modern, interactive portfolio for a digital architect and developer. Features a 3D hero, animated CLI workflow, categorized technical skills, and robust testing.
 
-**URL**: https://lovable.dev/projects/65913ebd-e8a4-4ce3-b2f1-04943854105a
+## Features
+- **Floating Developer Workflow CLI**: Animated, draggable CLI showing a 6-step dev workflow (write code, run tests, fix, deploy, etc.).
+- **3D Hero Section**: Eye-catching intro with rainbow-gradient title.
+- **About & Technical Skills**: About and collapsible, categorized skills with icons.
+- **Contact**: Modern icons, up-to-date links.
+- **Robust Testing**: Unit, functional, and performance tests with 90%+ coverage.
+
+## Developer Workflow CLI
+- Drag and drop anywhere on the page (desktop/mobile).
+- Steps: Write Code → Run Tests → See Failure → Fix → All Pass → Deploy/Coverage.
+- Fully accessible and responsive.
+
+## Testing
+
+### Unit Tests (UT)
+- Test individual functions, hooks, and React components in isolation.
+- Example: utils, About, Contact, ThemeToggle, FloatingCLI, ThemeContext.
+
+### Functional Tests (FT)
+- Simulate user flows and UI interactions.
+- Example: Completing the CLI workflow, navigating steps, theme switching, mobile responsiveness.
+
+### Performance Tests (PT)
+- Measure render time, memory usage, and responsiveness of key components (e.g., FloatingCLI).
+
+### How to Run
+- **All tests:** `npm run test:all`
+- **Unit tests:** `npm run test:unit`
+- **Functional tests:** `npm run test:functional`
+- **Performance tests:** `npm run test:performance`
+- **Coverage:** `npm run test:coverage`
+
+### Build Enforcement
+- The build script (`npm run build`) will run all tests (UT, FT, PT) before building. If any test fails, the build fails.
+
+## Getting Started
+
+```sh
+npm install
+npm run dev
+```
+
+## Technologies
+- Vite, React, TypeScript, shadcn-ui, Tailwind CSS
+
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/65913ebd-e8a4-4ce3-b2f1-04943854105a) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
 
 **Use your preferred IDE**
 
@@ -49,25 +88,3 @@ npm run dev
 - Select the "Codespaces" tab.
 - Click on "New codespace" to launch a new Codespace environment.
 - Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/65913ebd-e8a4-4ce3-b2f1-04943854105a) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)

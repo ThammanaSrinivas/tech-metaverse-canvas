@@ -6,6 +6,7 @@ import FloatingCLI from './FloatingCLI';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, Mouse, ArrowRight } from 'lucide-react';
 import { animationUtils } from '@/lib/utils';
+import ResumeButton from './ui/ResumeButton';
 
 const Hero: React.FC = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -35,10 +36,6 @@ const Hero: React.FC = () => {
     if (projectsSection) {
       projectsSection.scrollIntoView({ behavior: 'smooth' });
     }
-  };
-
-  const downloadResume = () => {
-    window.open('https://drive.google.com/file/d/1dl6EqMYEaTCljbrqoKPbaH48pccvPxcX/view?usp=sharing', '_blank');
   };
 
   const textVariants = {
@@ -130,7 +127,7 @@ const Hero: React.FC = () => {
               Digital
             </span>
             <br />
-            <span className="text-foreground/90">
+            <span className="gradient-text neon-text bg-gradient-to-r from-primary via-secondary to-neon-green bg-clip-text text-transparent">
               Architect
             </span>
           </h1>
@@ -160,14 +157,7 @@ const Hero: React.FC = () => {
               <ArrowRight className={`w-5 h-5 transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`} />
             </span>
           </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={downloadResume}
-            className="border-primary/50 text-primary hover:bg-primary/10 px-8 py-4 text-lg font-semibold transition-all duration-300 transform hover:scale-105 backdrop-blur-sm"
-          >
-            Download Resume
-          </Button>
+          <ResumeButton />
         </motion.div>
 
         <motion.div
@@ -178,7 +168,7 @@ const Hero: React.FC = () => {
             className="text-center p-6 rounded-2xl bg-background/50 backdrop-blur-sm border border-primary/20 hover:border-primary/40 transition-all duration-300"
             whileHover={{ scale: 1.05, y: -5 }}
           >
-            <div className="text-4xl font-bold text-primary neon-text mb-2">5+</div>
+            <div className="text-4xl font-bold text-primary neon-text mb-2">3+</div>
             <div className="text-sm text-muted-foreground font-medium">Years Experience</div>
           </motion.div>
           <motion.div 

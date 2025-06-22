@@ -1,20 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { projectUtils } from '@/lib/utils';
 
 const Projects: React.FC = () => {
-  const [filter, setFilter] = useState('all');
-
   const projects = [
     {
       id: 1,
       title: "Neural Network Visualizer",
       description: "Interactive 3D visualization of neural networks with real-time training data.",
       image: "/placeholder.svg",
-      category: "web-app",
       technologies: ["React", "Three.js", "Python", "WebGL"],
       github: "https://github.com/yourusername/neural-network-visualizer",
       demo: "https://demo.neural-network-visualizer.com",
@@ -25,7 +21,6 @@ const Projects: React.FC = () => {
       title: "Metaverse Portfolio",
       description: "Immersive 3D portfolio website with virtual reality support.",
       image: "/placeholder.svg",
-      category: "portfolio",
       technologies: ["Next.js", "R3F", "WebXR", "GSAP"],
       github: "https://github.com/yourusername/metaverse-portfolio",
       demo: "https://metaverse-portfolio.com",
@@ -36,7 +31,6 @@ const Projects: React.FC = () => {
       title: "AI Art Generator",
       description: "Web application for generating AI art with custom style transfer.",
       image: "/placeholder.svg",
-      category: "web-app",
       technologies: ["TypeScript", "TensorFlow.js", "Canvas API"],
       github: "https://github.com/yourusername/ai-art-generator",
       demo: "https://ai-art-generator.com",
@@ -47,7 +41,6 @@ const Projects: React.FC = () => {
       title: "Cryptocurrency Dashboard",
       description: "Real-time crypto tracking dashboard with advanced analytics.",
       image: "/placeholder.svg",
-      category: "dashboard",
       technologies: ["React", "Node.js", "Socket.io", "Chart.js"],
       github: "https://github.com/yourusername/crypto-dashboard",
       demo: "https://crypto-dashboard.com",
@@ -58,7 +51,6 @@ const Projects: React.FC = () => {
       title: "AR Shopping Experience",
       description: "Augmented reality shopping app for furniture placement.",
       image: "/placeholder.svg",
-      category: "mobile",
       technologies: ["React Native", "AR.js", "Three.js"],
       github: "https://github.com/yourusername/ar-shopping",
       demo: "https://ar-shopping.com",
@@ -69,24 +61,12 @@ const Projects: React.FC = () => {
       title: "Blockchain Voting System",
       description: "Secure and transparent voting system built on blockchain.",
       image: "/placeholder.svg",
-      category: "blockchain",
       technologies: ["Solidity", "Web3.js", "React", "Ethereum"],
       github: "https://github.com/yourusername/blockchain-voting",
       demo: "https://blockchain-voting.com",
       featured: false
     }
   ];
-
-  const categories = [
-    { id: 'all', name: 'All Projects' },
-    { id: 'web-app', name: 'Web Apps' },
-    { id: 'portfolio', name: 'Portfolio' },
-    { id: 'dashboard', name: 'Dashboards' },
-    { id: 'mobile', name: 'Mobile' },
-    { id: 'blockchain', name: 'Blockchain' }
-  ];
-
-  const filteredProjects = projectUtils.filterProjects(projects, filter);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -114,11 +94,11 @@ const Projects: React.FC = () => {
   };
 
   const openGitHubProfile = () => {
-    window.open('https://github.com/yourusername', '_blank', 'noopener,noreferrer');
+    window.open('https://github.com/ThammanaSrinivas', '_blank', 'noopener,noreferrer');
   };
 
   return (
-    <section id="projects" className="py-20 px-6">
+    <section id="projects" className="py-20 px-6" role="region" aria-label="Projects">
       <div className="container mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
@@ -135,29 +115,6 @@ const Projects: React.FC = () => {
           </p>
         </motion.div>
 
-        {/* Filter buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-wrap justify-center gap-4 mb-12"
-        >
-          {categories.map((category) => (
-            <Button
-              key={category.id}
-              variant={filter === category.id ? "default" : "outline"}
-              onClick={() => setFilter(category.id)}
-              className={`transition-all duration-300 ${
-                filter === category.id 
-                  ? 'bg-primary text-primary-foreground neon-glow' 
-                  : 'border-primary/50 hover:border-primary hover:bg-primary/10'
-              }`}
-            >
-              {category.name}
-            </Button>
-          ))}
-        </motion.div>
-
         {/* Projects grid */}
         <motion.div
           variants={containerVariants}
@@ -165,7 +122,7 @@ const Projects: React.FC = () => {
           whileInView="visible"
           className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
-          {filteredProjects.map((project) => (
+          {projects.map((project) => (
             <motion.div
               key={project.id}
               variants={cardVariants}

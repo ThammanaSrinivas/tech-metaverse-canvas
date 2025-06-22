@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import About from '@/components/About';
+import About from '../About';
 
 const renderWithRouter = (component: React.ReactElement) => {
   return render(
@@ -16,7 +16,6 @@ describe('About', () => {
     renderWithRouter(<About />);
     
     expect(screen.getByText('About Me')).toBeInTheDocument();
-    expect(screen.getByText('Technical Skills')).toBeInTheDocument();
   });
 
   it('renders journey and philosophy cards', () => {
@@ -26,89 +25,65 @@ describe('About', () => {
     expect(screen.getByText('Philosophy')).toBeInTheDocument();
   });
 
-  it('displays all skill categories', () => {
+  it('displays core values section', () => {
     renderWithRouter(<About />);
     
-    expect(screen.getByText('Programming Languages')).toBeInTheDocument();
-    expect(screen.getByText('Frameworks & Libraries')).toBeInTheDocument();
-    expect(screen.getByText('Tools & Platforms')).toBeInTheDocument();
-    expect(screen.getByText('Databases')).toBeInTheDocument();
-    expect(screen.getByText('Concepts & Expertise')).toBeInTheDocument();
+    expect(screen.getByText('Core Values')).toBeInTheDocument();
+    expect(screen.getByText('Innovation')).toBeInTheDocument();
+    expect(screen.getByText('Quality')).toBeInTheDocument();
+    expect(screen.getByText('Collaboration')).toBeInTheDocument();
   });
 
-  it('displays programming language skills', () => {
+  it('displays expertise areas', () => {
     renderWithRouter(<About />);
     
-    expect(screen.getByText('Python')).toBeInTheDocument();
-    expect(screen.getByText('Java')).toBeInTheDocument();
-    expect(screen.getByText('C/C++')).toBeInTheDocument();
-    expect(screen.getByText('JavaScript')).toBeInTheDocument();
-    expect(screen.getByText('TypeScript')).toBeInTheDocument();
-    expect(screen.getByText('HTML/CSS')).toBeInTheDocument();
-    expect(screen.getByText('SQL')).toBeInTheDocument();
-  });
-
-  it('displays framework skills', () => {
-    renderWithRouter(<About />);
-    
-    expect(screen.getByText('Spring Boot')).toBeInTheDocument();
-    expect(screen.getByText('Spring MVC')).toBeInTheDocument();
-    expect(screen.getByText('Socket.IO')).toBeInTheDocument();
-  });
-
-  it('displays tool and platform skills', () => {
-    renderWithRouter(<About />);
-    
-    expect(screen.getByText('Git')).toBeInTheDocument();
-    expect(screen.getByText('Docker')).toBeInTheDocument();
-    expect(screen.getByText('Kubernetes')).toBeInTheDocument();
-    expect(screen.getByText('Kafka')).toBeInTheDocument();
-    expect(screen.getByText('REST APIs')).toBeInTheDocument();
-    expect(screen.getByText('RAG')).toBeInTheDocument();
-  });
-
-  it('displays database skills', () => {
-    renderWithRouter(<About />);
-    
-    expect(screen.getByText('MySQL')).toBeInTheDocument();
-    expect(screen.getByText('PostgreSQL')).toBeInTheDocument();
-    expect(screen.getByText('Redis')).toBeInTheDocument();
-  });
-
-  it('displays concept and expertise skills', () => {
-    renderWithRouter(<About />);
-    
+    expect(screen.getByText('Expertise Areas')).toBeInTheDocument();
     expect(screen.getByText('System Design')).toBeInTheDocument();
-    expect(screen.getByText('Distributed Systems')).toBeInTheDocument();
-    expect(screen.getByText('Full Stack Development')).toBeInTheDocument();
-    expect(screen.getByText('WebSockets')).toBeInTheDocument();
+    expect(screen.getByText('Cloud Architecture')).toBeInTheDocument();
+    expect(screen.getByText('Full Stack Dev')).toBeInTheDocument();
+    expect(screen.getByText('Performance')).toBeInTheDocument();
   });
 
-  it('displays skill levels', () => {
+  it('displays about description', () => {
     renderWithRouter(<About />);
     
-    const advancedLevels = screen.getAllByText('Advanced');
-    const intermediateLevels = screen.getAllByText('Intermediate');
-    
-    expect(advancedLevels.length).toBeGreaterThan(0);
-    expect(intermediateLevels.length).toBeGreaterThan(0);
+    expect(screen.getByText(/Software Engineer with 3 years of experience/)).toBeInTheDocument();
   });
 
-  it('renders skill icons', () => {
+  it('displays journey content', () => {
     renderWithRouter(<About />);
     
-    // Check for emoji icons
-    expect(screen.getByText('🐍')).toBeInTheDocument(); // Python
-    expect(screen.getByText('☕')).toBeInTheDocument(); // Java
-    expect(screen.getByText('🍃')).toBeInTheDocument(); // Spring Boot
-    expect(screen.getByText('🐳')).toBeInTheDocument(); // Docker
-    expect(screen.getByText('🐬')).toBeInTheDocument(); // MySQL
+    expect(screen.getByText(/Started as a computer science enthusiast/)).toBeInTheDocument();
+  });
+
+  it('displays philosophy content', () => {
+    renderWithRouter(<About />);
+    
+    expect(screen.getByText(/Code is architecture, design is communication/)).toBeInTheDocument();
+  });
+
+  it('displays innovation description', () => {
+    renderWithRouter(<About />);
+    
+    expect(screen.getByText(/Embracing cutting-edge technologies/)).toBeInTheDocument();
+  });
+
+  it('displays quality description', () => {
+    renderWithRouter(<About />);
+    
+    expect(screen.getByText(/Maintaining high standards in code quality/)).toBeInTheDocument();
+  });
+
+  it('displays collaboration description', () => {
+    renderWithRouter(<About />);
+    
+    expect(screen.getByText(/Working effectively in teams/)).toBeInTheDocument();
   });
 
   it('has correct section structure', () => {
     renderWithRouter(<About />);
     
-    const section = document.querySelector('section[id="about"]');
-    expect(section).toBeInTheDocument();
+    const section = screen.getByRole('region', { hidden: true });
+    expect(section).toHaveAttribute('id', 'about');
   });
 }); 

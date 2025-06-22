@@ -1,15 +1,31 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Github, Linkedin, Mail, MapPin } from 'lucide-react';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   const socialLinks = [
-    { name: 'GitHub', href: '#', icon: '🐙' },
-    { name: 'LinkedIn', href: '#', icon: '💼' },
-    { name: 'Twitter', href: '#', icon: '🐦' },
-    { name: 'Discord', href: '#', icon: '🎮' },
+    { 
+      name: 'GitHub', 
+      href: 'https://github.com/ThammanaSrinivas', 
+      icon: Github 
+    },
+    { 
+      name: 'LinkedIn', 
+      href: 'https://www.linkedin.com/in/evolvedaily/', 
+      icon: Linkedin 
+    },
+    { 
+      name: 'Email', 
+      href: 'mailto:sreenivast84@gmail.com', 
+      icon: Mail 
+    },
+    { 
+      name: 'Location', 
+      href: null, 
+      icon: MapPin 
+    },
   ];
 
   return (
@@ -36,16 +52,29 @@ const Footer: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="flex justify-center space-x-6"
           >
-            {socialLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-2xl hover:scale-110 transition-transform duration-200"
-                aria-label={link.name}
-              >
-                {link.icon}
-              </a>
-            ))}
+            {socialLinks.map((link) => {
+              const IconComponent = link.icon;
+              return link.href ? (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-foreground/60 hover:text-primary transition-colors duration-200 hover:scale-110"
+                  aria-label={link.name}
+                >
+                  <IconComponent className="w-6 h-6" />
+                </a>
+              ) : (
+                <div
+                  key={link.name}
+                  className="text-foreground/40 cursor-default"
+                  aria-label={link.name}
+                >
+                  <IconComponent className="w-6 h-6" />
+                </div>
+              );
+            })}
           </motion.div>
 
           <motion.div
