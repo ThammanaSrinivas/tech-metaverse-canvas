@@ -37,7 +37,7 @@ const Hero: React.FC = () => {
   };
 
   const downloadResume = () => {
-    window.open('https://drive.google.com/drive/folders/1IBzvupAZQm3L6FZDAeirg0MpKIThNcQS', '_blank');
+    window.open('https://drive.google.com/file/d/1dl6EqMYEaTCljbrqoKPbaH48pccvPxcX/view?usp=sharing', '_blank');
   };
 
   const textVariants = {
@@ -184,8 +184,8 @@ const Hero: React.FC = () => {
             className="text-center p-6 rounded-2xl bg-background/50 backdrop-blur-sm border border-secondary/20 hover:border-secondary/40 transition-all duration-300"
             whileHover={{ scale: 1.05, y: -5 }}
           >
-            <div className="text-4xl font-bold text-secondary neon-text mb-2">50+</div>
-            <div className="text-sm text-muted-foreground font-medium">Projects Completed</div>
+            <div className="text-4xl font-bold text-secondary neon-text mb-2">System</div>
+            <div className="text-sm text-muted-foreground font-medium">Architecture</div>
           </motion.div>
           <motion.div 
             className="text-center p-6 rounded-2xl bg-background/50 backdrop-blur-sm border border-neon-green/20 hover:border-neon-green/40 transition-all duration-300"
@@ -211,17 +211,6 @@ const Hero: React.FC = () => {
           onClick={scrollToProjects}
         >
           <Mouse className="w-6 h-6 text-primary/60" />
-          <motion.div
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-6 h-10 border-2 border-primary/60 rounded-full flex justify-center"
-          >
-            <motion.div
-              animate={{ y: [0, 12, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-1 h-3 bg-primary/60 rounded-full mt-2"
-            />
-          </motion.div>
           <ChevronDown className="w-4 h-4 text-primary/40" />
         </motion.div>
       </motion.div>

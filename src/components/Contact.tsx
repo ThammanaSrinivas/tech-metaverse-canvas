@@ -98,7 +98,7 @@ const Contact: React.FC = () => {
   ];
 
   const downloadResume = () => {
-    window.open('https://drive.google.com/drive/folders/1IBzvupAZQm3L6FZDAeirg0MpKIThNcQS', '_blank');
+    window.open('https://drive.google.com/file/d/1dl6EqMYEaTCljbrqoKPbaH48pccvPxcX/view?usp=sharing', '_blank');
   };
 
   return (

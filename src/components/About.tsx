@@ -2,56 +2,79 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { 
+  Code2, 
+  Database, 
+  Server, 
+  Globe, 
+  Cpu, 
+  GitBranch, 
+  Container, 
+  Network,
+  Layers,
+  Zap,
+  Shield,
+  Cloud
+} from 'lucide-react';
 
 const About: React.FC = () => {
   const skillCategories = [
     {
       name: 'Programming Languages',
+      icon: Code2,
+      color: 'from-blue-500 to-cyan-500',
       skills: [
-        { name: 'Python', icon: '🐍', color: 'bg-yellow-500' },
-        { name: 'Java', icon: '☕', color: 'bg-orange-500' },
-        { name: 'C', icon: '🔵', color: 'bg-blue-500' },
-        { name: 'C++', icon: '🔷', color: 'bg-blue-600' },
-        { name: 'JavaScript', icon: '🟡', color: 'bg-yellow-400' },
-        { name: 'TypeScript', icon: '🔷', color: 'bg-blue-500' },
-        { name: 'HTML', icon: '🌐', color: 'bg-orange-500' },
-        { name: 'SQL', icon: '🗄️', color: 'bg-blue-400' },
+        { name: 'Python', icon: '🐍', level: 'Advanced' },
+        { name: 'Java', icon: '☕', level: 'Advanced' },
+        { name: 'C/C++', icon: '🔵', level: 'Intermediate' },
+        { name: 'JavaScript', icon: '🟡', level: 'Advanced' },
+        { name: 'TypeScript', icon: '🔷', level: 'Advanced' },
+        { name: 'HTML/CSS', icon: '🌐', level: 'Advanced' },
+        { name: 'SQL', icon: '🗄️', level: 'Advanced' },
       ]
     },
     {
       name: 'Frameworks & Libraries',
+      icon: Layers,
+      color: 'from-green-500 to-emerald-500',
       skills: [
-        { name: 'Spring Boot', icon: '🍃', color: 'bg-green-500' },
-        { name: 'Spring MVC', icon: '🌱', color: 'bg-green-600' },
-        { name: 'Socket.IO', icon: '🔌', color: 'bg-blue-500' },
+        { name: 'Spring Boot', icon: '🍃', level: 'Advanced' },
+        { name: 'Spring MVC', icon: '🌱', level: 'Advanced' },
+        { name: 'Socket.IO', icon: '🔌', level: 'Intermediate' },
       ]
     },
     {
       name: 'Tools & Platforms',
+      icon: Cpu,
+      color: 'from-orange-500 to-red-500',
       skills: [
-        { name: 'Git', icon: '📝', color: 'bg-orange-500' },
-        { name: 'Docker', icon: '🐳', color: 'bg-blue-500' },
-        { name: 'Kubernetes', icon: '⚓', color: 'bg-blue-600' },
-        { name: 'Kafka', icon: '📨', color: 'bg-orange-400' },
-        { name: 'REST APIs', icon: '🌐', color: 'bg-green-500' },
-        { name: 'RAG', icon: '🤖', color: 'bg-purple-500' },
+        { name: 'Git', icon: '📝', level: 'Advanced' },
+        { name: 'Docker', icon: '🐳', level: 'Advanced' },
+        { name: 'Kubernetes', icon: '⚓', level: 'Intermediate' },
+        { name: 'Kafka', icon: '📨', level: 'Intermediate' },
+        { name: 'REST APIs', icon: '🌐', level: 'Advanced' },
+        { name: 'RAG', icon: '🤖', level: 'Intermediate' },
       ]
     },
     {
       name: 'Databases',
+      icon: Database,
+      color: 'from-purple-500 to-pink-500',
       skills: [
-        { name: 'MySQL', icon: '🐬', color: 'bg-blue-500' },
-        { name: 'PostgreSQL', icon: '🐘', color: 'bg-blue-600' },
-        { name: 'Redis', icon: '🔴', color: 'bg-red-500' },
+        { name: 'MySQL', icon: '🐬', level: 'Advanced' },
+        { name: 'PostgreSQL', icon: '🐘', level: 'Advanced' },
+        { name: 'Redis', icon: '🔴', level: 'Intermediate' },
       ]
     },
     {
       name: 'Concepts & Expertise',
+      icon: Network,
+      color: 'from-indigo-500 to-blue-500',
       skills: [
-        { name: 'System Design', icon: '🏗️', color: 'bg-gray-500' },
-        { name: 'Distributed Systems', icon: '🌐', color: 'bg-blue-500' },
-        { name: 'Full Stack Development', icon: '💻', color: 'bg-green-500' },
-        { name: 'WebSockets', icon: '🔌', color: 'bg-blue-400' },
+        { name: 'System Design', icon: '🏗️', level: 'Advanced' },
+        { name: 'Distributed Systems', icon: '🌐', level: 'Advanced' },
+        { name: 'Full Stack Development', icon: '💻', level: 'Advanced' },
+        { name: 'WebSockets', icon: '🔌', level: 'Intermediate' },
       ]
     }
   ];
@@ -75,6 +98,15 @@ const About: React.FC = () => {
         duration: 0.5,
       },
     },
+  };
+
+  const getLevelColor = (level: string) => {
+    switch (level) {
+      case 'Advanced': return 'text-green-500';
+      case 'Intermediate': return 'text-yellow-500';
+      case 'Beginner': return 'text-blue-500';
+      default: return 'text-gray-500';
+    }
   };
 
   return (
@@ -134,37 +166,54 @@ const About: React.FC = () => {
             className="space-y-8"
           >
             <h3 className="text-3xl font-bold mb-8 text-center">Technical Skills</h3>
-            {skillCategories.map((category, categoryIndex) => (
-              <motion.div
-                key={category.name}
-                variants={itemVariants}
-                className="space-y-4"
-              >
-                <h4 className="text-xl font-semibold text-foreground border-b border-primary/20 pb-2">
-                  {category.name}
-                </h4>
-                <div className="flex flex-wrap gap-3">
-                  {category.skills.map((skill, skillIndex) => (
-                    <motion.div
-                      key={skill.name}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3, delay: (categoryIndex * 0.1) + (skillIndex * 0.05) }}
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      className="group"
-                    >
-                      <Badge
-                        variant="secondary"
-                        className={`${skill.color} text-white hover:${skill.color}/80 transition-all duration-300 cursor-default group-hover:shadow-lg`}
-                      >
-                        <span className="mr-2 text-lg">{skill.icon}</span>
-                        {skill.name}
-                      </Badge>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
+            {skillCategories.map((category, categoryIndex) => {
+              const CategoryIcon = category.icon;
+              return (
+                <motion.div
+                  key={category.name}
+                  variants={itemVariants}
+                  className="space-y-4"
+                >
+                  <Card className="glass-card border-primary/20 overflow-hidden">
+                    <div className={`bg-gradient-to-r ${category.color} p-4`}>
+                      <div className="flex items-center gap-3">
+                        <CategoryIcon className="w-6 h-6 text-white" />
+                        <h4 className="text-xl font-semibold text-white">
+                          {category.name}
+                        </h4>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {category.skills.map((skill, skillIndex) => (
+                          <motion.div
+                            key={skill.name}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3, delay: (categoryIndex * 0.1) + (skillIndex * 0.05) }}
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            className="group"
+                          >
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-primary/10 hover:border-primary/30 transition-all duration-300">
+                              <div className="flex items-center gap-3">
+                                <span className="text-2xl">{skill.icon}</span>
+                                <span className="font-medium text-foreground">{skill.name}</span>
+                              </div>
+                              <Badge 
+                                variant="secondary" 
+                                className={`${getLevelColor(skill.level)} bg-background/80 border border-current/20`}
+                              >
+                                {skill.level}
+                              </Badge>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </motion.div>
         </div>
       </div>
