@@ -108,7 +108,7 @@ describe('About', () => {
   it('has correct section structure', () => {
     renderWithRouter(<About />);
     
-    const section = screen.getByRole('region', { hidden: true }) || document.querySelector('section');
-    expect(section).toHaveAttribute('id', 'about');
+    const section = document.querySelector('section[id="about"]');
+    expect(section).toBeInTheDocument();
   });
 }); 

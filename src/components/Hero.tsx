@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Scene3D from './Scene3D';
 import ParticleEffect from './ParticleEffect';
+import FloatingCLI from './FloatingCLI';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, Mouse, ArrowRight } from 'lucide-react';
 import { animationUtils } from '@/lib/utils';
@@ -224,6 +225,9 @@ const Hero: React.FC = () => {
         }}
         transition={{ type: "spring", stiffness: 500, damping: 28 }}
       />
+
+      {/* Floating CLI Workflow */}
+      <FloatingCLI />
     </section>
   );
 };

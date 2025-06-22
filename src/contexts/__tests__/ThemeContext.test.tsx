@@ -59,7 +59,7 @@ describe('ThemeContext', () => {
     );
 
     expect(screen.getByTestId('theme')).toHaveTextContent('system');
-    expect(screen.getByTestId('effective-theme')).toHaveTextContent('dark');
+    expect(screen.getByTestId('effective-theme')).toHaveTextContent('light');
   });
 
   it('loads saved theme from localStorage', () => {

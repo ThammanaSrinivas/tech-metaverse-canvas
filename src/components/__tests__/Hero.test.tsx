@@ -2,6 +2,47 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Hero from '@/components/Hero';
+import React from 'react';
+
+// Mock 3D components that cause ResizeObserver issues
+vi.mock('../Scene3D', () => ({
+  default: () => <div data-testid="scene3d">Scene3D</div>,
+}));
+
+vi.mock('../ParticleEffect', () => ({
+  default: () => <div data-testid="particle-effect">ParticleEffect</div>,
+}));
+
+vi.mock('../FloatingCLI', () => ({
+  default: () => <div data-testid="floating-cli">FloatingCLI</div>,
+}));
+
+// Mock framer-motion
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
+  },
+  useScroll: () => ({
+    scrollYProgress: { get: () => 0 },
+  }),
+  useTransform: () => ({ get: () => 0 }),
+}));
+
+// Mock lucide-react icons
+vi.mock('lucide-react', () => ({
+  ChevronDown: () => <div data-testid="chevron-down">ChevronDown</div>,
+  Mouse: () => <div data-testid="mouse">Mouse</div>,
+  ArrowRight: () => <div data-testid="arrow-right">ArrowRight</div>,
+}));
+
+// Mock utils
+vi.mock('@/lib/utils', () => ({
+  animationUtils: {
+    getMousePosition: vi.fn(() => ({ x: 0, y: 0 })),
+  },
+  cn: vi.fn((...classes) => classes.filter(Boolean).join(' ')),
+}));
 
 // Mock window.open
 const mockOpen = vi.fn();
@@ -88,11 +129,12 @@ describe('Hero', () => {
   it('scrolls to projects when scroll indicator is clicked', () => {
     renderWithRouter(<Hero />);
     
-    const scrollIndicator = screen.getByRole('button', { name: /scroll/i }) || 
-                          document.querySelector('.cursor-pointer');
+    // Look for the scroll indicator by its test ID
+    const mouseIcon = screen.getByTestId('mouse');
+    const scrollContainer = mouseIcon.closest('.cursor-pointer');
     
-    if (scrollIndicator) {
-      fireEvent.click(scrollIndicator);
+    if (scrollContainer) {
+      fireEvent.click(scrollContainer);
       expect(mockGetElementById).toHaveBeenCalledWith('projects');
       expect(mockScrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
     }
@@ -101,15 +143,15 @@ describe('Hero', () => {
   it('has correct section structure', () => {
     renderWithRouter(<Hero />);
     
-    const section = screen.getByRole('region', { hidden: true }) || document.querySelector('section');
-    expect(section).toHaveAttribute('id', 'home');
+    const section = document.querySelector('section[id="home"]');
+    expect(section).toBeInTheDocument();
   });
 
   it('renders scroll indicator', () => {
     renderWithRouter(<Hero />);
     
-    // Check for mouse icon (scroll indicator)
-    const mouseIcon = document.querySelector('.w-6.h-6.text-primary\\/60');
+    // Check for mouse icon (scroll indicator) using test ID
+    const mouseIcon = screen.getByTestId('mouse');
     expect(mouseIcon).toBeInTheDocument();
   });
 
