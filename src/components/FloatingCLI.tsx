@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, CheckCircle, XCircle, Play, Code, TestTube, Rocket, BarChart3, Minus, Maximize2, X, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -51,8 +51,8 @@ const FloatingCLI: React.FC<FloatingCLIProps> = ({ testMode = false }) => {
   // Remove all drag-related state and handlers
   const cliRef = useRef<HTMLDivElement>(null);
 
-  // Mobile-specific positioning and sizing - static positioning
-  const getMobileStyles = () => {
+  // Mobile-specific positioning and sizing - memoized for performance
+  const mobileStyles = useMemo(() => {
     if (isMobile) {
       if (isMaximized) {
         return 'top-20 left-2 right-2 bottom-2';
@@ -64,7 +64,7 @@ const FloatingCLI: React.FC<FloatingCLIProps> = ({ testMode = false }) => {
       return 'top-24 left-4 right-4 bottom-4';
     }
     return 'top-28 right-8 w-80 h-80 md:w-96 md:h-96 lg:w-[28rem] lg:h-[28rem]';
-  };
+  }, [isMobile, isMaximized]);
 
   const steps: CLIStep[] = [
     {
@@ -311,20 +311,20 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
     }
   }, [currentStep]);
 
-  const handleStepNavigation = (direction: 'next' | 'prev') => {
+  const handleStepNavigation = useCallback((direction: 'next' | 'prev') => {
     if (direction === 'next' && currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else if (direction === 'prev' && currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
     setIsAutoPlaying(false);
-  };
+  }, [currentStep, steps.length]);
 
-  const handleAutoPlayToggle = () => {
+  const handleAutoPlayToggle = useCallback(() => {
     setIsAutoPlaying(!isAutoPlaying);
-  };
+  }, [isAutoPlaying]);
 
-  const handleWindowControl = (action: 'minimize' | 'maximize' | 'close') => {
+  const handleWindowControl = useCallback((action: 'minimize' | 'maximize' | 'close') => {
     switch (action) {
       case 'minimize':
         setIsMinimized(true);
@@ -340,14 +340,14 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
         setIsMaximized(false);
         break;
     }
-  };
+  }, [isMaximized]);
 
-  const handleReopen = () => {
+  const handleReopen = useCallback(() => {
     setIsClosed(false);
     setIsMinimized(false);
     setIsMaximized(false);
     setIsAutoPlaying(true);
-  };
+  }, []);
 
   // Theme-aware color classes
   const isDark = theme === 'dark';
@@ -404,7 +404,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
           initial={{ opacity: 0, y: 20, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.9 }}
-          className={`fixed z-40 transition-all duration-300 ${getMobileStyles()}`}
+          className={`fixed z-40 transition-all duration-300 ${mobileStyles}`}
           tabIndex={0}
           aria-label="Draggable Developer Workflow CLI"
         >
