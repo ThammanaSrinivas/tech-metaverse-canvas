@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import FloatingCLI from '../FloatingCLI';
 import * as ThemeContext from '@/contexts/ThemeContext';
-import * as UseMobile from '@/hooks/use-mobile';
+import useIsMobile from '@/hooks/use-mobile';
 
 // Mock framer-motion with simplified implementation
 vi.mock('framer-motion', () => ({
@@ -32,12 +32,17 @@ vi.mock('lucide-react', () => ({
   RefreshCw: () => <div data-testid="refresh-icon">RefreshCw</div>,
 }));
 
+// Mock useIsMobile hook
+vi.mock('@/hooks/use-mobile', () => ({
+  default: vi.fn()
+}));
+
 describe('FloatingCLI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     vi.spyOn(ThemeContext, 'useTheme').mockReturnValue({ theme: 'dark' });
-    vi.spyOn(UseMobile, 'useIsMobile').mockReturnValue(false);
+    vi.mocked(useIsMobile).mockReturnValue(false);
   });
 
   afterEach(() => {

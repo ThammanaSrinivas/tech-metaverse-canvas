@@ -4,11 +4,11 @@ import { vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import FloatingCLI from '../FloatingCLI';
-import { useIsMobile } from '@/hooks/use-mobile';
+import useIsMobile from '@/hooks/use-mobile';
 
 // Mock the useIsMobile hook
 vi.mock('@/hooks/use-mobile', () => ({
-  useIsMobile: vi.fn()
+  default: vi.fn()
 }));
 
 // Mock Framer Motion

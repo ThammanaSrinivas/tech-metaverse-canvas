@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, forwardRef, useMemo, useCallback } 
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, CheckCircle, XCircle, Play, Code, TestTube, Rocket, BarChart3, Minus, Maximize2, X, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import useIsMobile from '@/hooks/use-mobile';
 
 interface CLIStep {
   id: number;
@@ -44,26 +45,11 @@ const FloatingCLI: React.FC<FloatingCLIProps> = ({ testMode = false }) => {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
-
-  // Remove all drag-related state and handlers
   const cliRef = useRef<HTMLDivElement>(null);
 
-  // Check mobile state once on mount to avoid re-renders
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    const handleResize = () => {
-      checkMobile();
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Use the optimized hook instead of manual state management
+  const isMobile = useIsMobile();
 
   // Mobile-specific positioning and sizing - memoized for performance
   const mobileStyles = useMemo(() => {

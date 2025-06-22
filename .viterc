@@ -1,5 +1,16 @@
-coverage/
-node_modules/
-dist/
-.git/
-*.log 
+{
+  "server": {
+    "watch": {
+      "ignored": [
+        "**/coverage/**",
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/.git/**",
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/__tests__/**",
+        "**/coverage/**/*"
+      ]
+    }
+  }
+} 
