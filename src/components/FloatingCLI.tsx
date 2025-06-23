@@ -403,7 +403,11 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
             stiffness: 300,
             damping: 30
           }}
-          className="fixed z-40 floating-cli-container top-24 right-4 w-[calc(100vw-2rem)] h-80 md:top-28 md:right-8 md:w-80 md:h-80 lg:w-96 lg:h-96 xl:w-[28rem] xl:h-[28rem] data-[maximized=true]:top-20 data-[maximized=true]:left-2 data-[maximized=true]:right-2 data-[maximized=true]:bottom-2 md:data-[maximized=true]:top-24 md:data-[maximized=true]:left-4 md:data-[maximized=true]:right-4 md:data-[maximized=true]:bottom-4"
+          className={`fixed z-40 floating-cli-container ${
+            isMaximized
+              ? 'inset-x-0 left-0 right-0 top-[5.5rem] bottom-0 m-0 md:inset-x-4 md:top-[5.5rem] md:bottom-4 md:m-0' // offset for header
+              : 'top-24 right-4 w-[calc(100vw-2rem)] h-80 md:top-28 md:right-8 md:w-80 md:h-80 lg:w-96 lg:h-96 xl:w-[28rem] xl:h-[28rem]'
+          }`}
           data-maximized={isMaximized}
           tabIndex={0}
           aria-label="Draggable Developer Workflow CLI"
@@ -501,13 +505,13 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
 
               {/* Command Line */}
               <div className="flex items-center space-x-2 flex-shrink-0">
-                <span className={`${textGreen} font-mono text-xs md:text-sm`}>$</span>
-                <span className={`${textColor} font-mono text-xs md:text-sm truncate`}>
+                <span className="text-green-500 font-mono text-xs md:text-sm">$</span>
+                <span className="text-blue-500 font-mono text-xs md:text-sm truncate">
                   <span className="md:hidden">
                     {steps[currentStep].command.length > 30 
-                    ? steps[currentStep].command.substring(0, 30) + '...'
-                    : steps[currentStep].command
-                  }
+                      ? steps[currentStep].command.substring(0, 30) + '...'
+                      : steps[currentStep].command
+                    }
                   </span>
                   <span className="hidden md:inline">{steps[currentStep].command}</span>
                 </span>
@@ -523,15 +527,26 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
                     : 'clamp(100px, 35vh, 150px)'
                 }}
               >
-                <pre className="whitespace-pre-wrap break-words overflow-hidden">
-                  <span className="md:hidden">
-                    {steps[currentStep].output.length > 500
-                    ? steps[currentStep].output.substring(0, 500) + '\n... (truncated for mobile)'
-                    : steps[currentStep].output
-                  }
-                  </span>
-                  <span className="hidden md:inline">{steps[currentStep].output}</span>
-                </pre>
+                {steps[currentStep].command.startsWith('vim') ? (
+                  <pre className="whitespace-pre-wrap break-words overflow-hidden bg-gray-900 text-green-300 rounded p-2">
+                    <code>{steps[currentStep].output}</code>
+                  </pre>
+                ) : (
+                  <pre className="whitespace-pre-wrap break-words overflow-hidden">
+                    {steps[currentStep].output.split('\n').map((line, idx) => {
+                      if (/FAIL|✗|error|TypeError|failed/i.test(line)) {
+                        return <span key={idx} className="text-red-400">{line + '\n'}</span>;
+                      }
+                      if (/PASS|✓|success|passed|All tests passing|Ready for deployment|Coverage target achieved/i.test(line)) {
+                        return <span key={idx} className="text-green-400">{line + '\n'}</span>;
+                      }
+                      if (/WARN|warning|uncovered/i.test(line)) {
+                        return <span key={idx} className="text-yellow-400">{line + '\n'}</span>;
+                      }
+                      return <span key={idx}>{line + '\n'}</span>;
+                    })}
+                  </pre>
+                )}
               </div>
 
               {/* Status Indicator */}
