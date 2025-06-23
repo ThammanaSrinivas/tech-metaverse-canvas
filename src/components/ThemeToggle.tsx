@@ -35,7 +35,7 @@ const ThemeToggle: React.FC = () => {
           className="flex items-center justify-center"
         >
           <div data-testid="theme-icon">
-            {getIcon()}
+          {getIcon()}
           </div>
         </motion.div>
       </Button>

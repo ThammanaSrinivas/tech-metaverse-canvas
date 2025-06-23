@@ -108,6 +108,6 @@ Element.prototype.scrollIntoView = vi.fn();
 Object.defineProperty(document, 'getElementById', {
   writable: true,
   value: vi.fn(() => ({
-    scrollIntoView: vi.fn(),
+      scrollIntoView: vi.fn(),
   })),
 }); 

@@ -423,13 +423,13 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
                 </span>
               </div>
               <div className="flex items-center space-x-1 flex-shrink-0">
-                <button
-                  onClick={() => handleWindowControl('minimize')}
+                  <button
+                    onClick={() => handleWindowControl('minimize')}
                   className="hidden md:block w-2.5 h-2.5 md:w-3 md:h-3 bg-yellow-500 rounded-full hover:bg-yellow-400 transition-colors"
-                  title="Minimize"
-                >
-                  <Minus className="w-1.5 h-1.5 md:w-2 md:h-2 text-gray-800 mx-auto" />
-                </button>
+                    title="Minimize"
+                  >
+                    <Minus className="w-1.5 h-1.5 md:w-2 md:h-2 text-gray-800 mx-auto" />
+                  </button>
                 <button
                   onClick={() => handleWindowControl('maximize')}
                   className="w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full hover:bg-green-400 transition-colors"
@@ -505,9 +505,9 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
                 <span className={`${textColor} font-mono text-xs md:text-sm truncate`}>
                   <span className="md:hidden">
                     {steps[currentStep].command.length > 30 
-                      ? steps[currentStep].command.substring(0, 30) + '...'
-                      : steps[currentStep].command
-                    }
+                    ? steps[currentStep].command.substring(0, 30) + '...'
+                    : steps[currentStep].command
+                  }
                   </span>
                   <span className="hidden md:inline">{steps[currentStep].command}</span>
                 </span>
@@ -526,9 +526,9 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
                 <pre className="whitespace-pre-wrap break-words overflow-hidden">
                   <span className="md:hidden">
                     {steps[currentStep].output.length > 500
-                      ? steps[currentStep].output.substring(0, 500) + '\n... (truncated for mobile)'
-                      : steps[currentStep].output
-                    }
+                    ? steps[currentStep].output.substring(0, 500) + '\n... (truncated for mobile)'
+                    : steps[currentStep].output
+                  }
                   </span>
                   <span className="hidden md:inline">{steps[currentStep].output}</span>
                 </pre>

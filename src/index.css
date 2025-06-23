@@ -331,3 +331,134 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Mobile performance optimizations */
+@media (max-width: 768px) {
+  /* Reduce animation complexity on mobile */
+  .animate-grid-move {
+    animation: gridMove 30s linear infinite; /* Slower animation */
+  }
+  
+  .animate-float {
+    animation: float 8s ease-in-out infinite; /* Slower floating */
+  }
+  
+  .animate-pulse-slow {
+    animation: pulseSlow 4s ease-in-out infinite; /* Slower pulse */
+  }
+  
+  .animate-glow {
+    animation: glow 3s ease-in-out infinite alternate; /* Slower glow */
+  }
+  
+  /* Reduce backdrop blur on mobile for better performance */
+  .backdrop-blur-sm {
+    backdrop-filter: blur(2px);
+  }
+  
+  .backdrop-blur-md {
+    backdrop-filter: blur(4px);
+  }
+  
+  .backdrop-blur-lg {
+    backdrop-filter: blur(8px);
+  }
+  
+  .backdrop-blur-xl {
+    backdrop-filter: blur(12px);
+  }
+  
+  .backdrop-blur-2xl {
+    backdrop-filter: blur(20px);
+  }
+  
+  .backdrop-blur-3xl {
+    backdrop-filter: blur(32px);
+  }
+  
+  /* Optimize transforms for mobile */
+  .hover-lift:hover {
+    transform: translateY(-3px); /* Reduced lift on mobile */
+    box-shadow: 0 8px 20px rgba(0, 245, 255, 0.2); /* Reduced shadow */
+  }
+  
+  /* Reduce text shadow complexity on mobile */
+  .text-3d {
+    text-shadow: 
+      0 1px 0 #ccc,
+      0 2px 0 #c9c9c9,
+      0 3px 0 #bbb,
+      0 4px 0 #b9b9b9,
+      0 5px 0 #aaa,
+      0 6px 1px rgba(0,0,0,.1),
+      0 0 5px rgba(0,0,0,.1),
+      0 1px 3px rgba(0,0,0,.3),
+      0 3px 5px rgba(0,0,0,.2);
+  }
+}
+
+/* Very low-end device optimizations */
+@media (max-width: 480px) {
+  /* Disable complex animations on very small screens */
+  .animate-grid-move,
+  .animate-float,
+  .animate-pulse-slow,
+  .animate-glow {
+    animation: none;
+  }
+  
+  /* Reduce backdrop blur even more */
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .backdrop-blur-3xl {
+    backdrop-filter: none;
+  }
+  
+  /* Simplify text effects */
+  .text-3d {
+    text-shadow: 
+      0 1px 0 #ccc,
+      0 2px 0 #c9c9c9,
+      0 3px 0 #bbb;
+  }
+  
+  .neon-text {
+    text-shadow: 0 0 5px currentColor;
+  }
+  
+  .neon-glow {
+    box-shadow: 0 0 5px currentColor;
+  }
+}
+
+/* iOS Safari specific optimizations */
+@supports (-webkit-touch-callout: none) {
+  /* Optimize for iOS Safari */
+  .floating-cli-container {
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    -webkit-perspective: 1000px;
+  }
+  
+  /* Reduce animation complexity on iOS */
+  .animate-grid-move {
+    animation: gridMove 40s linear infinite;
+  }
+  
+  .animate-float {
+    animation: float 10s ease-in-out infinite;
+  }
+  
+  /* Optimize backdrop blur for iOS */
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .backdrop-blur-3xl {
+    -webkit-backdrop-filter: blur(var(--blur-amount));
+  }
+}
