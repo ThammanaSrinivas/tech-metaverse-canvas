@@ -43,19 +43,6 @@ describe('Projects', () => {
     expect(screen.getByText('Spring MVC Practice CRUD RESTful API')).toBeInTheDocument();
   });
 
-  it('opens project demo when demo button is clicked', () => {
-    render(<Projects />);
-    
-    const demoButtons = screen.getAllByText('Demo');
-    fireEvent.click(demoButtons[0]);
-    
-    expect(mockOpen).toHaveBeenCalledWith(
-      'https://github.com/randomAndroidProject/randomAndroidProject',
-      '_blank',
-      'noopener,noreferrer'
-    );
-  });
-
   it('opens project source when source button is clicked', () => {
     render(<Projects />);
     

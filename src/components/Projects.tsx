@@ -13,7 +13,6 @@ const Projects: React.FC = () => {
       image: "/placeholder.svg",
       technologies: ["Android", "Java", "Kotlin", "XML"],
       github: "https://github.com/randomAndroidProject/randomAndroidProject",
-      demo: "https://github.com/randomAndroidProject/randomAndroidProject",
       featured: true
     },
     {
@@ -23,7 +22,6 @@ const Projects: React.FC = () => {
       image: "/placeholder.svg",
       technologies: ["React", "TypeScript", "Three.js", "Vite"],
       github: "https://github.com/ThammanaSrinivas/tech-metaverse-canvas",
-      demo: "https://github.com/ThammanaSrinivas/tech-metaverse-canvas",
       featured: true
     },
     {
@@ -33,7 +31,6 @@ const Projects: React.FC = () => {
       image: "/placeholder.svg",
       technologies: ["Node.js", "JavaScript", "MCP", "API"],
       github: "https://github.com/ThammanaSrinivas/habitica-mcp-server",
-      demo: "https://github.com/ThammanaSrinivas/habitica-mcp-server",
       featured: true
     },
     {
@@ -43,7 +40,24 @@ const Projects: React.FC = () => {
       image: "/placeholder.svg",
       technologies: ["Spring", "Java", "REST", "MySQL"],
       github: "https://github.com/ThammanaSrinivas/SpringMVCPracticeCRUDRestfulAPI",
-      demo: "https://github.com/ThammanaSrinivas/SpringMVCPracticeCRUDRestfulAPI",
+      featured: false
+    },
+    {
+      id: 5,
+      title: "RAG_experiment",
+      description: "A sophisticated Retrieval-Augmented Generation (RAG) system enabling interactive chat with PDF documents using advanced language modeling and vector embeddings.",
+      image: "/placeholder.svg",
+      technologies: ["Python", "PyTorch", "Transformers", "ChromaDB", "SentenceTransformers", "PyPDF"],
+      github: "https://github.com/ThammanaSrinivas/RAG_experiment",
+      featured: false
+    },
+    {
+      id: 6,
+      title: "SaiKiCoin",
+      description: "Blockchain-based project for decentralized digital currency and smart contract experimentation.",
+      image: "/placeholder.svg",
+      technologies: ["Python", "JavaScript", "Django", "Blockchain", "Smart Contracts"],
+      github: "https://github.com/ThammanaSrinivas/SaiKiCoin",
       featured: false
     }
   ];
@@ -126,13 +140,6 @@ const Projects: React.FC = () => {
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="absolute bottom-4 left-4 right-4 flex gap-2">
-                      <Button 
-                        size="sm" 
-                        className="bg-primary hover:bg-primary/80"
-                        onClick={() => openProjectLink(project.demo)}
-                      >
-                        Demo
-                      </Button>
                       <Button 
                         size="sm" 
                         variant="outline" 
