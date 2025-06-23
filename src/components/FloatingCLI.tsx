@@ -365,7 +365,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={handleReopen}
-        className="fixed z-50 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-200 top-24 right-4 md:top-32 md:right-6"
+        className="fixed z-50 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bottom-8 right-4 md:bottom-12 md:right-6"
         title="Reopen Developer Workflow"
       >
         <Terminal className="w-5 h-5 md:w-6 md:h-6" />
@@ -381,7 +381,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={handleReopen}
-        className={`fixed z-50 p-3 ${bgColor} ${textGreen} rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 top-24 right-4 md:top-32 md:right-6`}
+        className={`fixed z-50 p-3 ${bgColor} ${textGreen} rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 bottom-8 right-4 md:bottom-12 md:right-6`}
         title="Restore Developer Workflow"
       >
         <Terminal className="w-5 h-5 md:w-6 md:h-6" />
@@ -406,7 +406,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
           className={`fixed z-40 floating-cli-container ${
             isMaximized
               ? 'inset-x-0 left-0 right-0 top-[5.5rem] bottom-0 m-0 md:inset-x-4 md:top-[5.5rem] md:bottom-4 md:m-0' // offset for header
-              : 'top-24 right-4 w-[calc(100vw-2rem)] h-80 md:top-28 md:right-8 md:w-80 md:h-80 lg:w-96 lg:h-96 xl:w-[28rem] xl:h-[28rem]'
+              : 'bottom-8 right-4 w-[calc(100vw-2rem)] h-80 md:bottom-12 md:right-8 md:w-80 md:h-80 lg:w-96 lg:h-96 xl:w-[28rem] xl:h-[28rem]'
           }`}
           data-maximized={isMaximized}
           tabIndex={0}
