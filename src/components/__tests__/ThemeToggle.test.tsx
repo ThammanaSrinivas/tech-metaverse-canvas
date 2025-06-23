@@ -60,16 +60,6 @@ describe('ThemeToggle', () => {
     expect(sunIconSvg).toHaveClass('lucide-sun');
   });
 
-  it('displays correct icon for system theme', () => {
-    mockThemeContext.theme = 'system';
-    mockThemeContext.effectiveTheme = 'dark';
-    
-    render(<ThemeToggle />);
-    // Look for the Monitor icon (lucide-monitor class)
-    const monitorIconSvg = screen.getByTestId('theme-icon').querySelector('svg');
-    expect(monitorIconSvg).toHaveClass('lucide-monitor');
-  });
-
   it('has correct styling classes', () => {
     render(<ThemeToggle />);
     const button = screen.getByRole('button');

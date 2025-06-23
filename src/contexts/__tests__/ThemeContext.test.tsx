@@ -30,7 +30,6 @@ const TestComponent = () => {
       <div data-testid="effective-theme">{effectiveTheme}</div>
       <button onClick={() => setTheme('light')}>Set Light</button>
       <button onClick={() => setTheme('dark')}>Set Dark</button>
-      <button onClick={() => setTheme('system')}>Set System</button>
       <button onClick={toggleTheme}>Toggle</button>
     </div>
   );
@@ -58,8 +57,8 @@ describe('ThemeContext', () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByTestId('theme')).toHaveTextContent('system');
-    expect(screen.getByTestId('effective-theme')).toHaveTextContent('light');
+    expect(screen.getByTestId('theme')).toHaveTextContent('dark');
+    expect(screen.getByTestId('effective-theme')).toHaveTextContent('dark');
   });
 
   it('loads saved theme from localStorage', () => {
@@ -102,19 +101,6 @@ describe('ThemeContext', () => {
     expect(screen.getByTestId('effective-theme')).toHaveTextContent('dark');
   });
 
-  it('sets theme to system when setTheme is called', () => {
-    render(
-      <ThemeProvider>
-        <TestComponent />
-      </ThemeProvider>
-    );
-
-    const setSystemButton = screen.getByText('Set System');
-    fireEvent.click(setSystemButton);
-
-    expect(screen.getByTestId('theme')).toHaveTextContent('system');
-  });
-
   it('toggles theme correctly', () => {
     render(
       <ThemeProvider>
@@ -124,17 +110,13 @@ describe('ThemeContext', () => {
 
     const toggleButton = screen.getByText('Toggle');
     
-    // First click: system -> light
+    // First click: dark -> light
     fireEvent.click(toggleButton);
     expect(screen.getByTestId('theme')).toHaveTextContent('light');
     
     // Second click: light -> dark
     fireEvent.click(toggleButton);
     expect(screen.getByTestId('theme')).toHaveTextContent('dark');
-    
-    // Third click: dark -> system
-    fireEvent.click(toggleButton);
-    expect(screen.getByTestId('theme')).toHaveTextContent('system');
   });
 
   it('saves theme to localStorage when theme changes', () => {
@@ -163,25 +145,6 @@ describe('ThemeContext', () => {
     // Test that the theme state changes correctly
     expect(screen.getByTestId('theme')).toHaveTextContent('light');
     expect(screen.getByTestId('effective-theme')).toHaveTextContent('light');
-  });
-
-  it('handles system theme preference', () => {
-    mockMatchMedia.mockReturnValue({
-      matches: true, // prefers dark
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    });
-
-    render(
-      <ThemeProvider>
-        <TestComponent />
-      </ThemeProvider>
-    );
-
-    const setSystemButton = screen.getByText('Set System');
-    fireEvent.click(setSystemButton);
-
-    expect(screen.getByTestId('effective-theme')).toHaveTextContent('dark');
   });
 
   it('throws error when useTheme is used outside provider', () => {
