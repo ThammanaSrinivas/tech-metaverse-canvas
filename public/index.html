@@ -1,9 +1,26 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React + TS</title>
+
+    <!-- Early theme script to prevent flash -->
+    <script>
+      (function() {
+        try {
+          var theme = localStorage.getItem('theme');
+          if (theme !== 'light' && theme !== 'dark') {
+            theme = 'dark';
+          }
+          if (document.documentElement) {
+            document.documentElement.classList.add(theme);
+            document.documentElement.setAttribute('data-theme', theme);
+          }
+        } catch (e) {}
+      })();
+    </script>
 
     <!-- update the version number as needed -->
     <script defer src="/__/firebase/11.9.1/firebase-app-compat.js"></script>
@@ -46,24 +63,6 @@
       <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
     </div>
     <p id="load">Firebase SDK Loading&hellip;</p>
-
-    <!-- Theme preloader script to prevent flash of incorrect theme -->
-    <script>
-      (function() {
-        try {
-          var theme = localStorage.getItem('theme');
-          if (theme !== 'light' && theme !== 'dark') {
-            theme = 'dark';
-          }
-          document.documentElement.classList.remove('light', 'dark');
-          document.documentElement.classList.add(theme);
-          document.documentElement.setAttribute('data-theme', theme);
-          document.body.classList.remove('light', 'dark');
-          document.body.classList.add(theme);
-        } catch (e) {}
-      })();
-    </script>
-    <!-- End theme preloader script -->
 
     <script>
       document.addEventListener('DOMContentLoaded', function() {
