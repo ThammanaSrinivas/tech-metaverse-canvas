@@ -242,7 +242,7 @@ const Hero: React.FC = () => {
       )}
 
       {/* Floating CLI Workflow */}
-      {/* <FloatingCLI /> */}
+      <FloatingCLI />
     </section>
   );
 };
