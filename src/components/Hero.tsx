@@ -104,7 +104,7 @@ const Hero: React.FC = () => {
       <div className={`absolute inset-0 grid-bg opacity-${isMobile ? '10' : '20'} animate-grid-move`}></div>
       
       {/* 3D Scene - disabled on mobile for performance */}
-      {!isMobile && <Scene3D />}
+      {/* !isMobile && <Scene3D /> */}
       
       {/* Gradient overlays for depth */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background/80"></div>
