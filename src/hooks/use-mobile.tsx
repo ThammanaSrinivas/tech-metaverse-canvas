@@ -10,12 +10,8 @@ function useIsMobile() {
     return false
   })
 
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    
-    const onChange = React.useCallback(() => {
+  const onChange = React.useCallback(() => {
+    if (typeof window !== 'undefined') {
       const newIsMobile = window.innerWidth < MOBILE_BREAKPOINT
       setIsMobile(prev => {
         if (prev !== newIsMobile) {
@@ -23,12 +19,16 @@ function useIsMobile() {
         }
         return prev
       })
-    }, [])
-
-    mql.addEventListener("change", onChange)
-    
-    return () => mql.removeEventListener("change", onChange)
+    }
   }, [])
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    mql.addEventListener("change", onChange)
+    return () => mql.removeEventListener("change", onChange)
+  }, [onChange])
 
   return isMobile
 }

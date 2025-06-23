@@ -45,7 +45,9 @@ describe('ThemeToggle', () => {
     mockThemeContext.effectiveTheme = 'dark';
     
     render(<ThemeToggle />);
-    expect(screen.getByText('🌙')).toBeInTheDocument();
+    // Look for the Moon icon (lucide-moon class)
+    const moonIconSvg = screen.getByTestId('theme-icon').querySelector('svg');
+    expect(moonIconSvg).toHaveClass('lucide-moon');
   });
 
   it('displays correct icon for light theme', () => {
@@ -53,7 +55,9 @@ describe('ThemeToggle', () => {
     mockThemeContext.effectiveTheme = 'light';
     
     render(<ThemeToggle />);
-    expect(screen.getByText('☀️')).toBeInTheDocument();
+    // Look for the Sun icon (lucide-sun class)
+    const sunIconSvg = screen.getByTestId('theme-icon').querySelector('svg');
+    expect(sunIconSvg).toHaveClass('lucide-sun');
   });
 
   it('displays correct icon for system theme', () => {
@@ -61,7 +65,9 @@ describe('ThemeToggle', () => {
     mockThemeContext.effectiveTheme = 'dark';
     
     render(<ThemeToggle />);
-    expect(screen.getByText('🔄')).toBeInTheDocument();
+    // Look for the Monitor icon (lucide-monitor class)
+    const monitorIconSvg = screen.getByTestId('theme-icon').querySelector('svg');
+    expect(monitorIconSvg).toHaveClass('lucide-monitor');
   });
 
   it('has correct styling classes', () => {

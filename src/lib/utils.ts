@@ -14,21 +14,44 @@ export const themeUtils = {
   
   saveTheme: (theme: string): void => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('theme', theme);
+      try {
+        localStorage.setItem('theme', theme);
+      } catch (error) {
+        console.warn('Failed to save theme to localStorage:', error);
+      }
     }
   },
   
   loadTheme: (): string | null => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme');
+      try {
+        return localStorage.getItem('theme');
+      } catch (error) {
+        console.warn('Failed to load theme from localStorage:', error);
+        return null;
+      }
     }
     return null;
   },
   
   applyTheme: (theme: 'light' | 'dark'): void => {
     if (typeof document !== 'undefined') {
-      document.documentElement.classList.remove('light', 'dark');
-      document.documentElement.classList.add(theme);
+      const root = document.documentElement;
+      
+      // Remove existing theme classes
+      root.classList.remove('light', 'dark');
+      
+      // Add the new theme class
+      root.classList.add(theme);
+      
+      // Also set a data attribute for additional styling if needed
+      if (root.setAttribute) {
+        root.setAttribute('data-theme', theme);
+      }
+      
+      // Ensure the theme is applied to the body as well
+      document.body.classList.remove('light', 'dark');
+      document.body.classList.add(theme);
     }
   }
 };
