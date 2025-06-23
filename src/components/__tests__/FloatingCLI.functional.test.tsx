@@ -5,12 +5,6 @@ import FloatingCLI from '../FloatingCLI';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 
-// Mock the useIsMobile hook
-let mockUseIsMobile: any;
-vi.mock('@/hooks/use-mobile', () => ({
-  default: (...args: any[]) => mockUseIsMobile(...args)
-}));
-
 // Mock framer-motion with simplified implementation
 vi.mock('framer-motion', () => ({
   motion: {
@@ -50,7 +44,6 @@ describe('FloatingCLI Functional Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
-    mockUseIsMobile = vi.fn(() => false);
   });
 
   afterEach(() => {
@@ -67,33 +60,41 @@ describe('FloatingCLI Functional Tests', () => {
         </BrowserRouter>
       );
 
-      // Check initial state
-      expect(screen.getByText('Step 1: Write Code')).toBeInTheDocument();
-      expect(screen.getByText('1 / 6')).toBeInTheDocument();
+      // Check initial state - use getAllByText to handle multiple elements
+      const step1Elements = screen.getAllByText('Step 1: Write Code');
+      expect(step1Elements.length).toBeGreaterThan(0);
+      const progressElements = screen.getAllByText('1 / 6');
+      expect(progressElements.length).toBeGreaterThan(0);
 
       // Navigate through all steps quickly
       const nextButton = screen.getByTitle('Next Step');
       
       // Step 2
       fireEvent.click(nextButton);
-      expect(screen.getByText('Step 2: Run Unit & Functional Tests')).toBeInTheDocument();
+      const step2Elements = screen.getAllByText('Step 2: Run Unit & Functional Tests');
+      expect(step2Elements.length).toBeGreaterThan(0);
 
       // Step 3
       fireEvent.click(nextButton);
-      expect(screen.getByText('Step 3: 1 FT Failed')).toBeInTheDocument();
+      const step3Elements = screen.getAllByText('Step 3: 1 FT Failed');
+      expect(step3Elements.length).toBeGreaterThan(0);
 
       // Step 4
       fireEvent.click(nextButton);
-      expect(screen.getByText('Step 4: Write Some Other Code')).toBeInTheDocument();
+      const step4Elements = screen.getAllByText('Step 4: Write Some Other Code');
+      expect(step4Elements.length).toBeGreaterThan(0);
 
       // Step 5
       fireEvent.click(nextButton);
-      expect(screen.getByText('Step 5: Now All Tests Pass')).toBeInTheDocument();
+      const step5Elements = screen.getAllByText('Step 5: Now All Tests Pass');
+      expect(step5Elements.length).toBeGreaterThan(0);
 
       // Step 6
       fireEvent.click(nextButton);
-      expect(screen.getByText('Step 6: Deploy & Check Coverage')).toBeInTheDocument();
-      expect(screen.getByText('npm run build && npm run test:coverage')).toBeInTheDocument();
+      const step6Elements = screen.getAllByText('Step 6: Deploy & Check Coverage');
+      expect(step6Elements.length).toBeGreaterThan(0);
+      const commandElements = screen.getAllByText('npm run build && npm run test:coverage');
+      expect(commandElements.length).toBeGreaterThan(0);
     });
 
     it('allows user to navigate backwards through workflow', () => {
@@ -104,15 +105,18 @@ describe('FloatingCLI Functional Tests', () => {
       fireEvent.click(nextButton); // Step 2
       fireEvent.click(nextButton); // Step 3
       
-      expect(screen.getByText('Step 3: 1 FT Failed')).toBeInTheDocument();
+      const step3Elements = screen.getAllByText('Step 3: 1 FT Failed');
+      expect(step3Elements.length).toBeGreaterThan(0);
       
       // Go back to step 1
       const prevButton = screen.getByTitle('Previous Step');
       fireEvent.click(prevButton); // Step 2
       fireEvent.click(prevButton); // Step 1
       
-      expect(screen.getByText('Step 1: Write Code')).toBeInTheDocument();
-      expect(screen.getByText('1 / 6')).toBeInTheDocument();
+      const step1Elements = screen.getAllByText('Step 1: Write Code');
+      expect(step1Elements.length).toBeGreaterThan(0);
+      const progressElements = screen.getAllByText('1 / 6');
+      expect(progressElements.length).toBeGreaterThan(0);
     });
   });
 
@@ -128,12 +132,14 @@ describe('FloatingCLI Functional Tests', () => {
       // Restore
       const restoreButton = screen.getByTitle('Restore Developer Workflow');
       fireEvent.click(restoreButton);
-      expect(screen.getByText('Development Workflow')).toBeInTheDocument();
+      const workflowElements = screen.getAllByText('Development Workflow');
+      expect(workflowElements.length).toBeGreaterThan(0);
       
       // Maximize
       const maximizeButton = screen.getByTitle('Maximize');
       fireEvent.click(maximizeButton);
-      expect(screen.getByText('Development Workflow')).toBeInTheDocument();
+      const workflowElements2 = screen.getAllByText('Development Workflow');
+      expect(workflowElements2.length).toBeGreaterThan(0);
       
       // Close
       const closeButton = screen.getByTitle('Close');
@@ -143,7 +149,8 @@ describe('FloatingCLI Functional Tests', () => {
       // Reopen
       const reopenButton = screen.getByTitle('Reopen Developer Workflow');
       fireEvent.click(reopenButton);
-      expect(screen.getByText('Development Workflow')).toBeInTheDocument();
+      const workflowElements3 = screen.getAllByText('Development Workflow');
+      expect(workflowElements3.length).toBeGreaterThan(0);
     });
 
     it('maintains step state during window operations', () => {
@@ -154,7 +161,8 @@ describe('FloatingCLI Functional Tests', () => {
       fireEvent.click(nextButton);
       fireEvent.click(nextButton);
       
-      expect(screen.getByText('Step 3: 1 FT Failed')).toBeInTheDocument();
+      const step3Elements = screen.getAllByText('Step 3: 1 FT Failed');
+      expect(step3Elements.length).toBeGreaterThan(0);
       
       // Minimize and restore
       const minimizeButton = screen.getByTitle('Minimize');
@@ -164,8 +172,10 @@ describe('FloatingCLI Functional Tests', () => {
       fireEvent.click(restoreButton);
       
       // Should still be on step 3
-      expect(screen.getByText('Step 3: 1 FT Failed')).toBeInTheDocument();
-      expect(screen.getByText('3 / 6')).toBeInTheDocument();
+      const step3Elements2 = screen.getAllByText('Step 3: 1 FT Failed');
+      expect(step3Elements2.length).toBeGreaterThan(0);
+      const progressElements = screen.getAllByText('3 / 6');
+      expect(progressElements.length).toBeGreaterThan(0);
     });
   });
 
@@ -214,7 +224,7 @@ describe('FloatingCLI Functional Tests', () => {
       );
 
       // Look for the main CLI container with the correct class
-      const cliContainer = screen.getByText('Development Workflow').closest('.bg-gray-800\\/90');
+      const cliContainer = screen.getAllByText('Development Workflow')[0].closest('.bg-gray-800\\/90');
       expect(cliContainer).toBeInTheDocument();
     });
 
@@ -227,25 +237,29 @@ describe('FloatingCLI Functional Tests', () => {
         </BrowserRouter>
       );
 
-      const cliContainer = screen.getByText('Step 1: Write Code').closest('div');
+      const step1Elements = screen.getAllByText('Step 1: Write Code');
+      expect(step1Elements.length).toBeGreaterThan(0);
+      const cliContainer = step1Elements[0].closest('div');
       expect(cliContainer).toBeInTheDocument();
     });
   });
 
   describe('Mobile Responsiveness Workflow', () => {
     it('adapts to mobile viewport', () => {
-      mockUseIsMobile.mockReturnValue(true);
       render(<FloatingCLI testMode />);
-      expect(screen.getByText('S1')).toBeInTheDocument();
-      expect(screen.getByText('Dev Workflow')).toBeInTheDocument();
+      // Check that both mobile and desktop versions are available
+      const s1Elements = screen.getAllByText('S1');
+      const devWorkflowElements = screen.getAllByText('Dev Workflow');
+      expect(s1Elements.length).toBeGreaterThan(0);
+      expect(devWorkflowElements.length).toBeGreaterThan(0);
     });
 
     it('handles mobile navigation correctly', () => {
-      mockUseIsMobile.mockReturnValue(true);
       render(<FloatingCLI testMode />);
       const nextButton = screen.getByTitle('Next Step');
       fireEvent.click(nextButton);
-      expect(screen.getByText('S2')).toBeInTheDocument();
+      const s2Elements = screen.getAllByText('S2');
+      expect(s2Elements.length).toBeGreaterThan(0);
     });
   });
 
@@ -261,7 +275,8 @@ describe('FloatingCLI Functional Tests', () => {
       }
       
       // Should end up at the last step
-      expect(screen.getByText('6 / 6')).toBeInTheDocument();
+      const progressElements = screen.getAllByText('6 / 6');
+      expect(progressElements.length).toBeGreaterThan(0);
     });
 
     it('handles disabled button states correctly', () => {
@@ -293,29 +308,35 @@ describe('FloatingCLI Functional Tests', () => {
       );
 
       // Check initial content
-      expect(screen.getByText('Step 1: Write Code')).toBeInTheDocument();
-      expect(screen.getByText('vim src/components/Feature.tsx')).toBeInTheDocument();
+      const step1Elements = screen.getAllByText('Step 1: Write Code');
+      expect(step1Elements.length).toBeGreaterThan(0);
+      const commandElements = screen.getAllByText('vim src/components/Feature.tsx');
+      expect(commandElements.length).toBeGreaterThan(0);
 
       // Navigate to step 2
       const nextButton = screen.getByTitle('Next Step');
       fireEvent.click(nextButton);
       
-      expect(screen.getByText('Step 2: Run Unit & Functional Tests')).toBeInTheDocument();
-      expect(screen.getByText('npm test -- --coverage')).toBeInTheDocument();
+      const step2Elements = screen.getAllByText('Step 2: Run Unit & Functional Tests');
+      expect(step2Elements.length).toBeGreaterThan(0);
+      const testCommandElements = screen.getAllByText('npm test -- --coverage');
+      expect(testCommandElements.length).toBeGreaterThan(0);
     });
 
     it('shows progress bar updates', () => {
       render(<FloatingCLI testMode />);
       
       // Initial progress
-      expect(screen.getByText('1 / 6')).toBeInTheDocument();
+      const initialProgressElements = screen.getAllByText('1 / 6');
+      expect(initialProgressElements.length).toBeGreaterThan(0);
       
       // Navigate to middle step
       const nextButton = screen.getByTitle('Next Step');
       fireEvent.click(nextButton);
       fireEvent.click(nextButton);
       
-      expect(screen.getByText('3 / 6')).toBeInTheDocument();
+      const progressElements = screen.getAllByText('3 / 6');
+      expect(progressElements.length).toBeGreaterThan(0);
     });
   });
 }); 

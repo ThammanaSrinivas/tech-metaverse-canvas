@@ -4,12 +4,6 @@ import { vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import FloatingCLI from '../FloatingCLI';
-import useIsMobile from '@/hooks/use-mobile';
-
-// Mock the useIsMobile hook
-vi.mock('@/hooks/use-mobile', () => ({
-  default: vi.fn()
-}));
 
 // Mock Framer Motion
 vi.mock('framer-motion', () => ({
@@ -50,7 +44,6 @@ describe('FloatingCLI Performance Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
-    vi.mocked(useIsMobile).mockReturnValue(false);
   });
 
   afterEach(() => {

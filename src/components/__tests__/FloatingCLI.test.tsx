@@ -3,7 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import FloatingCLI from '../FloatingCLI';
 import * as ThemeContext from '@/contexts/ThemeContext';
-import useIsMobile from '@/hooks/use-mobile';
 
 // Mock framer-motion with simplified implementation
 vi.mock('framer-motion', () => ({
@@ -32,17 +31,11 @@ vi.mock('lucide-react', () => ({
   RefreshCw: () => <div data-testid="refresh-icon">RefreshCw</div>,
 }));
 
-// Mock useIsMobile hook
-vi.mock('@/hooks/use-mobile', () => ({
-  default: vi.fn()
-}));
-
 describe('FloatingCLI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     vi.spyOn(ThemeContext, 'useTheme').mockReturnValue({ theme: 'dark' });
-    vi.mocked(useIsMobile).mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -62,7 +55,8 @@ describe('FloatingCLI', () => {
   it('displays command line', () => {
     render(<FloatingCLI testMode />);
     expect(screen.getByText('$')).toBeInTheDocument();
-    expect(screen.getByText('vim src/components/Feature.tsx')).toBeInTheDocument();
+    const commandElements = screen.getAllByText('vim src/components/Feature.tsx');
+    expect(commandElements.length).toBeGreaterThan(0);
   });
 
   it('shows progress bar', () => {
@@ -169,14 +163,20 @@ describe('FloatingCLI', () => {
 
   it('displays correct step content', () => {
     render(<FloatingCLI testMode />);
-    // Check first step
-    expect(screen.getByText('vim src/components/Feature.tsx')).toBeInTheDocument();
+    // Check first step - use getAllByText since we now have both mobile and desktop versions
+    const commandElements = screen.getAllByText('vim src/components/Feature.tsx');
+    expect(commandElements.length).toBeGreaterThan(0);
+    
     // Navigate to second step
     const nextButton = screen.getByTitle('Next Step');
     fireEvent.click(nextButton);
-    expect(screen.getByText('npm test -- --coverage')).toBeInTheDocument();
-    // Check for a substring from the output
-    expect(screen.getByText((content) => content.includes('vitest --coverage'))).toBeInTheDocument();
+    
+    const secondCommandElements = screen.getAllByText('npm test -- --coverage');
+    expect(secondCommandElements.length).toBeGreaterThan(0);
+    
+    // Check for a substring from the output in both mobile and desktop
+    const outputElements = screen.getAllByText((content) => content.includes('vitest --coverage'));
+    expect(outputElements.length).toBeGreaterThan(0);
   });
 
   it('shows status indicators', () => {

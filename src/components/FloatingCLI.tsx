@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, forwardRef, useMemo, useCallback } 
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, CheckCircle, XCircle, Play, Code, TestTube, Rocket, BarChart3, Minus, Maximize2, X, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
-import useIsMobile from '@/hooks/use-mobile';
 
 interface CLIStep {
   id: number;
@@ -48,24 +47,6 @@ const FloatingCLI: React.FC<FloatingCLIProps> = ({ testMode = false }) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
   const cliRef = useRef<HTMLDivElement>(null);
-
-  // Use the optimized hook instead of manual state management
-  const isMobile = useIsMobile();
-
-  // Mobile-specific positioning and sizing - memoized for performance
-  const mobileStyles = useMemo(() => {
-    if (isMobile) {
-      if (isMaximized) {
-        return 'top-20 left-2 right-2 bottom-2';
-      }
-      return 'top-24 right-4 w-[calc(100vw-2rem)] h-80';
-    }
-    
-    if (isMaximized) {
-      return 'top-24 left-4 right-4 bottom-4';
-    }
-    return 'top-28 right-8 w-80 h-80 md:w-96 md:h-96 lg:w-[28rem] lg:h-[28rem]';
-  }, [isMobile, isMaximized]);
 
   const steps: CLIStep[] = [
     {
@@ -384,9 +365,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={handleReopen}
-        className={`fixed z-50 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-200 ${
-          isMobile ? 'top-24 right-4' : 'top-32 right-6'
-        }`}
+        className="fixed z-50 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-200 top-24 right-4 md:top-32 md:right-6"
         title="Reopen Developer Workflow"
       >
         <Terminal className="w-5 h-5 md:w-6 md:h-6" />
@@ -402,9 +381,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={handleReopen}
-        className={`fixed z-50 p-3 ${bgColor} ${textGreen} rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ${
-          isMobile ? 'top-24 right-4' : 'top-32 right-6'
-        }`}
+        className={`fixed z-50 p-3 ${bgColor} ${textGreen} rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 top-24 right-4 md:top-32 md:right-6`}
         title="Restore Developer Workflow"
       >
         <Terminal className="w-5 h-5 md:w-6 md:h-6" />
@@ -426,12 +403,8 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
             stiffness: 300,
             damping: 30
           }}
-          className={`fixed z-40 floating-cli-container ${mobileStyles}`}
-          style={{
-            // Prevent layout shifts by reserving space
-            minHeight: isMobile ? '320px' : '320px',
-            minWidth: isMobile ? 'calc(100vw - 2rem)' : '320px'
-          }}
+          className="fixed z-40 floating-cli-container top-24 right-4 w-[calc(100vw-2rem)] h-80 md:top-28 md:right-8 md:w-80 md:h-80 lg:w-96 lg:h-96 xl:w-[28rem] xl:h-[28rem] data-[maximized=true]:top-20 data-[maximized=true]:left-2 data-[maximized=true]:right-2 data-[maximized=true]:bottom-2 md:data-[maximized=true]:top-24 md:data-[maximized=true]:left-4 md:data-[maximized=true]:right-4 md:data-[maximized=true]:bottom-4"
+          data-maximized={isMaximized}
           tabIndex={0}
           aria-label="Draggable Developer Workflow CLI"
         >
@@ -445,19 +418,18 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
               <div className="flex items-center space-x-1 md:space-x-2 min-w-0 flex-1">
                 <Terminal className={`w-3 h-3 md:w-4 md:h-4 ${textGreen} flex-shrink-0`} />
                 <span className={`text-xs md:text-sm font-mono ${textColor} truncate`}>
-                  {isMobile ? 'Dev Workflow' : 'Development Workflow'}
+                  <span className="md:hidden">Dev Workflow</span>
+                  <span className="hidden md:inline">Development Workflow</span>
                 </span>
               </div>
               <div className="flex items-center space-x-1 flex-shrink-0">
-                {!isMobile && (
-                  <button
-                    onClick={() => handleWindowControl('minimize')}
-                    className="w-2.5 h-2.5 md:w-3 md:h-3 bg-yellow-500 rounded-full hover:bg-yellow-400 transition-colors"
-                    title="Minimize"
-                  >
-                    <Minus className="w-1.5 h-1.5 md:w-2 md:h-2 text-gray-800 mx-auto" />
-                  </button>
-                )}
+                <button
+                  onClick={() => handleWindowControl('minimize')}
+                  className="hidden md:block w-2.5 h-2.5 md:w-3 md:h-3 bg-yellow-500 rounded-full hover:bg-yellow-400 transition-colors"
+                  title="Minimize"
+                >
+                  <Minus className="w-1.5 h-1.5 md:w-2 md:h-2 text-gray-800 mx-auto" />
+                </button>
                 <button
                   onClick={() => handleWindowControl('maximize')}
                   className="w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full hover:bg-green-400 transition-colors"
@@ -484,7 +456,8 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
                     {steps[currentStep].icon}
                   </div>
                   <span className={`text-xs md:text-sm font-mono ${textGreen} truncate`}>
-                    {isMobile ? `S${steps[currentStep].id}` : `Step ${steps[currentStep].id}: ${steps[currentStep].title}`}
+                    <span className="md:hidden">S{steps[currentStep].id}</span>
+                    <span className="hidden md:inline">Step {steps[currentStep].id}: {steps[currentStep].title}</span>
                   </span>
                 </div>
                 <div className="flex items-center space-x-1 md:space-x-2 flex-shrink-0">
@@ -530,10 +503,13 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
               <div className="flex items-center space-x-2 flex-shrink-0">
                 <span className={`${textGreen} font-mono text-xs md:text-sm`}>$</span>
                 <span className={`${textColor} font-mono text-xs md:text-sm truncate`}>
-                  {isMobile && steps[currentStep].command.length > 30 
-                    ? steps[currentStep].command.substring(0, 30) + '...'
-                    : steps[currentStep].command
-                  }
+                  <span className="md:hidden">
+                    {steps[currentStep].command.length > 30 
+                      ? steps[currentStep].command.substring(0, 30) + '...'
+                      : steps[currentStep].command
+                    }
+                  </span>
+                  <span className="hidden md:inline">{steps[currentStep].command}</span>
                 </span>
               </div>
 
@@ -543,15 +519,18 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
                 className={`flex-1 ${outputBg} rounded p-2 md:p-3 font-mono text-xs ${textColor} overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 min-h-0`}
                 style={{ 
                   maxHeight: isMaximized 
-                    ? isMobile ? 'calc(100vh - 120px)' : 'calc(100vh - 200px)'
-                    : isMobile ? 'clamp(100px, 35vh, 150px)' : 'clamp(120px, 40vh, 200px)'
+                    ? 'calc(100vh - 120px)'
+                    : 'clamp(100px, 35vh, 150px)'
                 }}
               >
                 <pre className="whitespace-pre-wrap break-words overflow-hidden">
-                  {isMobile && steps[currentStep].output.length > 500
-                    ? steps[currentStep].output.substring(0, 500) + '\n... (truncated for mobile)'
-                    : steps[currentStep].output
-                  }
+                  <span className="md:hidden">
+                    {steps[currentStep].output.length > 500
+                      ? steps[currentStep].output.substring(0, 500) + '\n... (truncated for mobile)'
+                      : steps[currentStep].output
+                    }
+                  </span>
+                  <span className="hidden md:inline">{steps[currentStep].output}</span>
                 </pre>
               </div>
 
