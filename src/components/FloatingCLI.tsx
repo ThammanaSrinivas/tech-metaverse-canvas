@@ -45,6 +45,7 @@ const FloatingCLI: React.FC<FloatingCLIProps> = ({ testMode = false }) => {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
   const cliRef = useRef<HTMLDivElement>(null);
 
@@ -285,9 +286,18 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
     },
   ];
 
+  // Initialize component with proper timing to prevent flash
   useEffect(() => {
-    if (testMode) return;
-    const timer = setTimeout(() => setIsVisible(true), 1000);
+    if (testMode) {
+      setIsInitialized(true);
+      return;
+    }
+    
+    // Set initialized immediately to prevent layout shifts
+    setIsInitialized(true);
+    
+    // Show CLI after a shorter delay to reduce flash
+    const timer = setTimeout(() => setIsVisible(true), 500);
     return () => clearTimeout(timer);
   }, [testMode]);
 
@@ -361,6 +371,11 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
   const progressBg = isDark ? 'bg-gray-700' : 'bg-gray-300';
   const progressFill = isDark ? 'bg-green-400' : 'bg-green-500';
 
+  // Don't render anything until initialized to prevent flash
+  if (!isInitialized) {
+    return null;
+  }
+
   if (isClosed) {
     return (
       <motion.button
@@ -398,13 +413,25 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
   }
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.9 }}
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 20, scale: 0.9 }}
-          className={`fixed z-40 transition-all duration-300 ${mobileStyles}`}
+          exit={{ opacity: 0, y: 20, scale: 0.95 }}
+          transition={{ 
+            duration: 0.3, 
+            ease: "easeOut",
+            type: "spring",
+            stiffness: 300,
+            damping: 30
+          }}
+          className={`fixed z-40 floating-cli-container ${mobileStyles}`}
+          style={{
+            // Prevent layout shifts by reserving space
+            minHeight: isMobile ? '320px' : '320px',
+            minWidth: isMobile ? 'calc(100vw - 2rem)' : '320px'
+          }}
           tabIndex={0}
           aria-label="Draggable Developer Workflow CLI"
         >

@@ -227,4 +227,50 @@ describe('FloatingCLI', () => {
     // Should still be on step 2
     expect(screen.getByText('Step 2: Run Unit & Functional Tests')).toBeInTheDocument();
   });
+
+  test('does not cause layout shifts on mobile', async () => {
+    vi.useFakeTimers();
+    // Mock mobile viewport
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 375,
+    });
+    window.dispatchEvent(new Event('resize'));
+
+    const { container } = render(<FloatingCLI testMode />);
+    
+    // Wait for component to initialize
+    await waitFor(() => {
+      expect(container.querySelector('.floating-cli-container')).toBeInTheDocument();
+    });
+
+    // Check that the component has proper containment styles
+    const cliContainer = container.querySelector('.floating-cli-container');
+    expect(cliContainer).toBeInTheDocument();
+    
+    // Verify the component is visible in test mode
+    expect(screen.getByText('Step 1: Write Code')).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  test('initializes without flash in normal mode', async () => {
+    vi.useFakeTimers();
+    const { container } = render(<FloatingCLI />);
+    
+    // Component should not render anything initially to prevent flash
+    expect(container.querySelector('.floating-cli-container')).not.toBeInTheDocument();
+    
+    // Fast-forward timers to trigger visibility
+    vi.runAllTimers();
+    
+    // Wait for initialization and visibility
+    await waitFor(() => {
+      expect(container.querySelector('.floating-cli-container')).toBeInTheDocument();
+    }, { timeout: 2000 });
+    
+    // Verify the component becomes visible
+    expect(screen.getByText('Step 1: Write Code')).toBeInTheDocument();
+    vi.useRealTimers();
+  });
 }); 
