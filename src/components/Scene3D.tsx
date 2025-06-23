@@ -60,84 +60,6 @@ const NetworkNodes: React.FC = () => {
   );
 };
 
-const InteractiveParticles: React.FC = () => {
-  const ref = useRef<THREE.Points>(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isMobile, setIsMobile] = useState(false);
-  
-  useEffect(() => {
-    const checkMobile = () => {
-      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-        window.innerWidth <= 768;
-      setIsMobile(isMobileDevice);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  
-  const particlesPosition = useMemo(() => {
-    // Reduced particle count: 200 → 50 on mobile, 100 on desktop
-    const particleCount = isMobile ? 50 : 100;
-    const positions = new Float32Array(particleCount * 3);
-    
-    for (let i = 0; i < particleCount; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * (isMobile ? 6 : 8);
-      positions[i * 3 + 1] = (Math.random() - 0.5) * (isMobile ? 6 : 8);
-      positions[i * 3 + 2] = (Math.random() - 0.5) * (isMobile ? 6 : 8);
-    }
-    
-    return positions;
-  }, [isMobile]);
-
-  useEffect(() => {
-    // Only add mouse tracking on desktop
-    if (!isMobile) {
-      const handleMouseMove = (e: MouseEvent) => {
-        setMousePosition({
-          x: (e.clientX / window.innerWidth) * 2 - 1,
-          y: -(e.clientY / window.innerHeight) * 2 + 1,
-        });
-      };
-
-      window.addEventListener('mousemove', handleMouseMove);
-      return () => window.removeEventListener('mousemove', handleMouseMove);
-    }
-  }, [isMobile]);
-
-  useFrame((state) => {
-    if (ref.current) {
-      const speedMultiplier = isMobile ? 0.3 : 1;
-      ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.2 * speedMultiplier) * 0.1;
-      ref.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3 * speedMultiplier) * 0.1;
-      
-      // Interactive movement based on mouse - only on desktop
-      if (!isMobile) {
-        ref.current.position.x = mousePosition.x * 0.5;
-        ref.current.position.y = mousePosition.y * 0.5;
-      }
-    }
-  });
-
-  // Don't render on very low-end devices
-  if (isMobile && window.innerWidth < 480) {
-    return null;
-  }
-
-  return (
-    <Points ref={ref} positions={particlesPosition} stride={3} frustumCulled={false}>
-      <PointMaterial
-        transparent
-        color="#ff0066"
-        size={isMobile ? 0.08 : 0.1}
-        sizeAttenuation={true}
-        depthWrite={false}
-        opacity={isMobile ? 0.7 : 0.9}
-      />
-    </Points>
-  );
-};
-
 const Scene3D: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   
@@ -179,7 +101,6 @@ const Scene3D: React.FC = () => {
         <pointLight position={[-10, -10, -10]} intensity={isMobile ? 0.3 : 0.5} />
         
         <NetworkNodes />
-        <InteractiveParticles />
         
         {/* Disable orbit controls on mobile for better performance */}
         {!isMobile && (

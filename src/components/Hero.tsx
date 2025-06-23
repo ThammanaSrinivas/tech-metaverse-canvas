@@ -211,36 +211,6 @@ const Hero: React.FC = () => {
         </motion.div>
       </motion.div>
 
-      {/* Single scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: isMobile ? 1 : 2 }}
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-      >
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: isMobile ? 3 : 2, repeat: Infinity }}
-          className="flex flex-col items-center gap-2 cursor-pointer"
-          onClick={scrollToProjects}
-        >
-          <Mouse className="w-6 h-6 text-primary/60" />
-          <ChevronDown className="w-4 h-4 text-primary/40" />
-        </motion.div>
-      </motion.div>
-
-      {/* Interactive cursor effect - only on desktop */}
-      {!isMobile && (
-        <motion.div
-          className="fixed w-4 h-4 bg-primary/30 rounded-full pointer-events-none z-50 mix-blend-difference"
-          animate={{
-            x: mousePosition.x * 50,
-            y: mousePosition.y * 50,
-          }}
-          transition={{ type: "spring", stiffness: 500, damping: 28 }}
-        />
-      )}
-
       {/* Floating CLI Workflow */}
       <FloatingCLI />
     </section>

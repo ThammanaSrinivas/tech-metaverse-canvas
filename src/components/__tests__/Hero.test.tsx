@@ -127,33 +127,11 @@ describe('Hero', () => {
     );
   });
 
-  it('scrolls to projects when scroll indicator is clicked', () => {
-    renderWithRouter(<Hero />);
-    
-    // Look for the scroll indicator by its test ID
-    const mouseIcon = screen.getByTestId('mouse');
-    const scrollContainer = mouseIcon.closest('.cursor-pointer');
-    
-    if (scrollContainer) {
-      fireEvent.click(scrollContainer);
-      expect(mockGetElementById).toHaveBeenCalledWith('projects');
-      expect(mockScrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
-    }
-  });
-
   it('has correct section structure', () => {
     renderWithRouter(<Hero />);
     
     const section = document.querySelector('section[id="home"]');
     expect(section).toBeInTheDocument();
-  });
-
-  it('renders scroll indicator', () => {
-    renderWithRouter(<Hero />);
-    
-    // Check for mouse icon (scroll indicator) using test ID
-    const mouseIcon = screen.getByTestId('mouse');
-    expect(mouseIcon).toBeInTheDocument();
   });
 
   it('handles mouse hover on View Projects button', () => {
