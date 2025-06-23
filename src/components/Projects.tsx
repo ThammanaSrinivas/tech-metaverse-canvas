@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Smartphone, Globe, Server, Leaf, Brain, Bitcoin } from 'lucide-react';
 
 const Projects: React.FC = () => {
   const projects = [
@@ -10,25 +11,27 @@ const Projects: React.FC = () => {
       id: 1,
       title: "Random Android Project",
       description: "Android application demonstrating modern Android development practices and UI/UX design.",
-      image: "/placeholder.svg",
+      icon: <Smartphone className="w-16 h-16 text-green-500" />,
       technologies: ["Android", "Java", "Kotlin", "XML"],
       github: "https://github.com/randomAndroidProject/randomAndroidProject",
+      video: "https://github.com/randomAndroidProject/randomAndroidProject/blob/main/HappyMe%20-%20Promo.mp4",
       featured: true
     },
     {
       id: 2,
       title: "Tech Metaverse Canvas",
       description: "Immersive 3D portfolio website with virtual reality support and modern web technologies.",
-      image: "/placeholder.svg",
+      icon: <Globe className="w-16 h-16 text-blue-500" />,
       technologies: ["React", "TypeScript", "Three.js", "Vite"],
       github: "https://github.com/ThammanaSrinivas/tech-metaverse-canvas",
+      demo: "https://srinivas-t.web.app/",
       featured: true
     },
     {
       id: 3,
       title: "Habitica MCP Server",
       description: "Server implementation for Habitica integration with MCP protocol support.",
-      image: "/placeholder.svg",
+      icon: <Server className="w-16 h-16 text-purple-500" />,
       technologies: ["Node.js", "JavaScript", "MCP", "API"],
       github: "https://github.com/ThammanaSrinivas/habitica-mcp-server",
       featured: true
@@ -37,28 +40,28 @@ const Projects: React.FC = () => {
       id: 4,
       title: "Spring MVC Practice CRUD RESTful API",
       description: "Complete CRUD operations with RESTful API design using Spring MVC framework.",
-      image: "/placeholder.svg",
+      icon: <Leaf className="w-16 h-16 text-green-700" />,
       technologies: ["Spring", "Java", "REST", "MySQL"],
       github: "https://github.com/ThammanaSrinivas/SpringMVCPracticeCRUDRestfulAPI",
-      featured: false
+      featured: true
     },
     {
       id: 5,
       title: "RAG_experiment",
       description: "A sophisticated Retrieval-Augmented Generation (RAG) system enabling interactive chat with PDF documents using advanced language modeling and vector embeddings.",
-      image: "/placeholder.svg",
+      icon: <Brain className="w-16 h-16 text-pink-500" />,
       technologies: ["Python", "PyTorch", "Transformers", "ChromaDB", "SentenceTransformers", "PyPDF"],
       github: "https://github.com/ThammanaSrinivas/RAG_experiment",
-      featured: false
+      featured: true
     },
     {
       id: 6,
       title: "SaiKiCoin",
       description: "Blockchain-based project for decentralized digital currency and smart contract experimentation.",
-      image: "/placeholder.svg",
+      icon: <Bitcoin className="w-16 h-16 text-yellow-500" />,
       technologies: ["Python", "JavaScript", "Django", "Blockchain", "Smart Contracts"],
       github: "https://github.com/ThammanaSrinivas/SaiKiCoin",
-      featured: false
+      featured: true
     }
   ];
 
@@ -128,11 +131,9 @@ const Projects: React.FC = () => {
             >
               <Card className="glass-card border-primary/20 overflow-hidden h-full hover:border-primary/50 transition-all duration-300">
                 <div className="relative overflow-hidden">
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
+                  <div className="relative overflow-hidden flex items-center justify-center w-full h-48 bg-muted">
+                    {project.icon}
+                  </div>
                   {project.featured && (
                     <Badge className="absolute top-4 left-4 bg-secondary text-secondary-foreground">
                       Featured
@@ -140,12 +141,18 @@ const Projects: React.FC = () => {
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="absolute bottom-4 left-4 right-4 flex gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="border-white text-white hover:bg-white hover:text-black"
-                        onClick={() => openProjectLink(project.github)}
-                      >
+                      {project.demo ? (
+                        <Button size="sm" variant="outline" className="border-white text-white hover:bg-white hover:text-black" onClick={() => openProjectLink(project.demo)}>
+                          Demo
+                        </Button>
+                      ) : project.video ? (
+                        <Button size="sm" variant="outline" className="border-white text-white hover:bg-white hover:text-black" onClick={() => openProjectLink(project.video)}>
+                          Video
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground px-2 py-1 rounded bg-background/60 border border-muted-foreground/10">Demo Unavailable</span>
+                      )}
+                      <Button size="sm" variant="outline" className="border-white text-white hover:bg-white hover:text-black ml-2" onClick={() => openProjectLink(project.github)}>
                         Code
                       </Button>
                     </div>

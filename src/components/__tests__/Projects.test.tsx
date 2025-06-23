@@ -16,6 +16,12 @@ vi.mock('lucide-react', () => ({
   ExternalLink: () => <div data-testid="external-link-icon">ExternalLink</div>,
   Github: () => <div data-testid="github-icon">Github</div>,
   ArrowRight: () => <div data-testid="arrow-right-icon">ArrowRight</div>,
+  Smartphone: () => <div data-testid="smartphone-icon">Smartphone</div>,
+  Globe: () => <div data-testid="globe-icon">Globe</div>,
+  Server: () => <div data-testid="server-icon">Server</div>,
+  Leaf: () => <div data-testid="leaf-icon">Leaf</div>,
+  Brain: () => <div data-testid="brain-icon">Brain</div>,
+  Bitcoin: () => <div data-testid="bitcoin-icon">Bitcoin</div>,
 }));
 
 // Mock window.open

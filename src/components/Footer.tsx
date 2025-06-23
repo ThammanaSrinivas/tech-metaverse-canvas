@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Github, Linkedin, Mail, MapPin } from 'lucide-react';
+import { Github, Linkedin, Mail } from 'lucide-react';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -20,12 +20,7 @@ const Footer: React.FC = () => {
       name: 'Email', 
       href: 'mailto:sreenivast84@gmail.com', 
       icon: Mail 
-    },
-    { 
-      name: 'Location', 
-      href: null, 
-      icon: MapPin 
-    },
+    }
   ];
 
   return (
