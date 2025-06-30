@@ -24,28 +24,30 @@ const Footer: React.FC = () => {
   ];
 
   return (
-    <footer className="relative py-12 px-6 border-t border-primary/20">
-      <div className="absolute inset-0 grid-bg opacity-10"></div>
+    <footer className="relative py-16 px-6 border-t border-primary/20 bg-background/50 backdrop-blur-sm">
+      <div className="absolute inset-0 grid-bg opacity-5"></div>
       
       <div className="container mx-auto max-w-6xl relative z-10">
-        <div className="grid md:grid-cols-3 gap-8 items-center">
+        {/* Main footer content */}
+        <div className="flex flex-col items-center space-y-8">
+          {/* Tagline */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center md:text-left"
+            className="text-center"
           >
-            <h3 className="text-2xl font-bold gradient-text mb-2">Portfolio</h3>
-            <p className="text-muted-foreground">
+            <p className="text-lg text-muted-foreground font-medium">
               Crafting digital experiences that inspire
             </p>
           </motion.div>
 
+          {/* Social links */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="flex justify-center space-x-6"
+            className="flex justify-center space-x-8"
           >
             {socialLinks.map((link) => {
               const IconComponent = link.icon;
@@ -55,33 +57,37 @@ const Footer: React.FC = () => {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-foreground/60 hover:text-primary transition-colors duration-200 hover:scale-110"
+                  className="group p-3 rounded-full bg-background/50 border border-primary/20 hover:border-primary/40 hover:bg-primary/10 transition-all duration-300 hover:scale-110"
                   aria-label={link.name}
                 >
-                  <IconComponent className="w-6 h-6" />
+                  <IconComponent className="w-5 h-5 text-foreground/70 group-hover:text-primary transition-colors duration-200" />
                 </a>
               ) : (
                 <div
                   key={link.name}
-                  className="text-foreground/40 cursor-default"
+                  className="p-3 rounded-full bg-background/30 border border-primary/10"
                   aria-label={link.name}
                 >
-                  <IconComponent className="w-6 h-6" />
+                  <IconComponent className="w-5 h-5 text-foreground/40" />
                 </div>
               );
             })}
           </motion.div>
 
+          {/* Divider */}
+          <div className="w-full max-w-md h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+
+          {/* Copyright and tech stack */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-center md:text-right"
+            className="text-center space-y-2"
           >
-            <p className="text-muted-foreground">
-              © {currentYear} Portfolio. All rights reserved.
+            <p className="text-muted-foreground font-medium">
+              © 2025 Srinivas. All rights reserved.
             </p>
-            <p className="text-sm text-muted-foreground/60 mt-1">
+            <p className="text-sm text-muted-foreground/60">
               Built with React, Three.js & Love ❤️
             </p>
           </motion.div>

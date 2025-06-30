@@ -107,15 +107,15 @@ const Contact: React.FC = () => {
           transition={{ duration: 0.8 }}
           className="text-center mb-16"
         >
-          <h2 className="text-5xl font-bold mb-6">
-            <span className="gradient-text">Let's Connect</span>
+          <h2 className="text-5xl font-bold mb-6 text-foreground heading-primary">
+            Let's Connect
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Ready to bring your ideas to life? Let's discuss your next project and create something amazing together.
           </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Contact Form */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -123,25 +123,25 @@ const Contact: React.FC = () => {
             transition={{ duration: 0.8 }}
           >
             <Card className="glass-card border-primary/20">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-primary">Send a Message</CardTitle>
+              <CardHeader className="pb-4 sm:pb-6">
+                <CardTitle className="text-xl sm:text-2xl font-bold text-primary heading-secondary">Send a Message</CardTitle>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CardContent className="p-4 sm:p-6">
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Name</Label>
+                      <Label htmlFor="name" className="text-sm sm:text-base">Name</Label>
                       <Input
                         id="name"
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
                         required
-                        className="bg-background/50 border-primary/30 focus:border-primary"
+                        className="bg-background/50 border-primary/30 focus:border-primary text-sm sm:text-base"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
                       <Input
                         id="email"
                         name="email"
@@ -149,40 +149,40 @@ const Contact: React.FC = () => {
                         value={formData.email}
                         onChange={handleInputChange}
                         required
-                        className="bg-background/50 border-primary/30 focus:border-primary"
+                        className="bg-background/50 border-primary/30 focus:border-primary text-sm sm:text-base"
                       />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="subject">Subject</Label>
+                    <Label htmlFor="subject" className="text-sm sm:text-base">Subject</Label>
                     <Input
                       id="subject"
                       name="subject"
                       value={formData.subject}
                       onChange={handleInputChange}
                       required
-                      className="bg-background/50 border-primary/30 focus:border-primary"
+                      className="bg-background/50 border-primary/30 focus:border-primary text-sm sm:text-base"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="message">Message</Label>
+                    <Label htmlFor="message" className="text-sm sm:text-base">Message</Label>
                     <Textarea
                       id="message"
                       name="message"
                       value={formData.message}
                       onChange={handleInputChange}
                       required
-                      rows={6}
-                      className="bg-background/50 border-primary/30 focus:border-primary resize-none"
+                      rows={4}
+                      className="bg-background/50 border-primary/30 focus:border-primary resize-none text-sm sm:text-base"
                     />
                   </div>
                   
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-primary hover:bg-primary/80 text-primary-foreground neon-glow py-3 text-lg font-semibold"
+                    className="w-full bg-primary hover:bg-primary/80 text-primary-foreground neon-glow py-3 text-base sm:text-lg font-semibold"
                   >
                     {isSubmitting ? 'Sending...' : 'Send Message'}
                   </Button>
@@ -196,18 +196,18 @@ const Contact: React.FC = () => {
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
-            className="space-y-8"
+            className="space-y-6 sm:space-y-8"
           >
             <div>
-              <h3 className="text-3xl font-bold mb-6 text-foreground">Get in Touch</h3>
-              <p className="text-muted-foreground leading-relaxed mb-8">
+              <h3 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-foreground heading-secondary">Get in Touch</h3>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6 sm:mb-8">
                 I'm always excited to work on new projects and collaborate with talented individuals. 
                 Whether you have a specific project in mind or just want to chat about technology and design, 
                 I'd love to hear from you.
               </p>
             </div>
 
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4">
               {contactInfo.map((info, index) => {
                 const IconComponent = info.icon;
                 return (
@@ -218,24 +218,24 @@ const Contact: React.FC = () => {
                     transition={{ duration: 0.5, delay: index * 0.1 }}
                   >
                     <Card className="glass-card border-primary/20 hover:border-primary/50 transition-all duration-300">
-                      <CardContent className="p-6">
-                        <div className="flex items-center space-x-4">
-                          <div className="text-2xl text-primary">
-                            <IconComponent className="w-6 h-6" />
+                      <CardContent className="p-4 sm:p-6">
+                        <div className="flex items-center space-x-3 sm:space-x-4">
+                          <div className="text-primary">
+                            <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
                           </div>
-                          <div>
-                            <h4 className="font-semibold text-foreground">{info.title}</h4>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-semibold text-foreground text-sm sm:text-base">{info.title}</h4>
                             {info.link ? (
                               <a
                                 href={info.link}
-                                className="text-primary hover:text-primary/80 transition-colors"
+                                className="text-primary hover:text-primary/80 transition-colors text-sm sm:text-base break-all"
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
                                 {info.value}
                               </a>
                             ) : (
-                              <p className="text-muted-foreground">{info.value}</p>
+                              <p className="text-muted-foreground text-sm sm:text-base">{info.value}</p>
                             )}
                           </div>
                         </div>
@@ -246,9 +246,9 @@ const Contact: React.FC = () => {
               })}
             </div>
 
-            <div className="pt-8">
-              <h4 className="text-xl font-bold mb-4 text-foreground">Resume</h4>
-              <ResumeButton size="md" />
+            <div className="pt-6 sm:pt-8">
+              <h4 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-foreground heading-secondary">Resume</h4>
+              <ResumeButton size="lg" />
             </div>
           </motion.div>
         </div>

@@ -9,7 +9,23 @@ import {
   Network,
   Layers,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  FileCode,
+  Coffee,
+  Circle,
+  FileText,
+  Type,
+  Globe,
+  GitBranch,
+  Container,
+  Anchor,
+  MessageSquare,
+  Globe2,
+  Bot,
+  CircleDot,
+  Building2,
+  Monitor,
+  Plug
 } from 'lucide-react';
 
 const TechnicalSkills: React.FC = () => {
@@ -19,59 +35,54 @@ const TechnicalSkills: React.FC = () => {
     {
       name: 'Programming Languages',
       icon: Code2,
-      color: 'from-blue-500 to-cyan-500',
       skills: [
-        { name: 'Python', icon: '🐍', level: 'Advanced' },
-        { name: 'Java', icon: '☕', level: 'Advanced' },
-        { name: 'C/C++', icon: '🔵', level: 'Intermediate' },
-        { name: 'JavaScript', icon: '🟡', level: 'Advanced' },
-        { name: 'TypeScript', icon: '🔷', level: 'Advanced' },
-        { name: 'HTML/CSS', icon: '🌐', level: 'Advanced' },
-        { name: 'SQL', icon: '🗄️', level: 'Advanced' },
+        { name: 'Python', icon: FileCode, level: 'Advanced' },
+        { name: 'Java', icon: Coffee, level: 'Advanced' },
+        { name: 'C/C++', icon: Circle, level: 'Intermediate' },
+        { name: 'JavaScript', icon: FileText, level: 'Advanced' },
+        { name: 'TypeScript', icon: Type, level: 'Advanced' },
+        { name: 'HTML/CSS', icon: Globe, level: 'Advanced' },
+        { name: 'SQL', icon: Database, level: 'Advanced' },
       ]
     },
     {
       name: 'Frameworks & Libraries',
       icon: Layers,
-      color: 'from-green-500 to-emerald-500',
       skills: [
-        { name: 'Spring Boot', icon: '🍃', level: 'Advanced' },
-        { name: 'Spring MVC', icon: '🌱', level: 'Advanced' },
-        { name: 'Socket.IO', icon: '🔌', level: 'Intermediate' },
+        { name: 'Spring Boot', icon: Layers, level: 'Advanced' },
+        { name: 'Spring MVC', icon: Layers, level: 'Advanced' },
+        { name: 'Socket.IO', icon: Plug, level: 'Intermediate' },
       ]
     },
     {
       name: 'Tools & Platforms',
       icon: Cpu,
-      color: 'from-orange-500 to-red-500',
       skills: [
-        { name: 'Git', icon: '📝', level: 'Advanced' },
-        { name: 'Docker', icon: '🐳', level: 'Advanced' },
-        { name: 'Kubernetes', icon: '⚓', level: 'Intermediate' },
-        { name: 'Kafka', icon: '📨', level: 'Intermediate' },
-        { name: 'REST APIs', icon: '🌐', level: 'Advanced' },
-        { name: 'RAG', icon: '🤖', level: 'Intermediate' },
+        { name: 'Git', icon: GitBranch, level: 'Advanced' },
+        { name: 'Docker', icon: Container, level: 'Advanced' },
+        { name: 'Kubernetes', icon: Anchor, level: 'Intermediate' },
+        { name: 'Kafka', icon: MessageSquare, level: 'Intermediate' },
+        { name: 'REST APIs', icon: Globe2, level: 'Advanced' },
+        { name: 'RAG', icon: Bot, level: 'Intermediate' },
       ]
     },
     {
       name: 'Databases',
       icon: Database,
-      color: 'from-purple-500 to-pink-500',
       skills: [
-        { name: 'MySQL', icon: '🐬', level: 'Advanced' },
-        { name: 'PostgreSQL', icon: '🐘', level: 'Advanced' },
-        { name: 'Redis', icon: '🔴', level: 'Intermediate' },
+        { name: 'MySQL', icon: Database, level: 'Advanced' },
+        { name: 'PostgreSQL', icon: Database, level: 'Advanced' },
+        { name: 'Redis', icon: CircleDot, level: 'Intermediate' },
       ]
     },
     {
       name: 'Concepts & Expertise',
       icon: Network,
-      color: 'from-indigo-500 to-blue-500',
       skills: [
-        { name: 'System Design', icon: '🏗️', level: 'Advanced' },
-        { name: 'Distributed Systems', icon: '🌐', level: 'Advanced' },
-        { name: 'Full Stack Development', icon: '💻', level: 'Advanced' },
-        { name: 'WebSockets', icon: '🔌', level: 'Intermediate' },
+        { name: 'System Design', icon: Building2, level: 'Advanced' },
+        { name: 'Distributed Systems', icon: Network, level: 'Advanced' },
+        { name: 'Full Stack Development', icon: Monitor, level: 'Advanced' },
+        { name: 'WebSockets', icon: Plug, level: 'Intermediate' },
       ]
     }
   ], []);
@@ -112,10 +123,10 @@ const TechnicalSkills: React.FC = () => {
 
   const getLevelColor = useCallback((level: string) => {
     switch (level) {
-      case 'Advanced': return 'text-green-500';
-      case 'Intermediate': return 'text-yellow-500';
-      case 'Beginner': return 'text-blue-500';
-      default: return 'text-gray-500';
+      case 'Advanced': return 'text-primary';
+      case 'Intermediate': return 'text-primary/80';
+      case 'Beginner': return 'text-primary/60';
+      default: return 'text-muted-foreground';
     }
   }, []);
 
@@ -140,8 +151,8 @@ const TechnicalSkills: React.FC = () => {
           transition={{ duration: 0.8 }}
           className="text-center mb-16"
         >
-          <h2 className="text-5xl font-bold mb-6">
-            <span className="gradient-text">Technical Skills</span>
+          <h2 className="text-5xl font-bold mb-6 text-foreground heading-primary">
+            Technical Skills
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             A comprehensive overview of my technical expertise across various domains and technologies.
@@ -167,7 +178,7 @@ const TechnicalSkills: React.FC = () => {
                 <Card className="glass-card border-primary/20 overflow-hidden">
                   <button
                     onClick={() => toggleCategory(category.name)}
-                    className={`w-full bg-gradient-to-r ${category.color} p-4 hover:opacity-90 transition-opacity duration-200`}
+                    className="w-full bg-gradient-to-r from-primary to-primary/80 p-4 hover:opacity-90 transition-opacity duration-200"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -179,7 +190,7 @@ const TechnicalSkills: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <Badge 
                           variant="secondary" 
-                          className="bg-white/20 text-white border-white/30"
+                          className="bg-white/20 text-white border border-white/30"
                         >
                           {category.skills.length} skills
                         </Badge>
@@ -201,31 +212,34 @@ const TechnicalSkills: React.FC = () => {
                         exit="collapsed"
                         className="overflow-hidden"
                       >
-                        <div className="p-6">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {category.skills.map((skill, skillIndex) => (
-                              <motion.div
-                                key={skill.name}
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.3, delay: skillIndex * 0.05 }}
-                                whileHover={{ scale: 1.02, y: -2 }}
-                                className="group"
-                              >
-                                <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-primary/10 hover:border-primary/30 transition-all duration-300">
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-2xl">{skill.icon}</span>
-                                    <span className="font-medium text-foreground">{skill.name}</span>
+                        <div className="p-4 sm:p-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                            {category.skills.map((skill, skillIndex) => {
+                              const SkillIcon = skill.icon;
+                              return (
+                                <motion.div
+                                  key={skill.name}
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ duration: 0.3, delay: skillIndex * 0.05 }}
+                                  whileHover={{ scale: 1.02, y: -2 }}
+                                  className="group"
+                                >
+                                  <div className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-background/50 border border-primary/10 hover:border-primary/30 transition-all duration-300">
+                                    <div className="flex items-center gap-2 sm:gap-3">
+                                      <SkillIcon className="w-4 h-4 sm:w-6 sm:h-6 text-primary" />
+                                      <span className="font-medium text-foreground text-sm sm:text-base">{skill.name}</span>
+                                    </div>
+                                    <Badge 
+                                      variant="secondary" 
+                                      className={`${getLevelColor(skill.level)} bg-background/80 border border-current/20 text-xs sm:text-sm`}
+                                    >
+                                      {skill.level}
+                                    </Badge>
                                   </div>
-                                  <Badge 
-                                    variant="secondary" 
-                                    className={`${getLevelColor(skill.level)} bg-background/80 border border-current/20`}
-                                  >
-                                    {skill.level}
-                                  </Badge>
-                                </div>
-                              </motion.div>
-                            ))}
+                                </motion.div>
+                              );
+                            })}
                           </div>
                         </div>
                       </motion.div>

@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import Scene3D from './Scene3D';
+import { HeroScene } from './HeroScene';
 import ParticleEffect from './ParticleEffect';
 import FloatingCLI from './FloatingCLI';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, Mouse, ArrowRight } from 'lucide-react';
 import { animationUtils } from '@/lib/utils';
 import ResumeButton from './ui/ResumeButton';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const Hero: React.FC = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -80,58 +81,28 @@ const Hero: React.FC = () => {
     },
   };
 
-  const floatingVariants = {
-    animate: {
-      y: isMobile ? [-5, 5, -5] : [-10, 10, -10],
-      transition: {
-        duration: isMobile ? 4 : 3,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }
-    }
-  };
-
   return (
     <section 
       ref={containerRef}
       id="home" 
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-background via-background/95 to-background/90 pt-20 md:pt-24"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-background via-background/95 to-background/90 pt-20 sm:pt-24 md:pt-20 lg:pt-24"
     >
       {/* Particle Effect */}
       <ParticleEffect />
       
       {/* Animated background grid - reduced opacity on mobile */}
-      <div className={`absolute inset-0 grid-bg opacity-${isMobile ? '10' : '20'} animate-grid-move`}></div>
+      <div className={`absolute inset-0 grid-bg opacity-${isMobile ? '5' : '20'} animate-grid-move`}></div>
       
-      {/* 3D Scene - disabled on mobile for performance */}
-      {!isMobile && <Scene3D />}
+      {/* 3D Stars Scene - disabled on mobile for performance */}
+      {!isMobile && (
+        <div className="absolute inset-0">
+          <HeroScene />
+        </div>
+      )}
       
       {/* Gradient overlays for depth */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background/80"></div>
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/20 to-transparent"></div>
-      
-      {/* Floating geometric elements - reduced on mobile */}
-      {!isMobile && (
-        <>
-          <motion.div
-            variants={floatingVariants}
-            animate="animate"
-            className="absolute top-20 left-20 w-4 h-4 bg-primary/30 rounded-full blur-sm"
-          />
-          <motion.div
-            variants={floatingVariants}
-            animate="animate"
-            transition={{ delay: 1 }}
-            className="absolute top-40 right-32 w-6 h-6 bg-secondary/40 rounded-full blur-sm"
-          />
-          <motion.div
-            variants={floatingVariants}
-            animate="animate"
-            transition={{ delay: 2 }}
-            className="absolute bottom-40 left-32 w-3 h-3 bg-neon-green/50 rounded-full blur-sm"
-          />
-        </>
-      )}
       
       {/* Content */}
       <motion.div
@@ -139,19 +110,15 @@ const Hero: React.FC = () => {
         initial="hidden"
         animate="visible"
         style={{ y: y1, opacity }}
-        className="relative z-10 text-center px-6 max-w-5xl mx-auto"
+        className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full"
       >
         <motion.div
           variants={textVariants}
-          className="mb-6"
+          className="mb-6 sm:mb-8 lg:mb-12"
         >
-          <h1 className={`${isMobile ? 'text-4xl md:text-6xl' : 'text-6xl md:text-8xl lg:text-9xl'} font-bold mb-4 tracking-tight`}>
-            <span className="gradient-text neon-text bg-gradient-to-r from-primary via-secondary to-neon-green bg-clip-text text-transparent">
-              Digital
-            </span>
-            <br />
-            <span className="gradient-text neon-text bg-gradient-to-r from-primary via-secondary to-neon-green bg-clip-text text-transparent">
-              Architect
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 sm:mb-4 lg:mb-6 tracking-tight leading-tight heading-primary">
+            <span className="text-foreground">
+              Digital Architect
             </span>
           </h1>
         </motion.div>
@@ -159,54 +126,61 @@ const Hero: React.FC = () => {
         <motion.p
           variants={textVariants}
           style={{ y: y2 }}
-          className={`${isMobile ? 'text-lg md:text-xl' : 'text-xl md:text-2xl lg:text-3xl'} text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed font-light`}
+          className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl text-muted-foreground mb-8 sm:mb-10 lg:mb-16 max-w-5xl mx-auto leading-relaxed font-light px-2 sm:px-4"
         >
           Crafting immersive digital experiences through cutting-edge technology and innovative design
         </motion.p>
 
         <motion.div
           variants={textVariants}
-          className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12"
+          className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-10 sm:mb-12 lg:mb-16 px-4"
         >
           <Button
             size="lg"
             onClick={scrollToProjects}
             onMouseEnter={() => !isMobile && setIsHovered(true)}
             onMouseLeave={() => !isMobile && setIsHovered(false)}
-            className="group bg-primary hover:bg-primary/80 text-primary-foreground neon-glow px-8 py-4 text-lg font-semibold transition-all duration-300 transform hover:scale-105"
+            className="group bg-primary hover:bg-primary/80 text-primary-foreground neon-glow px-8 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold transition-all duration-300 transform hover:scale-105 w-full sm:w-auto min-h-[56px] sm:min-h-[60px]"
           >
-            <span className="flex items-center gap-2">
-            View Projects
-              <ArrowRight className={`w-5 h-5 transition-transform duration-300 ${isHovered && !isMobile ? 'translate-x-1' : ''}`} />
+            <span className="flex items-center gap-2 sm:gap-3">
+              View Projects
+              <ArrowRight className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 ${isHovered && !isMobile ? 'translate-x-1' : ''}`} />
             </span>
           </Button>
-          <ResumeButton />
+          <div className="w-full sm:w-auto">
+            <ResumeButton />
+          </div>
         </motion.div>
 
         <motion.div
           variants={textVariants}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto"
+          className="flex flex-row items-center justify-center gap-4 sm:gap-6 lg:gap-8 max-w-4xl mx-auto px-4 mt-8 sm:mt-12"
         >
           <motion.div 
-            className="text-center p-6 rounded-2xl bg-background/50 backdrop-blur-sm border border-primary/20 hover:border-primary/40 transition-all duration-300"
-            whileHover={!isMobile ? { scale: 1.05, y: -5 } : undefined}
+            className="flex flex-col items-center text-center"
+            whileHover={!isMobile ? { scale: 1.02 } : undefined}
+            transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            <div className="text-4xl font-bold text-primary neon-text mb-2">3+</div>
-            <div className="text-sm text-muted-foreground font-medium">Years Experience</div>
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-none mb-1">3+</div>
+            <div className="text-xs sm:text-sm text-muted-foreground opacity-70">Years Experience</div>
           </motion.div>
+          
           <motion.div 
-            className="text-center p-6 rounded-2xl bg-background/50 backdrop-blur-sm border border-secondary/20 hover:border-secondary/40 transition-all duration-300"
-            whileHover={!isMobile ? { scale: 1.05, y: -5 } : undefined}
+            className="flex flex-col items-center text-center"
+            whileHover={!isMobile ? { scale: 1.02 } : undefined}
+            transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            <div className="text-4xl font-bold text-secondary neon-text mb-2">System</div>
-            <div className="text-sm text-muted-foreground font-medium">Architecture</div>
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground leading-none mb-1">System</div>
+            <div className="text-xs sm:text-sm text-muted-foreground opacity-70">Architecture</div>
           </motion.div>
+          
           <motion.div 
-            className="text-center p-6 rounded-2xl bg-background/50 backdrop-blur-sm border border-neon-green/20 hover:border-neon-green/40 transition-all duration-300"
-            whileHover={!isMobile ? { scale: 1.05, y: -5 } : undefined}
+            className="flex flex-col items-center text-center"
+            whileHover={!isMobile ? { scale: 1.02 } : undefined}
+            transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            <div className="text-4xl font-bold text-neon-green neon-text mb-2">Full Stack</div>
-            <div className="text-sm text-muted-foreground font-medium">Development</div>
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground leading-none mb-1">Full Stack</div>
+            <div className="text-xs sm:text-sm text-muted-foreground opacity-70">Development</div>
           </motion.div>
         </motion.div>
       </motion.div>
