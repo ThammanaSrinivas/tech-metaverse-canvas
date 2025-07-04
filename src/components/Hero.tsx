@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { HeroScene } from './HeroScene';
 import ParticleEffect from './ParticleEffect';
@@ -8,7 +8,6 @@ import { ChevronDown, Mouse, ArrowRight } from 'lucide-react';
 import { animationUtils } from '@/lib/utils';
 import ResumeButton from './ui/ResumeButton';
 import { useTheme } from '@/contexts/ThemeContext';
-import { performanceUtils } from '@/lib/utils';
 
 const AnimatedText: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -76,16 +75,9 @@ const Hero: React.FC = () => {
   const { scrollYProgress } = useScroll();
   const { theme } = useTheme();
   
-  // Get device capabilities for performance optimization
-  const { capabilities, recommendations } = useMemo(() => {
-    const cap = performanceUtils.getDeviceCapabilities();
-    const rec = performanceUtils.getPerformanceRecommendations();
-    return { capabilities: cap, recommendations: rec };
-  }, []);
-  
-  // Parallax effects - adaptive based on device capabilities
-  const y1 = useTransform(scrollYProgress, [0, 1], [0, capabilities.isMobile ? -30 : capabilities.isLowEnd ? -50 : -100]);
-  const y2 = useTransform(scrollYProgress, [0, 1], [0, capabilities.isMobile ? -60 : capabilities.isLowEnd ? -100 : -200]);
+  // Parallax effects - reduced on mobile
+  const y1 = useTransform(scrollYProgress, [0, 1], [0, isMobile ? -50 : -100]);
+  const y2 = useTransform(scrollYProgress, [0, 1], [0, isMobile ? -100 : -200]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   useEffect(() => {
@@ -154,18 +146,16 @@ const Hero: React.FC = () => {
       id="home" 
       className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-background via-background/95 to-background/90 pt-20 sm:pt-24 md:pt-20 lg:pt-24"
     >
-      {/* Particle Effect - only render if performance allows */}
-      {!recommendations.reduceParticles && <ParticleEffect />}
+      {/* Particle Effect */}
+      <ParticleEffect />
       
-      {/* Animated background grid - adaptive opacity based on device */}
-      <div className={`absolute inset-0 grid-bg opacity-${capabilities.isMobile ? '5' : capabilities.isLowEnd ? '10' : '20'} ${!recommendations.disableComplexAnimations ? 'animate-grid-move' : ''}`}></div>
+      {/* Animated background grid - reduced opacity on mobile */}
+      <div className={`absolute inset-0 grid-bg opacity-${isMobile ? '5' : '20'} animate-grid-move`}></div>
       
-      {/* 3D Stars Scene - conditional rendering based on performance */}
-      {!recommendations.disable3D && (
-        <div className="absolute inset-0">
-          <HeroScene />
-        </div>
-      )}
+      {/* 3D Stars Scene - optimized for mobile performance */}
+      <div className="absolute inset-0">
+        <HeroScene />
+      </div>
       
       
       {/* Gradient overlays for depth */}

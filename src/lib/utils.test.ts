@@ -59,11 +59,9 @@ describe('themeUtils', () => {
   });
 
   describe('applyTheme', () => {
-    it('should apply theme classes to document element', async () => {
+    it('should apply theme classes to document element', () => {
       const mockRemove = vi.fn();
       const mockAdd = vi.fn();
-      const mockBodyRemove = vi.fn();
-      const mockBodyAdd = vi.fn();
       
       Object.defineProperty(document, 'documentElement', {
         value: {
@@ -74,26 +72,11 @@ describe('themeUtils', () => {
         },
         writable: true,
       });
-      
-      Object.defineProperty(document, 'body', {
-        value: {
-          classList: {
-            remove: mockBodyRemove,
-            add: mockBodyAdd,
-          },
-        },
-        writable: true,
-      });
 
       themeUtils.applyTheme('dark');
       
-      // Wait for requestAnimationFrame to execute
-      await new Promise(resolve => requestAnimationFrame(resolve));
-      
       expect(mockRemove).toHaveBeenCalledWith('light', 'dark');
       expect(mockAdd).toHaveBeenCalledWith('dark');
-      expect(mockBodyRemove).toHaveBeenCalledWith('light', 'dark');
-      expect(mockBodyAdd).toHaveBeenCalledWith('dark');
     });
   });
 });

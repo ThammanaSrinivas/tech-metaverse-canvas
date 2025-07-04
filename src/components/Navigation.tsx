@@ -42,10 +42,10 @@ const Navigation: React.FC = () => {
           : 'bg-background/20 backdrop-blur-sm'
       }`}
     >
-      <div className="container mx-auto px-4 xs:px-6 py-3 xs:py-4">
+      <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Center-aligned navigation items */}
-          <div className="hidden md:flex items-center justify-center flex-1 space-x-4 lg:space-x-8">
+          <div className="hidden md:flex items-center justify-center flex-1 space-x-8">
             {navItems.map((item, index) => (
               <motion.button
                 key={item.name}
@@ -56,7 +56,7 @@ const Navigation: React.FC = () => {
                 whileHover={{ 
                   scale: 1.05
                 }}
-                className="text-foreground/90 hover:text-primary transition-all duration-300 font-medium text-xs sm:text-sm lg:text-base px-2 lg:px-3 py-2 rounded-lg hover:bg-primary/20 hover:shadow-sm border border-transparent hover:border-primary/30 theme-transition"
+                className="text-foreground/90 hover:text-primary transition-all duration-300 font-medium text-sm lg:text-base px-3 py-2 rounded-lg hover:bg-primary/20 hover:shadow-sm border border-transparent hover:border-primary/30"
               >
                 {item.name}
               </motion.button>
