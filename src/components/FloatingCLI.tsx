@@ -313,7 +313,7 @@ Snapshots   0 total
 Time        3.2s
 
 ----------|---------|----------|---------|---------|-------------------
-File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s  
 ----------|---------|----------|---------|---------|-------------------
 All files |   94.2% |    95.0% |   93.0% |   94.0% |                  
 ----------|---------|----------|---------|---------|-------------------
@@ -433,7 +433,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={handleReopen}
-        className="fixed z-50 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bottom-8 right-4 md:bottom-12 md:right-6"
+        className="fixed z-50 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bottom-8 right-4 md:bottom-12 md:right-6 cli-btn"
         title="Reopen Developer Workflow"
         aria-label="Reopen developer workflow terminal"
       >
@@ -450,7 +450,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={handleReopen}
-        className={`fixed z-50 p-3 ${bgColor} ${textGreen} rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 bottom-8 right-4 md:bottom-12 md:right-6`}
+        className={`fixed z-50 p-3 ${bgColor} ${textGreen} rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 bottom-8 right-4 md:bottom-12 md:right-6 cli-btn`}
         title="Restore Developer Workflow"
         aria-label="Restore developer workflow terminal"
       >
@@ -502,24 +502,24 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
               <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
                   <button
                     onClick={() => handleWindowControl('minimize')}
-                  className="hidden sm:flex w-3 h-3 sm:w-3.5 sm:h-3.5 bg-yellow-500 rounded-full hover:bg-yellow-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+                    className="cli-btn flex w-2.5 h-2.5 lg:w-3 xl:w-3.5 bg-yellow-500 rounded-full hover:bg-yellow-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
                     title="Minimize"
                   >
-                    <Minus className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-yellow-900 group-hover:text-yellow-800" />
+                    <Minus className="w-1 h-1 lg:w-1.5 xl:w-2 text-yellow-900 group-hover:text-yellow-800" />
                   </button>
                 <button
                   onClick={() => handleWindowControl('maximize')}
-                  className="flex w-3 h-3 sm:w-3.5 sm:h-3.5 bg-green-500 rounded-full hover:bg-green-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-500/50"
+                  className="cli-btn flex w-2.5 h-2.5 lg:w-3 lg:h-3 bg-green-500 rounded-full hover:bg-green-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-500/50"
                   title={isMaximized ? "Restore" : "Maximize"}
                 >
-                  <Maximize2 className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-green-900 group-hover:text-green-800" />
+                  <Maximize2 className="w-1 h-1 lg:w-1.5 xl:w-2 text-green-900 group-hover:text-green-800" />
                 </button>
                 <button
                   onClick={() => handleWindowControl('close')}
-                  className="flex w-3 h-3 sm:w-3.5 sm:h-3.5 bg-red-500 rounded-full hover:bg-red-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                  className="cli-btn flex w-2.5 h-2.5 lg:w-3 lg:h-3 bg-red-500 rounded-full hover:bg-red-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   title="Close"
                 >
-                  <X className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-red-900 group-hover:text-red-800" />
+                  <X className="w-1 h-1 lg:w-1.5 xl:w-2 text-red-900 group-hover:text-red-800" />
                 </button>
               </div>
             </div>
@@ -543,7 +543,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
                 <div className="flex items-center space-x-1 md:space-x-2 flex-shrink-0">
                   <button
                     onClick={handleAutoPlayToggle}
-                    className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500/50 ${
+                    className={`cli-btn p-1.5 lg:p-2 xl:p-2.5 rounded-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500/50 ${
                       isAutoPlaying 
                         ? `${isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-500/20 text-green-600'}`
                         : `${isDark ? 'bg-gray-700/50 text-gray-400 hover:text-green-400' : 'bg-gray-200/50 text-gray-600 hover:text-green-600'}`
@@ -555,7 +555,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
                   <button
                     onClick={() => handleStepNavigation('prev')}
                     disabled={currentStep === 0}
-                    className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 ${
+                    className={`cli-btn p-1.5 lg:p-2 xl:p-2.5 rounded-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 ${
                       isDark ? 'bg-gray-700/50 text-gray-400 hover:text-blue-400' : 'bg-gray-200/50 text-gray-600 hover:text-blue-600'
                     }`}
                     title="Previous Step"
@@ -565,7 +565,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
                   <button
                     onClick={() => handleStepNavigation('next')}
                     disabled={currentStep === steps.length - 1}
-                    className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 ${
+                    className={`cli-btn p-1.5 lg:p-2 xl:p-2.5 rounded-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 ${
                       isDark ? 'bg-gray-700/50 text-gray-400 hover:text-blue-400' : 'bg-gray-200/50 text-gray-600 hover:text-blue-600'
                     }`}
                     title="Next Step"

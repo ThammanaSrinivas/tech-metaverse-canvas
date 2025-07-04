@@ -647,6 +647,11 @@
       0 1px 3px rgba(0,0,0,.3),
       0 3px 5px rgba(0,0,0,.2);
   }
+
+  .cli-btn {
+    min-width: unset !important;
+    min-height: unset !important;
+  }
 }
 
 /* Very low-end device optimizations */

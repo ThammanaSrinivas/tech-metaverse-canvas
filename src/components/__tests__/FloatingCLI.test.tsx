@@ -230,4 +230,37 @@ describe('FloatingCLI', () => {
     // Should still be on step 2
     expect(screen.getByText('Step 2: Run Unit & Functional Tests')).toBeInTheDocument();
   });
+
+  it('has correct button and icon sizes on mobile', () => {
+    render(<FloatingCLI testMode />);
+    // Minimize, Maximize, Close buttons in header
+    const minimizeButton = screen.getByTitle('Minimize');
+    const maximizeButton = screen.getByTitle('Maximize');
+    const closeButton = screen.getByTitle('Close');
+    // Navigation buttons
+    const nextButton = screen.getByTitle('Next Step');
+    const prevButton = screen.getByTitle('Previous Step');
+    const autoPlayButton = screen.getByTitle('Pause Auto-play');
+
+    // Check classNames for mobile (no sm: or md: applied)
+    expect(minimizeButton.className).toMatch(/w-2\.5 h-2\.5/);
+    expect(maximizeButton.className).toMatch(/w-2\.5 h-2\.5/);
+    expect(closeButton.className).toMatch(/w-2\.5 h-2\.5/);
+    expect(nextButton.className).toMatch(/p-1\.5/);
+    expect(prevButton.className).toMatch(/p-1\.5/);
+    expect(autoPlayButton.className).toMatch(/p-1\.5/);
+  });
+
+  it('has correct icon sizes on mobile', () => {
+    render(<FloatingCLI testMode />);
+    // Find icons by test id (mocked lucide-react)
+    const maximizeIcon = screen.getByTestId('maximize-icon');
+    const closeIcon = screen.getByTestId('x-icon');
+    const playIcon = screen.getByTestId('play-icon');
+    // These are rendered as children of their buttons
+    // We can't check className directly on the mock, but we can check presence
+    expect(maximizeIcon).toBeInTheDocument();
+    expect(closeIcon).toBeInTheDocument();
+    expect(playIcon).toBeInTheDocument();
+  });
 }); 

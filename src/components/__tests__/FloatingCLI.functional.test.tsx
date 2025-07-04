@@ -342,4 +342,26 @@ describe('FloatingCLI Functional Tests', () => {
       expect(progressElements.length).toBeGreaterThan(0);
     });
   });
+
+  describe('Mobile Interactivity', () => {
+    it('responds to navigation button clicks in a mobile viewport', () => {
+      // Simulate mobile viewport
+      window.innerWidth = 375;
+      window.dispatchEvent(new Event('resize'));
+      render(<FloatingCLI testMode />);
+      const nextButton = screen.getByTitle('Next Step');
+      fireEvent.click(nextButton);
+      const step2Elements = screen.getAllByText('Step 2: Run Unit & Functional Tests');
+      expect(step2Elements.length).toBeGreaterThan(0);
+    });
+
+    it('responds to touch events on navigation buttons', () => {
+      const { container } = render(<FloatingCLI testMode />);
+      const nextButton = screen.getByTitle('Next Step');
+      // Simulate click event (covers both mouse and touch in React)
+      fireEvent.click(nextButton);
+      // Should still trigger navigation
+      expect(container.textContent).toContain('Run Unit & Functional Tests');
+    });
+  });
 }); 

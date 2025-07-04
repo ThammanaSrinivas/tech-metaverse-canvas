@@ -237,4 +237,25 @@ describe('FloatingCLI Performance Tests', () => {
     // Should handle 10 navigation changes in under 100ms
     expect(totalTime).toBeLessThan(100);
   });
+
+  it('renders and interacts smoothly on mobile viewport', () => {
+    // Simulate mobile viewport
+    window.innerWidth = 375;
+    window.dispatchEvent(new Event('resize'));
+    const startTime = performance.now();
+    render(<FloatingCLI testMode />);
+    const endTime = performance.now();
+    const renderTime = endTime - startTime;
+    expect(renderTime).toBeLessThan(150); // Allow a bit more for mobile
+
+    // Simulate rapid navigation on mobile
+    const nextButton = screen.getByTitle('Next Step');
+    const navStart = performance.now();
+    for (let i = 0; i < 6; i++) {
+      fireEvent.click(nextButton);
+    }
+    const navEnd = performance.now();
+    const navTime = navEnd - navStart;
+    expect(navTime).toBeLessThan(300); // Navigation should be smooth
+  });
 }); 
