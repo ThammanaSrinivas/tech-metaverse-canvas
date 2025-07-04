@@ -102,6 +102,8 @@
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Prevent theme flash by ensuring smooth transitions */
+    transition: background-color 0.15s ease, color 0.15s ease;
   }
 
   html {
@@ -422,13 +424,35 @@
 
   /* Smooth transitions for theme changes */
   .theme-transition {
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   }
 
   /* Prevent flash during theme changes */
   .no-flash {
     opacity: 1 !important;
     visibility: visible !important;
+  }
+
+  /* iOS Safari specific fixes for flashing */
+  @supports (-webkit-touch-callout: none) {
+    html {
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
+    
+    body {
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+    }
+    
+    /* Force hardware acceleration for smoother theme transitions */
+    .theme-transition {
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      will-change: background-color, color, border-color;
+    }
   }
 
   /* Optimize animations for reduced motion */
@@ -686,6 +710,25 @@
   }
 }
 
+/* Enhanced responsive breakpoints */
+@media (max-width: 480px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Reduce transform complexity on small screens */
+  .group-hover\:rotate-y-180 {
+    transition: transform 0.3s ease;
+  }
+  
+  /* Optimize touch targets */
+  button, [role="button"], a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
 /* iOS Safari specific optimizations */
 @supports (-webkit-touch-callout: none) {
   /* Optimize for iOS Safari */
@@ -712,5 +755,15 @@
   .backdrop-blur-2xl,
   .backdrop-blur-3xl {
     -webkit-backdrop-filter: blur(var(--blur-amount));
+  }
+  
+  /* Fix viewport issues on iOS */
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Prevent rubber band scrolling on iOS */
+  body {
+    overscroll-behavior-y: none;
   }
 }

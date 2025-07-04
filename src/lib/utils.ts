@@ -38,20 +38,30 @@ export const themeUtils = {
     if (typeof document !== 'undefined') {
       const root = document.documentElement;
       
-      // Remove existing theme classes
-      root.classList.remove('light', 'dark');
-      
-      // Add the new theme class
-      root.classList.add(theme);
-      
-      // Also set a data attribute for additional styling if needed
-      if (root.setAttribute) {
-        root.setAttribute('data-theme', theme);
-      }
-      
-      // Ensure the theme is applied to the body as well
-      document.body.classList.remove('light', 'dark');
-      document.body.classList.add(theme);
+      // Prevent flash by applying changes in a single frame
+      requestAnimationFrame(() => {
+        // Remove existing theme classes
+        root.classList.remove('light', 'dark');
+        
+        // Add the new theme class
+        root.classList.add(theme);
+        
+        // Also set a data attribute for additional styling if needed
+        if (root.setAttribute) {
+          root.setAttribute('data-theme', theme);
+        }
+        
+        // Ensure the theme is applied to the body as well
+        document.body.classList.remove('light', 'dark');
+        document.body.classList.add(theme);
+        
+        // Force a style recalculation for iOS Safari
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+          root.style.display = 'none';
+          root.offsetHeight; // Trigger reflow
+          root.style.display = '';
+        }
+      });
     }
   }
 };

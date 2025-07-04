@@ -133,7 +133,7 @@ const Projects: React.FC = () => {
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
+          className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xs:gap-6 sm:gap-6 md:gap-8 lg:gap-8"
         >
           {projects.map((project) => (
             <motion.div
@@ -143,12 +143,12 @@ const Projects: React.FC = () => {
               style={{ perspective: '1000px' }}
             >
               <div 
-                className="relative w-full h-80 sm:h-96 cursor-pointer transition-transform duration-700 transform-style-preserve-3d group-hover:rotate-y-180"
+                className="relative w-full h-80 xs:h-96 sm:h-96 md:h-[26rem] lg:h-96 cursor-pointer transition-transform duration-700 transform-style-preserve-3d group-hover:rotate-y-180"
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 {/* Front of card */}
                 <motion.div
-                  className="absolute inset-0 backface-hidden rounded-xl overflow-hidden bg-primary/10 border-primary/30 border-2 backdrop-blur-sm"
+                  className="absolute inset-0 backface-hidden rounded-xl overflow-hidden bg-primary/10 border-primary/30 border-2 backdrop-blur-sm theme-transition"
                   style={{ backfaceVisibility: 'hidden' }}
                 >
                   <div className="relative h-full flex flex-col">
@@ -213,7 +213,7 @@ const Projects: React.FC = () => {
 
                 {/* Back of card */}
                 <motion.div
-                  className="absolute inset-0 backface-hidden rotate-y-180 rounded-xl overflow-hidden bg-background/95 backdrop-blur-md border-2 border-primary/30"
+                  className="absolute inset-0 backface-hidden rotate-y-180 rounded-xl overflow-hidden bg-background/95 backdrop-blur-md border-2 border-primary/30 theme-transition"
                   style={{ backfaceVisibility: 'hidden' }}
                 >
                   <div className="h-full flex flex-col p-4 sm:p-6">

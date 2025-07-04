@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useLayoutEffect } from 'react';
 import { themeUtils } from '@/lib/utils';
 
 type Theme = 'light' | 'dark';
@@ -8,6 +8,7 @@ interface ThemeContextType {
   setTheme: (theme: Theme) => void;
   effectiveTheme: Theme;
   toggleTheme: () => void;
+  isHydrated: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -20,27 +21,58 @@ export const useTheme = () => {
   return context;
 };
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('dark');
-
-  useEffect(() => {
-    const savedTheme = themeUtils.loadTheme() as Theme;
+function getInitialTheme(): Theme {
+  if (typeof window === 'undefined') return 'dark';
+  
+  try {
+    const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme && ['light', 'dark'].includes(savedTheme)) {
-      setTheme(savedTheme);
+      return savedTheme;
     }
+  } catch (error) {
+    console.warn('Failed to read theme from localStorage:', error);
+  }
+  
+  // Fallback to system preference
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
+  
+  return 'light';
+}
+
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [theme, setTheme] = useState<Theme>(() => getInitialTheme());
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Use useLayoutEffect to apply theme before paint to prevent flash
+  useLayoutEffect(() => {
+    const initialTheme = getInitialTheme();
+    
+    // Apply theme immediately to prevent flash
+    themeUtils.applyTheme(initialTheme);
+    
+    // Set the theme state if it's different
+    if (theme !== initialTheme) {
+      setTheme(initialTheme);
+    }
+    
+    setIsHydrated(true);
   }, []);
 
   useEffect(() => {
-    themeUtils.saveTheme(theme);
-    themeUtils.applyTheme(theme);
-  }, [theme]);
+    if (isHydrated) {
+      themeUtils.saveTheme(theme);
+      themeUtils.applyTheme(theme);
+    }
+  }, [theme, isHydrated]);
 
   const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+    setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, effectiveTheme: theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, effectiveTheme: theme, toggleTheme, isHydrated }}>
       {children}
     </ThemeContext.Provider>
   );

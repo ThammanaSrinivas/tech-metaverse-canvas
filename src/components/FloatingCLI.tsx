@@ -332,15 +332,26 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
   useEffect(() => {
     if (testMode) {
       setIsInitialized(true);
+      setIsVisible(true);
       return;
     }
     
-    // Set initialized immediately to prevent layout shifts
-    setIsInitialized(true);
+    // Use requestAnimationFrame to ensure DOM is ready
+    const initializeComponent = () => {
+      requestAnimationFrame(() => {
+        setIsInitialized(true);
+        // Show CLI after a much shorter delay to reduce flash
+        setTimeout(() => setIsVisible(true), 100);
+      });
+    };
     
-    // Show CLI after a shorter delay to reduce flash
-    const timer = setTimeout(() => setIsVisible(true), 500);
-    return () => clearTimeout(timer);
+    // Check if page is already loaded
+    if (document.readyState === 'complete') {
+      initializeComponent();
+    } else {
+      window.addEventListener('load', initializeComponent);
+      return () => window.removeEventListener('load', initializeComponent);
+    }
   }, [testMode]);
 
   useEffect(() => {
@@ -422,7 +433,12 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
 
   // Don't render anything until initialized to prevent flash
   if (!isInitialized) {
-    return null;
+    return (
+      <div 
+        className="fixed z-40 bottom-2 right-2 w-[20rem] h-[18rem] opacity-0 pointer-events-none"
+        aria-hidden="true"
+      />
+    );
   }
 
   if (isClosed) {

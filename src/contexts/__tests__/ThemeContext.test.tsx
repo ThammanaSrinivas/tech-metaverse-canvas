@@ -51,6 +51,13 @@ describe('ThemeContext', () => {
   });
 
   it('provides default theme values', () => {
+    // Mock system preference for dark theme
+    mockMatchMedia.mockReturnValue({
+      matches: true, // prefers dark theme
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    });
+    
     render(
       <ThemeProvider>
         <TestComponent />
@@ -102,6 +109,13 @@ describe('ThemeContext', () => {
   });
 
   it('toggles theme correctly', () => {
+    // Mock system preference for dark theme
+    mockMatchMedia.mockReturnValue({
+      matches: true, // prefers dark theme
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    });
+    
     render(
       <ThemeProvider>
         <TestComponent />

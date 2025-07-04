@@ -71,6 +71,25 @@ vi.mock('@/lib/utils', () => ({
   animationUtils: {
     getMousePosition: vi.fn(() => ({ x: 0, y: 0 })),
   },
+  performanceUtils: {
+    getDeviceCapabilities: vi.fn(() => ({
+      isMobile: false,
+      isIOS: false,
+      isLowEnd: false,
+      hasReducedMotion: false,
+      screenWidth: 1920,
+      screenHeight: 1080,
+      pixelRatio: 1,
+      cores: 4,
+    })),
+    getPerformanceRecommendations: vi.fn(() => ({
+      disable3D: false,
+      reduceParticles: false,
+      disableComplexAnimations: false,
+      reduceBackdropBlur: false,
+      useLowQualityRendering: false,
+    })),
+  },
   cn: vi.fn((...classes) => classes.filter(Boolean).join(' ')),
 }));
 

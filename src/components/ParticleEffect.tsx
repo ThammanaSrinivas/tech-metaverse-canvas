@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { performanceUtils } from '@/lib/utils';
 
 interface Particle {
   id: number;
@@ -17,19 +18,31 @@ const ParticleEffect: React.FC = () => {
   const animationRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
 
+  const { capabilities, recommendations } = useMemo(() => {
+    const cap = performanceUtils.getDeviceCapabilities();
+    const rec = performanceUtils.getPerformanceRecommendations();
+    return { capabilities: cap, recommendations: rec };
+  }, []);
+
   useEffect(() => {
-    // Detect mobile device
-    const checkMobile = () => {
-      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-        window.innerWidth <= 768;
-      setIsMobile(isMobileDevice);
-    };
+    // Use performance recommendations to determine if particles should render
+    if (recommendations.reduceParticles && capabilities.screenWidth < 480) {
+      return; // Don't render particles on very low-end devices
+    }
 
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
+    setIsMobile(capabilities.isMobile);
 
-    // Create initial particles with reduced count on mobile
-    const particleCount = isMobile ? 15 : 30; // Reduced from 50
+    // Create initial particles with adaptive count based on device capabilities
+    let particleCount;
+    if (capabilities.screenWidth < 480) {
+      particleCount = 8;
+    } else if (capabilities.isMobile) {
+      particleCount = 12;
+    } else if (capabilities.isLowEnd) {
+      particleCount = 20;
+    } else {
+      particleCount = 25;
+    }
     const initialParticles: Particle[] = Array.from({ length: particleCount }, (_, i) => ({
       id: i,
       x: Math.random() * window.innerWidth,
@@ -45,8 +58,13 @@ const ParticleEffect: React.FC = () => {
 
     // Optimized animation loop using requestAnimationFrame
     const animate = (currentTime: number) => {
-      // Throttle to 30fps on mobile, 60fps on desktop
-      const targetFPS = isMobile ? 30 : 60;
+      // Adaptive FPS based on device capabilities
+      let targetFPS;
+      if (capabilities.isLowEnd || capabilities.isMobile) {
+        targetFPS = 24; // Lower FPS for better performance
+      } else {
+        targetFPS = 45; // Moderate FPS for smooth animation
+      }
       const frameInterval = 1000 / targetFPS;
       
       if (currentTime - lastTimeRef.current >= frameInterval) {
@@ -84,12 +102,16 @@ const ParticleEffect: React.FC = () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
-      window.removeEventListener('resize', checkMobile);
     };
-  }, [isMobile]);
+  }, [capabilities, recommendations]);
 
-  // Don't render particles on very low-end devices
-  if (isMobile && window.innerWidth < 480) {
+  // Don't render particles based on performance recommendations
+  if (recommendations.reduceParticles && capabilities.screenWidth < 480) {
+    return null;
+  }
+
+  // Disable particles if user prefers reduced motion
+  if (capabilities.hasReducedMotion) {
     return null;
   }
 
