@@ -77,8 +77,7 @@ describe('Hero', () => {
   it('renders hero section with title', () => {
     renderWithRouter(<Hero />);
     
-    expect(screen.getByText('Digital')).toBeInTheDocument();
-    expect(screen.getByText('Architect')).toBeInTheDocument();
+    expect(screen.getByText('Digital Architect')).toBeInTheDocument();
   });
 
   it('renders hero description', () => {

@@ -22,6 +22,7 @@ vi.mock('lucide-react', () => ({
   Leaf: () => <div data-testid="leaf-icon">Leaf</div>,
   Brain: () => <div data-testid="brain-icon">Brain</div>,
   Bitcoin: () => <div data-testid="bitcoin-icon">Bitcoin</div>,
+  Play: () => <div data-testid="play-icon">Play</div>,
 }));
 
 // Mock window.open
@@ -43,10 +44,11 @@ describe('Projects', () => {
   it('renders project cards', () => {
     render(<Projects />);
     
-    expect(screen.getByText('Random Android Project')).toBeInTheDocument();
-    expect(screen.getByText('Tech Metaverse Canvas')).toBeInTheDocument();
-    expect(screen.getByText('Habitica MCP Server')).toBeInTheDocument();
-    expect(screen.getByText('Spring MVC Practice CRUD RESTful API')).toBeInTheDocument();
+    // Each project appears twice due to flip card (front and back), so use getAllByText
+    expect(screen.getAllByText('Random Android Project')).toHaveLength(2);
+    expect(screen.getAllByText('Tech Metaverse Canvas')).toHaveLength(2);
+    expect(screen.getAllByText('Habitica MCP Server')).toHaveLength(2);
+    expect(screen.getAllByText('Spring MVC Practice CRUD RESTful API')).toHaveLength(2);
   });
 
   it('opens project source when source button is clicked', () => {

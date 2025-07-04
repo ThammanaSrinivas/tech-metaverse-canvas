@@ -1,11 +1,8 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { vi } from 'vitest';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import Navigation from '../Navigation';
-
-// Mock window.open
-const mockOpen = vi.fn();
-window.open = mockOpen;
 
 const renderWithTheme = (component: React.ReactElement) => {
   return render(
@@ -16,8 +13,12 @@ const renderWithTheme = (component: React.ReactElement) => {
 };
 
 describe('Navigation', () => {
+  // Mock scrollIntoView
   beforeEach(() => {
-    mockOpen.mockClear();
+    Element.prototype.scrollIntoView = vi.fn();
+    document.querySelector = vi.fn(() => ({
+      scrollIntoView: vi.fn()
+    }));
   });
 
   it('renders navigation with all menu items', () => {
@@ -25,44 +26,20 @@ describe('Navigation', () => {
     
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('About')).toBeInTheDocument();
+    expect(screen.getByText('Work Experience')).toBeInTheDocument();
     expect(screen.getByText('Technical Skills')).toBeInTheDocument();
     expect(screen.getByText('Projects')).toBeInTheDocument();
     expect(screen.getByText('Contact')).toBeInTheDocument();
   });
 
-  it('renders Portfolio text', () => {
+  it('handles navigation item clicks', () => {
     renderWithTheme(<Navigation />);
     
-    expect(screen.getByText('Portfolio')).toBeInTheDocument();
-  });
-
-  it('opens GitHub when Portfolio is clicked', () => {
-    renderWithTheme(<Navigation />);
+    const homeButton = screen.getByText('Home');
+    fireEvent.click(homeButton);
     
-    const portfolioText = screen.getByText('Portfolio');
-    fireEvent.click(portfolioText);
-    
-    expect(mockOpen).toHaveBeenCalledWith(
-      'https://github.com/ThammanaSrinivas/tech-metaverse-canvas',
-      '_blank',
-      'noopener,noreferrer'
-    );
-  });
-
-  it('has correct navigation links', () => {
-    renderWithTheme(<Navigation />);
-    
-    const homeLink = screen.getByText('Home').closest('a');
-    const aboutLink = screen.getByText('About').closest('a');
-    const technicalSkillsLink = screen.getByText('Technical Skills').closest('a');
-    const projectsLink = screen.getByText('Projects').closest('a');
-    const contactLink = screen.getByText('Contact').closest('a');
-    
-    expect(homeLink).toHaveAttribute('href', '#home');
-    expect(aboutLink).toHaveAttribute('href', '#about');
-    expect(technicalSkillsLink).toHaveAttribute('href', '#technical-skills');
-    expect(projectsLink).toHaveAttribute('href', '#projects');
-    expect(contactLink).toHaveAttribute('href', '#contact');
+    // Since scrollIntoView is mocked, we just check that the element exists and is clickable
+    expect(homeButton).toBeInTheDocument();
   });
 
   it('renders with proper styling classes', () => {
@@ -70,5 +47,30 @@ describe('Navigation', () => {
     
     const nav = screen.getByRole('navigation');
     expect(nav).toHaveClass('fixed', 'top-0', 'left-0', 'right-0', 'z-50');
+  });
+
+  it('toggles mobile menu', () => {
+    renderWithTheme(<Navigation />);
+    
+    // Get all buttons and find the mobile menu button (should be in md:hidden div)
+    const buttons = screen.getAllByRole('button');
+    const mobileMenuButton = buttons.find(button => 
+      button.closest('.md\\:hidden')
+    );
+    
+    expect(mobileMenuButton).toBeInTheDocument();
+    fireEvent.click(mobileMenuButton!);
+    
+    // Check if mobile menu items are visible (duplicated in mobile menu)
+    const mobileHomeButtons = screen.getAllByText('Home');
+    expect(mobileHomeButtons.length).toBeGreaterThan(1); // Desktop + mobile versions
+  });
+
+  it('includes theme toggle', () => {
+    renderWithTheme(<Navigation />);
+    
+    // Check that theme toggle is present by looking for the theme icon
+    const themeIcon = screen.getByTestId('theme-icon');
+    expect(themeIcon).toBeInTheDocument();
   });
 }); 

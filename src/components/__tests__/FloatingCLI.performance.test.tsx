@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -81,10 +81,14 @@ describe('FloatingCLI Performance Tests', () => {
   it('maintains consistent memory usage during animations', () => {
     const initialMemory = (performance as any).memory?.usedJSHeapSize || 0;
     
-    render(<FloatingCLI testMode />);
+    act(() => {
+      render(<FloatingCLI testMode />);
+    });
     
     // Simulate some time passing (animations)
-    vi.advanceTimersByTime(5000);
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
     
     const finalMemory = (performance as any).memory?.usedJSHeapSize || 0;
     const memoryIncrease = finalMemory - initialMemory;

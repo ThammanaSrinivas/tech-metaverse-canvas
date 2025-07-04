@@ -148,14 +148,18 @@ describe('ThemeContext', () => {
   });
 
   it('throws error when useTheme is used outside provider', () => {
-    // Test the error without rendering to avoid document issues
     const TestComponentWithoutProvider = () => {
       const { theme } = useTheme();
       return <div>{theme}</div>;
     };
 
+    // Capture console.error to avoid error output during test
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    
     expect(() => {
       render(<TestComponentWithoutProvider />);
     }).toThrow('useTheme must be used within a ThemeProvider');
+    
+    consoleSpy.mockRestore();
   });
 }); 

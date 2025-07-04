@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { HeroScene } from './HeroScene';
 import ParticleEffect from './ParticleEffect';
 import FloatingCLI from './FloatingCLI';
@@ -8,6 +8,43 @@ import { ChevronDown, Mouse, ArrowRight } from 'lucide-react';
 import { animationUtils } from '@/lib/utils';
 import ResumeButton from './ui/ResumeButton';
 import { useTheme } from '@/contexts/ThemeContext';
+
+const AnimatedText: React.FC = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const texts = [
+    "3+ Years Experience",
+    "System Architecture", 
+    "Full Stack Development"
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % texts.length);
+    }, 3000); // Change text every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [texts.length]);
+
+  return (
+    <div className="relative inline-block min-w-[200px] sm:min-w-[250px] h-[1.5em] overflow-hidden">
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={currentIndex}
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -50, opacity: 0 }}
+          transition={{ 
+            duration: 0.5,
+            ease: "easeInOut"
+          }}
+          className="absolute left-0 top-0 text-primary font-semibold whitespace-nowrap"
+        >
+          {texts[currentIndex]}
+        </motion.span>
+      </AnimatePresence>
+    </div>
+  );
+};
 
 const Hero: React.FC = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -110,78 +147,28 @@ const Hero: React.FC = () => {
         initial="hidden"
         animate="visible"
         style={{ y: y1, opacity }}
-        className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full"
+        className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full flex flex-col items-center justify-center min-h-[60vh]"
       >
         <motion.div
           variants={textVariants}
           className="mb-6 sm:mb-8 lg:mb-12"
         >
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 sm:mb-4 lg:mb-6 tracking-tight leading-tight heading-primary">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-bold mb-3 sm:mb-4 lg:mb-6 tracking-tight leading-tight heading-primary">
             <span className="text-foreground">
               Digital Architect
             </span>
           </h1>
         </motion.div>
 
-        <motion.p
+        <motion.div
           variants={textVariants}
           style={{ y: y2 }}
-          className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl text-muted-foreground mb-8 sm:mb-10 lg:mb-16 max-w-5xl mx-auto leading-relaxed font-light px-2 sm:px-4"
+          className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground mb-12 sm:mb-16 lg:mb-20 max-w-4xl mx-auto leading-relaxed font-light px-2 sm:px-4"
         >
-          Crafting immersive digital experiences through cutting-edge technology and innovative design
-        </motion.p>
-
-        <motion.div
-          variants={textVariants}
-          className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-10 sm:mb-12 lg:mb-16 px-4"
-        >
-          <Button
-            size="lg"
-            onClick={scrollToProjects}
-            onMouseEnter={() => !isMobile && setIsHovered(true)}
-            onMouseLeave={() => !isMobile && setIsHovered(false)}
-            className="group bg-primary hover:bg-primary/80 text-primary-foreground neon-glow px-8 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold transition-all duration-300 transform hover:scale-105 w-full sm:w-auto min-h-[56px] sm:min-h-[60px]"
-          >
-            <span className="flex items-center gap-2 sm:gap-3">
-              View Projects
-              <ArrowRight className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 ${isHovered && !isMobile ? 'translate-x-1' : ''}`} />
-            </span>
-          </Button>
-          <div className="w-full sm:w-auto">
-            <ResumeButton />
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span>Crafting immersive digital experiences with</span>
+            <AnimatedText />
           </div>
-        </motion.div>
-
-        <motion.div
-          variants={textVariants}
-          className="flex flex-row items-center justify-center gap-4 sm:gap-6 lg:gap-8 max-w-4xl mx-auto px-4 mt-8 sm:mt-12"
-        >
-          <motion.div 
-            className="flex flex-col items-center text-center"
-            whileHover={!isMobile ? { scale: 1.02 } : undefined}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-          >
-            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-none mb-1">3+</div>
-            <div className="text-xs sm:text-sm text-muted-foreground opacity-70">Years Experience</div>
-          </motion.div>
-          
-          <motion.div 
-            className="flex flex-col items-center text-center"
-            whileHover={!isMobile ? { scale: 1.02 } : undefined}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-          >
-            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground leading-none mb-1">System</div>
-            <div className="text-xs sm:text-sm text-muted-foreground opacity-70">Architecture</div>
-          </motion.div>
-          
-          <motion.div 
-            className="flex flex-col items-center text-center"
-            whileHover={!isMobile ? { scale: 1.02 } : undefined}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-          >
-            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground leading-none mb-1">Full Stack</div>
-            <div className="text-xs sm:text-sm text-muted-foreground opacity-70">Development</div>
-          </motion.div>
         </motion.div>
       </motion.div>
 
