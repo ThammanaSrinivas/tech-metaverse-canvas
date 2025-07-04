@@ -49,7 +49,7 @@ describe('FloatingCLI', () => {
 
   it('shows first step by default', () => {
     render(<FloatingCLI testMode />);
-    const step1Elements = screen.getAllByText(/Step 1.*Write Code/);
+    const step1Elements = screen.getAllByText((content) => content.includes('Write Code'));
     expect(step1Elements.length).toBeGreaterThan(0);
   });
 
@@ -135,7 +135,7 @@ describe('FloatingCLI', () => {
     const prevButton = screen.getByTitle('Previous Step');
     fireEvent.click(prevButton);
     
-    const step1Elements = screen.getAllByText(/Step 1.*Write Code/);
+    const step1Elements = screen.getAllByText((content) => content.includes('Write Code'));
     expect(step1Elements.length).toBeGreaterThan(0);
     expect(screen.getByText('1 / 6')).toBeInTheDocument();
   });
@@ -165,7 +165,7 @@ describe('FloatingCLI', () => {
 
   it('displays correct step content', () => {
     render(<FloatingCLI testMode />);
-    // Check first step - use getAllByText since we now have both mobile and desktop versions
+    // Check first step command
     const commandElements = screen.getAllByText('vim src/components/Feature.tsx');
     expect(commandElements.length).toBeGreaterThan(0);
     

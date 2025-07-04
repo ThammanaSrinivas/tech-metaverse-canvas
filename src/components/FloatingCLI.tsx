@@ -437,7 +437,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
         title="Reopen Developer Workflow"
         aria-label="Reopen developer workflow terminal"
       >
-        <Terminal className="w-5 h-5 md:w-6 md:h-6" aria-hidden="true" />
+        <Terminal className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" aria-hidden="true" />
       </motion.button>
     );
   }
@@ -454,7 +454,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
         title="Restore Developer Workflow"
         aria-label="Restore developer workflow terminal"
       >
-        <Terminal className="w-5 h-5 md:w-6 md:h-6" aria-hidden="true" />
+        <Terminal className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" aria-hidden="true" />
       </motion.button>
     );
   }
@@ -475,8 +475,8 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
           }}
           className={`fixed z-40 floating-cli-container ${
             isMaximized
-              ? 'inset-x-0 left-0 right-0 top-[5.5rem] bottom-0 m-0 md:inset-x-6 md:top-[5.5rem] md:bottom-6 md:m-0' // offset for header
-              : 'bottom-6 right-6 w-[22rem] h-[22rem] lg:w-[26rem] lg:h-[26rem] xl:w-[30rem] xl:h-[30rem]'
+              ? 'inset-x-2 left-2 right-2 top-[5.5rem] bottom-2 m-0 sm:inset-x-4 sm:top-[5.5rem] sm:bottom-4 md:inset-x-6 md:top-[5.5rem] md:bottom-6 md:m-0' // offset for header
+              : 'bottom-2 right-2 w-[20rem] h-[18rem] xs:bottom-4 xs:right-4 xs:w-[22rem] xs:h-[20rem] sm:bottom-6 sm:right-6 sm:w-[24rem] sm:h-[22rem] lg:w-[26rem] lg:h-[26rem] xl:w-[30rem] xl:h-[30rem]'
           }`}
           data-maximized={isMaximized}
           tabIndex={0}
@@ -493,39 +493,39 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
             }}
           >
             {/* Terminal Header */}
-            <div className={`flex items-center justify-between p-2 md:p-3 ${headerBg} rounded-t-xl border-b ${borderColor} flex-shrink-0 select-none backdrop-blur-sm`}>
+            <div className={`flex items-center justify-between p-2 sm:p-2.5 md:p-3 ${headerBg} rounded-t-xl border-b ${borderColor} flex-shrink-0 select-none backdrop-blur-sm`}>
               <div className="flex items-center space-x-2 min-w-0 flex-1">
                 <div className={`p-1 rounded-lg ${isDark ? 'bg-green-400/10' : 'bg-green-500/10'} flex-shrink-0`}>
-                  <Terminal className={`w-3 h-3 md:w-3.5 md:h-3.5 ${textGreen} flex-shrink-0`} />
+                  <Terminal className={`w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 ${textGreen} flex-shrink-0`} />
                 </div>
               </div>
-              <div className="flex items-center space-x-2 flex-shrink-0">
+              <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
                   <button
                     onClick={() => handleWindowControl('minimize')}
-                  className="hidden md:flex w-3.5 h-3.5 bg-yellow-500 rounded-full hover:bg-yellow-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+                  className="hidden sm:flex w-3 h-3 sm:w-3.5 sm:h-3.5 bg-yellow-500 rounded-full hover:bg-yellow-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
                     title="Minimize"
                   >
-                    <Minus className="w-2 h-2 text-yellow-900 group-hover:text-yellow-800" />
+                    <Minus className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-yellow-900 group-hover:text-yellow-800" />
                   </button>
                 <button
                   onClick={() => handleWindowControl('maximize')}
-                  className="flex w-3.5 h-3.5 bg-green-500 rounded-full hover:bg-green-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-500/50"
+                  className="flex w-3 h-3 sm:w-3.5 sm:h-3.5 bg-green-500 rounded-full hover:bg-green-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-500/50"
                   title={isMaximized ? "Restore" : "Maximize"}
                 >
-                  <Maximize2 className="w-2 h-2 text-green-900 group-hover:text-green-800" />
+                  <Maximize2 className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-green-900 group-hover:text-green-800" />
                 </button>
                 <button
                   onClick={() => handleWindowControl('close')}
-                  className="flex w-3.5 h-3.5 bg-red-500 rounded-full hover:bg-red-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                  className="flex w-3 h-3 sm:w-3.5 sm:h-3.5 bg-red-500 rounded-full hover:bg-red-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   title="Close"
                 >
-                  <X className="w-2 h-2 text-red-900 group-hover:text-red-800" />
+                  <X className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-red-900 group-hover:text-red-800" />
                 </button>
               </div>
             </div>
 
             {/* Terminal Content */}
-            <div className="flex-1 flex flex-col p-4 md:p-5 space-y-3 md:space-y-4 min-h-0">
+            <div className="flex-1 flex flex-col p-2 sm:p-3 md:p-4 lg:p-5 space-y-2 sm:space-y-3 md:space-y-4 min-h-0">
               {/* Step Header */}
               <div className="flex items-center justify-between flex-shrink-0">
                 <div className="flex items-center space-x-2 md:space-x-3 min-w-0 flex-1">
