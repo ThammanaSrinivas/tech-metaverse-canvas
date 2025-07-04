@@ -38,8 +38,8 @@ const Navigation: React.FC = () => {
       animate={{ y: 0 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled 
-          ? 'bg-background/90 backdrop-blur-lg border-b border-primary/20' 
-          : 'bg-transparent'
+          ? 'bg-background/95 backdrop-blur-lg border-b border-primary/20' 
+          : 'bg-background/20 backdrop-blur-sm'
       }`}
     >
       <div className="container mx-auto px-6 py-4">
@@ -54,10 +54,9 @@ const Navigation: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ 
-                  scale: 1.05,
-                  color: 'var(--primary)'
+                  scale: 1.05
                 }}
-                className="text-foreground hover:text-primary transition-all duration-300 font-medium text-sm lg:text-base px-3 py-2 rounded-lg hover:bg-primary/10"
+                className="text-foreground/90 hover:text-primary transition-all duration-300 font-medium text-sm lg:text-base px-3 py-2 rounded-lg hover:bg-primary/20 hover:shadow-sm border border-transparent hover:border-primary/30"
               >
                 {item.name}
               </motion.button>
@@ -104,7 +103,7 @@ const Navigation: React.FC = () => {
                     scale: 1.02,
                     x: 5
                   }}
-                  className="w-full text-left text-foreground hover:text-primary transition-all duration-300 font-medium px-4 py-3 rounded-lg hover:bg-primary/10"
+                  className="w-full text-left text-foreground/90 hover:text-primary transition-all duration-300 font-medium px-4 py-3 rounded-lg hover:bg-primary/20 border border-transparent hover:border-primary/30"
                 >
                   {item.name}
                 </motion.button>

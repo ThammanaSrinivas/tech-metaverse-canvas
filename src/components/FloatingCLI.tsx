@@ -32,6 +32,66 @@ function getEffectiveCoverage(coverage: typeof mockCoverage): number {
   return Math.round(average * 10) / 10; // Round to 1 decimal place
 }
 
+const renderHighlightedCode = (code: string, isDark: boolean): React.ReactNode => {
+  return code.split('\n').map((line, idx) => {
+    const parts: React.ReactNode[] = [];
+    let remaining = line;
+    let partIndex = 0;
+    
+    // Helper function to add text parts with highlighting
+    const addHighlightedPart = (text: string, className?: string) => {
+      if (className) {
+        parts.push(<span key={`${idx}-${partIndex++}`} className={className}>{text}</span>);
+      } else {
+        parts.push(text);
+      }
+    };
+    
+    // Process the line character by character for better control
+    const tokens = remaining.split(/(\s+|[<>{}();,.]|\b(?:import|export|const|let|var|function|interface|type|React|useState|useEffect|from|motion|div|h3|p)\b|'[^']*'|"[^"]*"|\d+\.?\d*)/g);
+    
+    tokens.forEach((token, tokenIdx) => {
+      if (!token) return;
+      
+      // Keywords
+      if (['import', 'export', 'const', 'let', 'var', 'function', 'interface', 'type', 'React', 'useState', 'useEffect', 'from'].includes(token)) {
+        addHighlightedPart(token, isDark ? 'text-purple-400' : 'text-purple-600');
+      }
+      // Strings
+      else if (token.match(/^['"][^'"]*['"]$/)) {
+        addHighlightedPart(token, isDark ? 'text-green-400' : 'text-green-600');
+      }
+      // JSX/HTML tags and React components
+      else if (['motion', 'div', 'h3', 'p'].includes(token)) {
+        addHighlightedPart(token, isDark ? 'text-blue-400' : 'text-blue-600');
+      }
+      // Numbers
+      else if (token.match(/^\d+\.?\d*$/)) {
+        addHighlightedPart(token, isDark ? 'text-yellow-400' : 'text-yellow-600');
+      }
+      // JSX angle brackets
+      else if (token === '<' || token === '>') {
+        addHighlightedPart(token, isDark ? 'text-blue-400' : 'text-blue-600');
+      }
+      // Braces and special characters
+      else if (['{', '}', '(', ')', ';', ',', '.'].includes(token)) {
+        addHighlightedPart(token, isDark ? 'text-gray-300' : 'text-gray-700');
+      }
+      // Regular text
+      else {
+        parts.push(token);
+      }
+    });
+    
+    return (
+      <span key={idx}>
+        {parts}
+        {'\n'}
+      </span>
+    );
+  });
+};
+
 interface FloatingCLIProps {
   testMode?: boolean;
 }
@@ -87,9 +147,9 @@ export const Feature: React.FC<FeatureProps> = ({ title, description }) => {
     {
       id: 2,
       title: "Run Unit & Functional Tests",
-      command: "npm test -- --coverage",
-      output: `> portfolio@1.0.0 test
-> vitest --coverage
+      command: "npm run test:coverage",
+      output: `> vite_react_shadcn_ts@0.0.0 test:coverage
+> vitest run --coverage --reporter=verbose
 
  ✓ src/lib/utils.test.ts (3 tests) 12ms
  ✓ src/components/__tests__/About.test.tsx (8 tests) 45ms
@@ -116,9 +176,9 @@ All files |   94.2% |    95.0% |   93.0% |   94.0% |
     },
     {
       id: 3,
-      title: "1 FT Failed",
-      command: "npm test -- FloatingCLI.test.tsx",
-      output: `> portfolio@1.0.0 test
+      title: "1 Test Failed",
+      command: "npm test FloatingCLI.test.tsx",
+      output: `> vite_react_shadcn_ts@0.0.0 test
 > vitest FloatingCLI.test.tsx
 
  ✗ src/components/__tests__/FloatingCLI.test.tsx
@@ -202,9 +262,9 @@ export default FloatingCLI;`,
     {
       id: 5,
       title: "Now All Tests Pass",
-      command: "npm test -- --run",
-      output: `> portfolio@1.0.0 test
-> vitest --run
+      command: "npm run test:all",
+      output: `> vite_react_shadcn_ts@0.0.0 test:all
+> npm run test:unit && npm run test:functional && npm run test:performance
 
  ✓ src/lib/utils.test.ts (3 tests) 12ms
  ✓ src/components/__tests__/About.test.tsx (8 tests) 45ms
@@ -227,15 +287,16 @@ Ran all test suites.`,
     },
     {
       id: 6,
-      title: "Deploy & Check Coverage",
-      command: "npm run build && npm run test:coverage",
-      output: `> portfolio@1.0.0 build
+      title: "Build & Deploy",
+      command: "npm run build",
+      output: `> vite_react_shadcn_ts@0.0.0 build
+> npm run test:all && npm run test:coverage && vite build
+
+✓ All tests passed
+✓ Coverage threshold met
+✓ Built in 2.1s
+
 > vite build
-
-✓ built in 2.1s
-
-> portfolio@1.0.0 test:coverage
-> vitest --coverage --run
 
  ✓ src/lib/utils.test.ts (3 tests) 12ms
  ✓ src/components/__tests__/About.test.tsx (8 tests) 45ms
@@ -432,15 +493,11 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
             }}
           >
             {/* Terminal Header */}
-            <div className={`flex items-center justify-between p-3 md:p-4 ${headerBg} rounded-t-xl border-b ${borderColor} flex-shrink-0 select-none backdrop-blur-sm`}>
-              <div className="flex items-center space-x-2 md:space-x-3 min-w-0 flex-1">
-                <div className={`p-1.5 rounded-lg ${isDark ? 'bg-green-400/10' : 'bg-green-500/10'} flex-shrink-0`}>
-                  <Terminal className={`w-3.5 h-3.5 md:w-4 md:h-4 ${textGreen} flex-shrink-0`} />
+            <div className={`flex items-center justify-between p-2 md:p-3 ${headerBg} rounded-t-xl border-b ${borderColor} flex-shrink-0 select-none backdrop-blur-sm`}>
+              <div className="flex items-center space-x-2 min-w-0 flex-1">
+                <div className={`p-1 rounded-lg ${isDark ? 'bg-green-400/10' : 'bg-green-500/10'} flex-shrink-0`}>
+                  <Terminal className={`w-3 h-3 md:w-3.5 md:h-3.5 ${textGreen} flex-shrink-0`} />
                 </div>
-                <span className={`text-sm md:text-base font-semibold ${textColor} truncate tracking-tight`}>
-                  <span className="md:hidden">Dev Workflow</span>
-                  <span className="hidden md:inline">Development Workflow</span>
-                </span>
               </div>
               <div className="flex items-center space-x-2 flex-shrink-0">
                   <button
@@ -562,7 +619,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
               >
                 {steps[currentStep].command.startsWith('vim') ? (
                   <pre className={`whitespace-pre-wrap break-words overflow-hidden rounded-lg p-3 ${isDark ? 'bg-gray-900 text-green-300 ring-1 ring-green-500/20' : 'bg-gray-100 text-green-700 ring-1 ring-green-500/20'}`}>
-                    <code>{steps[currentStep].output}</code>
+                    <code>{renderHighlightedCode(steps[currentStep].output, isDark)}</code>
                   </pre>
                 ) : (
                   <pre className="whitespace-pre-wrap break-words overflow-hidden">
@@ -575,6 +632,12 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
                       }
                       if (/WARN|warning|uncovered/i.test(line)) {
                         return <span key={idx} className="text-yellow-400">{line + '\n'}</span>;
+                      }
+                      if (/npm|yarn|pnpm|bun/.test(line)) {
+                        return <span key={idx} className={isDark ? 'text-blue-400' : 'text-blue-600'}>{line + '\n'}</span>;
+                      }
+                      if (/\$/.test(line)) {
+                        return <span key={idx} className={isDark ? 'text-cyan-400' : 'text-cyan-600'}>{line + '\n'}</span>;
                       }
                       return <span key={idx}>{line + '\n'}</span>;
                     })}

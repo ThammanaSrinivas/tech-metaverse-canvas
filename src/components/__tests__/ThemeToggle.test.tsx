@@ -64,6 +64,6 @@ describe('ThemeToggle', () => {
     render(<ThemeToggle />);
     const button = screen.getByRole('button');
     
-    expect(button).toHaveClass('border-primary/50', 'bg-background/50', 'backdrop-blur-sm');
+    expect(button).toHaveClass('border-primary/50', 'bg-background/80', 'backdrop-blur-sm');
   });
 }); 

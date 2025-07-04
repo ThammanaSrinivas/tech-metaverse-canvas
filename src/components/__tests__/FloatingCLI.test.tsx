@@ -44,7 +44,7 @@ describe('FloatingCLI', () => {
 
   it('renders in test mode', () => {
     render(<FloatingCLI testMode />);
-    expect(screen.getByText('Development Workflow')).toBeInTheDocument();
+    expect(screen.getByTestId('terminal-icon')).toBeInTheDocument();
   });
 
   it('shows first step by default', () => {
@@ -85,7 +85,7 @@ describe('FloatingCLI', () => {
     fireEvent.click(maximizeButton);
     
     // Should still be visible but maximized
-    expect(screen.getByText('Development Workflow')).toBeInTheDocument();
+    expect(screen.getByTestId('terminal-icon')).toBeInTheDocument();
   });
 
   it('handles window close', () => {
@@ -104,7 +104,7 @@ describe('FloatingCLI', () => {
     const reopenButton = screen.getByTitle('Reopen Developer Workflow');
     fireEvent.click(reopenButton);
     
-    expect(screen.getByText('Development Workflow')).toBeInTheDocument();
+    expect(screen.getByTestId('terminal-icon')).toBeInTheDocument();
   });
 
   it('handles reopen from minimized state', () => {
@@ -115,7 +115,7 @@ describe('FloatingCLI', () => {
     const restoreButton = screen.getByTitle('Restore Developer Workflow');
     fireEvent.click(restoreButton);
     
-    expect(screen.getByText('Development Workflow')).toBeInTheDocument();
+    expect(screen.getByTestId('terminal-icon')).toBeInTheDocument();
   });
 
   it('navigates to next step', () => {
@@ -173,11 +173,11 @@ describe('FloatingCLI', () => {
     const nextButton = screen.getByTitle('Next Step');
     fireEvent.click(nextButton);
     
-    const secondCommandElements = screen.getAllByText('npm test -- --coverage');
+    const secondCommandElements = screen.getAllByText('npm run test:coverage');
     expect(secondCommandElements.length).toBeGreaterThan(0);
     
     // Check for a substring from the output in both mobile and desktop
-    const outputElements = screen.getAllByText((content) => content.includes('vitest --coverage'));
+    const outputElements = screen.getAllByText((content) => content.includes('vitest run --coverage'));
     expect(outputElements.length).toBeGreaterThan(0);
   });
 
@@ -198,10 +198,10 @@ describe('FloatingCLI', () => {
     const expectedSteps = [
       'Write Code',
       'Run Unit & Functional Tests', 
-      '1 FT Failed',
+      '1 Test Failed',
       'Write Some Other Code',
       'Now All Tests Pass',
-      'Deploy & Check Coverage'
+      'Build & Deploy'
     ];
     
     expectedSteps.forEach((step, index) => {

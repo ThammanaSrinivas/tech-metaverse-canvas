@@ -53,12 +53,13 @@ const AnimatedText: React.FC = () => {
 
   return (
     <div className="relative inline-block min-w-[200px] sm:min-w-[250px] h-[1.5em] overflow-hidden">
-      <span className="text-primary font-semibold whitespace-nowrap">
+      <span className="text-primary font-semibold whitespace-nowrap flex items-center">
         {displayedText}
         <motion.span
           animate={{ opacity: [1, 0, 1] }}
           transition={{ duration: 1, repeat: Infinity }}
-          className="inline-block ml-1 w-0.5 h-[1.2em] bg-primary"
+          className="inline-block ml-1 w-0.5 h-[1.2em] bg-primary align-text-bottom"
+          style={{ verticalAlign: 'baseline' }}
         />
       </span>
     </div>
@@ -69,7 +70,6 @@ const Hero: React.FC = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [spotlightPosition, setSpotlightPosition] = useState({ x: 50, y: 50 });
   const [glitchTrigger, setGlitchTrigger] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll();
@@ -97,12 +97,6 @@ const Hero: React.FC = () => {
         if (containerRef.current) {
           const position = animationUtils.getMousePosition(e, containerRef.current);
           setMousePosition(position);
-          
-          // Calculate spotlight position as percentage for CSS
-          const rect = containerRef.current.getBoundingClientRect();
-          const x = ((e.clientX - rect.left) / rect.width) * 100;
-          const y = ((e.clientY - rect.top) / rect.height) * 100;
-          setSpotlightPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
         }
       };
 
@@ -165,17 +159,6 @@ const Hero: React.FC = () => {
         </div>
       )}
       
-      {/* Mouse-following spotlight effect */}
-      {!isMobile && (
-        <div 
-          className="absolute inset-0 pointer-events-none transition-all duration-300 ease-out"
-          style={{
-            background: theme === 'dark' 
-              ? `radial-gradient(circle 500px at ${spotlightPosition.x}% ${spotlightPosition.y}%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 40%, rgba(255, 223, 0, 0.03) 60%, transparent 80%)`
-              : `radial-gradient(circle 600px at ${spotlightPosition.x}% ${spotlightPosition.y}%, rgba(0, 245, 255, 0.06) 0%, rgba(0, 245, 255, 0.03) 30%, transparent 70%)`,
-          }}
-        />
-      )}
       
       {/* Gradient overlays for depth */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background/80"></div>

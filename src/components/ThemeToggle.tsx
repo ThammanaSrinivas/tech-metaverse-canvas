@@ -25,7 +25,7 @@ const ThemeToggle: React.FC = () => {
         variant="outline"
         size="sm"
         onClick={toggleTheme}
-        className="relative border-primary/50 bg-background/50 backdrop-blur-sm hover:border-primary hover:bg-primary/10 transition-colors"
+        className="relative border-primary/50 bg-background/80 backdrop-blur-sm hover:border-primary hover:bg-primary/20 hover:shadow-lg hover:shadow-primary/20 transition-all duration-200 hover:scale-105"
       >
         <motion.div
           key={theme}

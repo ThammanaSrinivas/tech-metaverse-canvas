@@ -76,7 +76,7 @@ describe('FloatingCLI Functional Tests', () => {
 
       // Step 3
       fireEvent.click(nextButton);
-      const step3Elements = screen.getAllByText('Step 3: 1 FT Failed');
+      const step3Elements = screen.getAllByText('Step 3: 1 Test Failed');
       expect(step3Elements.length).toBeGreaterThan(0);
 
       // Step 4
@@ -91,9 +91,9 @@ describe('FloatingCLI Functional Tests', () => {
 
       // Step 6
       fireEvent.click(nextButton);
-      const step6Elements = screen.getAllByText('Step 6: Deploy & Check Coverage');
+      const step6Elements = screen.getAllByText('Step 6: Build & Deploy');
       expect(step6Elements.length).toBeGreaterThan(0);
-      const commandElements = screen.getAllByText('npm run build && npm run test:coverage');
+      const commandElements = screen.getAllByText('npm run build');
       expect(commandElements.length).toBeGreaterThan(0);
     });
 
@@ -105,7 +105,7 @@ describe('FloatingCLI Functional Tests', () => {
       fireEvent.click(nextButton); // Step 2
       fireEvent.click(nextButton); // Step 3
       
-      const step3Elements = screen.getAllByText('Step 3: 1 FT Failed');
+      const step3Elements = screen.getAllByText('Step 3: 1 Test Failed');
       expect(step3Elements.length).toBeGreaterThan(0);
       
       // Go back to step 1
@@ -132,14 +132,14 @@ describe('FloatingCLI Functional Tests', () => {
       // Restore
       const restoreButton = screen.getByTitle('Restore Developer Workflow');
       fireEvent.click(restoreButton);
-      const workflowElements = screen.getAllByText('Development Workflow');
-      expect(workflowElements.length).toBeGreaterThan(0);
+      const step1Elements = screen.getAllByText('Step 1: Write Code');
+      expect(step1Elements.length).toBeGreaterThan(0);
       
       // Maximize
       const maximizeButton = screen.getByTitle('Maximize');
       fireEvent.click(maximizeButton);
-      const workflowElements2 = screen.getAllByText('Development Workflow');
-      expect(workflowElements2.length).toBeGreaterThan(0);
+      const step1Elements2 = screen.getAllByText('Step 1: Write Code');
+      expect(step1Elements2.length).toBeGreaterThan(0);
       
       // Close
       const closeButton = screen.getByTitle('Close');
@@ -149,8 +149,8 @@ describe('FloatingCLI Functional Tests', () => {
       // Reopen
       const reopenButton = screen.getByTitle('Reopen Developer Workflow');
       fireEvent.click(reopenButton);
-      const workflowElements3 = screen.getAllByText('Development Workflow');
-      expect(workflowElements3.length).toBeGreaterThan(0);
+      const step1Elements3 = screen.getAllByText('Step 1: Write Code');
+      expect(step1Elements3.length).toBeGreaterThan(0);
     });
 
     it('maintains step state during window operations', () => {
@@ -161,7 +161,7 @@ describe('FloatingCLI Functional Tests', () => {
       fireEvent.click(nextButton);
       fireEvent.click(nextButton);
       
-      const step3Elements = screen.getAllByText('Step 3: 1 FT Failed');
+      const step3Elements = screen.getAllByText('Step 3: 1 Test Failed');
       expect(step3Elements.length).toBeGreaterThan(0);
       
       // Minimize and restore
@@ -172,7 +172,7 @@ describe('FloatingCLI Functional Tests', () => {
       fireEvent.click(restoreButton);
       
       // Should still be on step 3
-      const step3Elements2 = screen.getAllByText('Step 3: 1 FT Failed');
+      const step3Elements2 = screen.getAllByText('Step 3: 1 Test Failed');
       expect(step3Elements2.length).toBeGreaterThan(0);
       const progressElements = screen.getAllByText('3 / 6');
       expect(progressElements.length).toBeGreaterThan(0);
@@ -223,9 +223,9 @@ describe('FloatingCLI Functional Tests', () => {
         </BrowserRouter>
       );
 
-      // Look for the main CLI container with the correct class
-      const cliContainer = screen.getAllByText('Development Workflow')[0].closest('.bg-gray-800\\/90');
-      expect(cliContainer).toBeInTheDocument();
+      // Look for the main CLI container with the terminal icon
+      const terminalIcon = screen.getByTestId('terminal-icon');
+      expect(terminalIcon).toBeInTheDocument();
     });
 
     it('handles theme switching gracefully', () => {
@@ -249,9 +249,7 @@ describe('FloatingCLI Functional Tests', () => {
       render(<FloatingCLI testMode />);
       // Check that both mobile and desktop versions are available
       const step1Elements = screen.getAllByText('Step 1');
-      const devWorkflowElements = screen.getAllByText('Dev Workflow');
       expect(step1Elements.length).toBeGreaterThan(0);
-      expect(devWorkflowElements.length).toBeGreaterThan(0);
     });
 
     it('handles mobile navigation correctly', () => {
@@ -319,7 +317,7 @@ describe('FloatingCLI Functional Tests', () => {
       
       const step2Elements = screen.getAllByText('Step 2: Run Unit & Functional Tests');
       expect(step2Elements.length).toBeGreaterThan(0);
-      const testCommandElements = screen.getAllByText('npm test -- --coverage');
+      const testCommandElements = screen.getAllByText('npm run test:coverage');
       expect(testCommandElements.length).toBeGreaterThan(0);
     });
 
