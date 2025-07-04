@@ -8,8 +8,11 @@ import type * as THREE from "three"
 function Stars(props: any) {
   const ref = useRef<THREE.Points>(null!)
   const [sphere] = useState(() => {
-    const positions = new Float32Array(5000 * 3)
-    for (let i = 0; i < 5000; i++) {
+    // Reduce particles on mobile for better performance
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    const particleCount = isMobile ? 1500 : 5000;
+    const positions = new Float32Array(particleCount * 3)
+    for (let i = 0; i < particleCount; i++) {
       const r = 4 + Math.random() * 4
       const theta = Math.random() * 2 * Math.PI
       const phi = Math.acos(2 * Math.random() - 1)
@@ -43,8 +46,11 @@ function Stars(props: any) {
 function SecondaryStars(props: any) {
   const ref = useRef<THREE.Points>(null!)
   const [sphere] = useState(() => {
-    const positions = new Float32Array(3000 * 3)
-    for (let i = 0; i < 3000; i++) {
+    // Reduce particles on mobile for better performance
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    const particleCount = isMobile ? 1000 : 3000;
+    const positions = new Float32Array(particleCount * 3)
+    for (let i = 0; i < particleCount; i++) {
       const r = 6 + Math.random() * 6
       const theta = Math.random() * 2 * Math.PI
       const phi = Math.acos(2 * Math.random() - 1)
@@ -78,8 +84,11 @@ function SecondaryStars(props: any) {
 function AccentStars(props: any) {
   const ref = useRef<THREE.Points>(null!)
   const [sphere] = useState(() => {
-    const positions = new Float32Array(2000 * 3)
-    for (let i = 0; i < 2000; i++) {
+    // Reduce particles on mobile for better performance
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    const particleCount = isMobile ? 500 : 2000;
+    const positions = new Float32Array(particleCount * 3)
+    for (let i = 0; i < particleCount; i++) {
       const r = 8 + Math.random() * 8
       const theta = Math.random() * 2 * Math.PI
       const phi = Math.acos(2 * Math.random() - 1)
@@ -111,12 +120,23 @@ function AccentStars(props: any) {
 }
 
 export function HeroScene() {
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+  
   return (
-    <Canvas camera={{ position: [0, 0, 8] }}>
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} intensity={120} color="#00f5ff" />
-      <pointLight position={[-10, -10, -10]} intensity={60} color="#00f5ff" />
-      <pointLight position={[0, 0, 10]} intensity={40} color="#39ff14" />
+    <Canvas 
+      camera={{ position: [0, 0, 8] }}
+      gl={{
+        antialias: !isMobile, // Disable antialiasing on mobile for better performance
+        pixelRatio: isMobile ? 1 : Math.min(window.devicePixelRatio, 2), // Limit pixel ratio on mobile
+        alpha: true,
+        premultipliedAlpha: true
+      }}
+      performance={{ min: 0.5 }} // Reduce quality if performance drops
+    >
+      <ambientLight intensity={isMobile ? 0.3 : 0.5} />
+      <pointLight position={[10, 10, 10]} intensity={isMobile ? 60 : 120} color="#00f5ff" />
+      <pointLight position={[-10, -10, -10]} intensity={isMobile ? 30 : 60} color="#00f5ff" />
+      <pointLight position={[0, 0, 10]} intensity={isMobile ? 20 : 40} color="#39ff14" />
       <Stars />
       <SecondaryStars />
       <AccentStars />

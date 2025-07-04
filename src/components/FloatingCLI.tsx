@@ -476,7 +476,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
           className={`fixed z-40 floating-cli-container ${
             isMaximized
               ? 'inset-x-0 left-0 right-0 top-[5.5rem] bottom-0 m-0 md:inset-x-6 md:top-[5.5rem] md:bottom-6 md:m-0' // offset for header
-              : 'bottom-6 right-6 w-[calc(100vw-2rem)] h-[22rem] md:bottom-8 md:right-8 md:w-[22rem] md:h-[22rem] lg:w-[26rem] lg:h-[26rem] xl:w-[30rem] xl:h-[30rem]'
+              : 'bottom-6 right-6 w-[22rem] h-[22rem] lg:w-[26rem] lg:h-[26rem] xl:w-[30rem] xl:h-[30rem]'
           }`}
           data-maximized={isMaximized}
           tabIndex={0}
@@ -536,11 +536,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
                   </div>
                   <div className="min-w-0 flex-1">
                     <span className={`text-sm md:text-base font-semibold ${textColor} truncate block`}>
-                      <span className="md:hidden">Step {steps[currentStep].id}</span>
-                      <span className="hidden md:inline">Step {steps[currentStep].id}: {steps[currentStep].title}</span>
-                    </span>
-                    <span className={`text-xs ${textSecondary} block md:hidden truncate`}>
-                      {steps[currentStep].title}
+                      Step {steps[currentStep].id}: {steps[currentStep].title}
                     </span>
                   </div>
                 </div>
@@ -595,13 +591,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
               <div className={`flex items-center space-x-3 flex-shrink-0 p-3 rounded-lg ${isDark ? 'bg-gray-900/50 ring-1 ring-gray-700/50' : 'bg-gray-50/50 ring-1 ring-gray-200/50'} font-mono`}>
                 <span className={`${isDark ? 'text-green-400' : 'text-green-600'} text-sm md:text-base font-semibold`}>$</span>
                 <span className={`${isDark ? 'text-blue-400' : 'text-blue-600'} text-sm md:text-base truncate`}>
-                  <span className="md:hidden">
-                    {steps[currentStep].command.length > 25 
-                      ? steps[currentStep].command.substring(0, 25) + '...'
-                      : steps[currentStep].command
-                    }
-                  </span>
-                  <span className="hidden md:inline">{steps[currentStep].command}</span>
+                  {steps[currentStep].command}
                 </span>
               </div>
 

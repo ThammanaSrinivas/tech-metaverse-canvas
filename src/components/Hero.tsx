@@ -152,12 +152,10 @@ const Hero: React.FC = () => {
       {/* Animated background grid - reduced opacity on mobile */}
       <div className={`absolute inset-0 grid-bg opacity-${isMobile ? '5' : '20'} animate-grid-move`}></div>
       
-      {/* 3D Stars Scene - disabled on mobile for performance */}
-      {!isMobile && (
-        <div className="absolute inset-0">
-          <HeroScene />
-        </div>
-      )}
+      {/* 3D Stars Scene - optimized for mobile performance */}
+      <div className="absolute inset-0">
+        <HeroScene />
+      </div>
       
       
       {/* Gradient overlays for depth */}
