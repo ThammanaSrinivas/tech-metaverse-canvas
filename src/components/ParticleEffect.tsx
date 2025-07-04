@@ -38,7 +38,7 @@ const ParticleEffect: React.FC = () => {
       speedX: (Math.random() - 0.5) * 0.3, // Slower movement
       speedY: (Math.random() - 0.5) * 0.3,
       opacity: Math.random() * 0.3 + 0.2, // Lower opacity
-      color: ['#00f5ff', '#bf00ff', '#ff0066', '#00ff88'][Math.floor(Math.random() * 4)]
+      color: ['#00f5ff', '#00ff88', '#39ff14'][Math.floor(Math.random() * 3)]
     }));
 
     setParticles(initialParticles);

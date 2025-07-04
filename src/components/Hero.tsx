@@ -11,6 +11,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 
 const AnimatedText: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [displayedText, setDisplayedText] = useState('');
+  const [isTyping, setIsTyping] = useState(true);
   const texts = [
     "3+ Years Experience",
     "System Architecture", 
@@ -18,30 +20,47 @@ const AnimatedText: React.FC = () => {
   ];
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % texts.length);
-    }, 3000); // Change text every 3 seconds
+    let timeoutId: NodeJS.Timeout;
+    const currentText = texts[currentIndex];
+    
+    if (isTyping) {
+      // Typing effect
+      if (displayedText.length < currentText.length) {
+        timeoutId = setTimeout(() => {
+          setDisplayedText(currentText.slice(0, displayedText.length + 1));
+        }, 100); // Typing speed
+      } else {
+        // Finished typing, wait before starting to delete
+        timeoutId = setTimeout(() => {
+          setIsTyping(false);
+        }, 2000); // Pause duration
+      }
+    } else {
+      // Deleting effect
+      if (displayedText.length > 0) {
+        timeoutId = setTimeout(() => {
+          setDisplayedText(displayedText.slice(0, -1));
+        }, 50); // Deleting speed
+      } else {
+        // Finished deleting, move to next text
+        setCurrentIndex((prev) => (prev + 1) % texts.length);
+        setIsTyping(true);
+      }
+    }
 
-    return () => clearInterval(interval);
-  }, [texts.length]);
+    return () => clearTimeout(timeoutId);
+  }, [currentIndex, displayedText, isTyping, texts]);
 
   return (
     <div className="relative inline-block min-w-[200px] sm:min-w-[250px] h-[1.5em] overflow-hidden">
-      <AnimatePresence mode="wait">
+      <span className="text-primary font-semibold whitespace-nowrap">
+        {displayedText}
         <motion.span
-          key={currentIndex}
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -50, opacity: 0 }}
-          transition={{ 
-            duration: 0.5,
-            ease: "easeInOut"
-          }}
-          className="absolute left-0 top-0 text-primary font-semibold whitespace-nowrap"
-        >
-          {texts[currentIndex]}
-        </motion.span>
-      </AnimatePresence>
+          animate={{ opacity: [1, 0, 1] }}
+          transition={{ duration: 1, repeat: Infinity }}
+          className="inline-block ml-1 w-0.5 h-[1.2em] bg-primary"
+        />
+      </span>
     </div>
   );
 };
@@ -50,8 +69,11 @@ const Hero: React.FC = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [spotlightPosition, setSpotlightPosition] = useState({ x: 50, y: 50 });
+  const [glitchTrigger, setGlitchTrigger] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll();
+  const { theme } = useTheme();
   
   // Parallax effects - reduced on mobile
   const y1 = useTransform(scrollYProgress, [0, 1], [0, isMobile ? -50 : -100]);
@@ -75,6 +97,12 @@ const Hero: React.FC = () => {
         if (containerRef.current) {
           const position = animationUtils.getMousePosition(e, containerRef.current);
           setMousePosition(position);
+          
+          // Calculate spotlight position as percentage for CSS
+          const rect = containerRef.current.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width) * 100;
+          const y = ((e.clientY - rect.top) / rect.height) * 100;
+          setSpotlightPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
         }
       };
 
@@ -137,6 +165,18 @@ const Hero: React.FC = () => {
         </div>
       )}
       
+      {/* Mouse-following spotlight effect */}
+      {!isMobile && (
+        <div 
+          className="absolute inset-0 pointer-events-none transition-all duration-300 ease-out"
+          style={{
+            background: theme === 'dark' 
+              ? `radial-gradient(circle 500px at ${spotlightPosition.x}% ${spotlightPosition.y}%, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 40%, rgba(255, 223, 0, 0.03) 60%, transparent 80%)`
+              : `radial-gradient(circle 600px at ${spotlightPosition.x}% ${spotlightPosition.y}%, rgba(0, 245, 255, 0.06) 0%, rgba(0, 245, 255, 0.03) 30%, transparent 70%)`,
+          }}
+        />
+      )}
+      
       {/* Gradient overlays for depth */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background/80"></div>
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/20 to-transparent"></div>
@@ -153,22 +193,104 @@ const Hero: React.FC = () => {
           variants={textVariants}
           className="mb-6 sm:mb-8 lg:mb-12"
         >
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-bold mb-3 sm:mb-4 lg:mb-6 tracking-tight leading-tight heading-primary">
-            <span className="text-foreground">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-bold mb-3 sm:mb-4 lg:mb-6 tracking-tight leading-tight heading-primary glitch-trigger">
+            <motion.span 
+              className={`text-foreground inline-block glitch ${glitchTrigger ? 'animate-pulse' : ''}`}
+              data-text="Digital Architect"
+              whileHover={{ 
+                scale: 1.02,
+                textShadow: "0 0 20px rgba(0, 245, 255, 0.5)"
+              }}
+              transition={{ duration: 0.3 }}
+              onHoverStart={() => setGlitchTrigger(true)}
+              onHoverEnd={() => setGlitchTrigger(false)}
+            >
               Digital Architect
-            </span>
+            </motion.span>
           </h1>
         </motion.div>
 
         <motion.div
           variants={textVariants}
           style={{ y: y2 }}
-          className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground mb-12 sm:mb-16 lg:mb-20 max-w-4xl mx-auto leading-relaxed font-light px-2 sm:px-4"
+          className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground mb-8 sm:mb-12 lg:mb-16 max-w-4xl mx-auto leading-relaxed font-light px-2 sm:px-4"
         >
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <span>Crafting immersive digital experiences with</span>
+            <motion.span
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+            >
+              Crafting immersive digital experiences with
+            </motion.span>
             <AnimatedText />
           </div>
+        </motion.div>
+
+        {/* CTA Buttons */}
+        <motion.div
+          variants={textVariants}
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-12 sm:mb-16 lg:mb-20"
+        >
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="group"
+          >
+            <Button
+              onClick={scrollToProjects}
+              size="lg"
+              className="relative overflow-hidden bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group-hover:shadow-primary/25"
+            >
+              <motion.span
+                className="relative z-10 flex items-center gap-2"
+                initial={false}
+                animate={{ x: 0 }}
+                whileHover={{ x: 4 }}
+              >
+                View My Work
+                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+              </motion.span>
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                initial={false}
+                whileHover={{ scale: 1.05 }}
+              />
+            </Button>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="group"
+          >
+            <ResumeButton 
+              variant="outline"
+              size="lg"
+              className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/25"
+            />
+          </motion.div>
+
+          <motion.div
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            whileTap={{ scale: 0.95 }}
+            className="group cursor-pointer"
+            onClick={() => {
+              const contactSection = document.getElementById('contact');
+              if (contactSection) {
+                contactSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+          >
+            <div className="relative p-4 rounded-full bg-muted hover:bg-muted/80 transition-all duration-300 group-hover:shadow-lg">
+              <ChevronDown className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors animate-bounce" />
+              <motion.div
+                className="absolute inset-0 rounded-full border-2 border-primary opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-110 transition-all duration-300"
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6 }}
+              />
+            </div>
+          </motion.div>
         </motion.div>
       </motion.div>
 

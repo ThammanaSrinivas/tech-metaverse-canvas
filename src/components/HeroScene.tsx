@@ -65,7 +65,7 @@ function SecondaryStars(props: any) {
       <Points ref={ref} positions={sphere} stride={3} frustumCulled={false} {...props}>
         <PointMaterial 
           transparent 
-          color="#bf00ff" 
+          color="#00f5ff" 
           size={0.02} 
           sizeAttenuation={true} 
           depthWrite={false} 
@@ -115,7 +115,7 @@ export function HeroScene() {
     <Canvas camera={{ position: [0, 0, 8] }}>
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} intensity={120} color="#00f5ff" />
-      <pointLight position={[-10, -10, -10]} intensity={60} color="#bf00ff" />
+      <pointLight position={[-10, -10, -10]} intensity={60} color="#00f5ff" />
       <pointLight position={[0, 0, 10]} intensity={40} color="#39ff14" />
       <Stars />
       <SecondaryStars />

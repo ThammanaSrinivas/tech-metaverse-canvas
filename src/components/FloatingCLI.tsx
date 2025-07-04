@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, CheckCircle, XCircle, Play, Code, TestTube, Rocket, BarChart3, Minus, Maximize2, X, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -48,7 +48,7 @@ const FloatingCLI: React.FC<FloatingCLIProps> = ({ testMode = false }) => {
   const outputRef = useRef<HTMLDivElement>(null);
   const cliRef = useRef<HTMLDivElement>(null);
 
-  const steps: CLIStep[] = [
+  const steps: CLIStep[] = useMemo(() => [
     {
       id: 1,
       title: "Write Code",
@@ -265,7 +265,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
       icon: <Rocket className="w-4 h-4" />,
       delay: 3000,
     },
-  ];
+  ], []);
 
   // Initialize component with proper timing to prevent flash
   useEffect(() => {
@@ -340,17 +340,24 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
     setIsAutoPlaying(true);
   }, []);
 
-  // Theme-aware color classes
-  const isDark = theme === 'dark';
-  const bgColor = isDark ? 'bg-gray-800/90' : 'bg-white/90';
-  const headerBg = isDark ? 'bg-gray-900/80' : 'bg-gray-100/80';
-  const borderColor = isDark ? 'border-gray-700' : 'border-gray-300';
-  const textColor = isDark ? 'text-gray-300' : 'text-gray-700';
-  const textSecondary = isDark ? 'text-gray-400' : 'text-gray-600';
-  const textGreen = isDark ? 'text-green-400' : 'text-green-600';
-  const outputBg = isDark ? 'bg-black/50' : 'bg-gray-100/50';
-  const progressBg = isDark ? 'bg-gray-700' : 'bg-gray-300';
-  const progressFill = isDark ? 'bg-green-400' : 'bg-green-500';
+  // Theme-aware color classes (memoized for performance)
+  const themeClasses = useMemo(() => {
+    const isDark = theme === 'dark';
+    return {
+      isDark,
+      bgColor: isDark ? 'bg-gray-800/90' : 'bg-white/90',
+      headerBg: isDark ? 'bg-gray-900/80' : 'bg-gray-100/80',
+      borderColor: isDark ? 'border-gray-700' : 'border-gray-300',
+      textColor: isDark ? 'text-gray-300' : 'text-gray-700',
+      textSecondary: isDark ? 'text-gray-400' : 'text-gray-600',
+      textGreen: isDark ? 'text-green-400' : 'text-green-600',
+      outputBg: isDark ? 'bg-black/50' : 'bg-gray-100/50',
+      progressBg: isDark ? 'bg-gray-700' : 'bg-gray-300',
+      progressFill: isDark ? 'bg-green-400' : 'bg-green-500'
+    };
+  }, [theme]);
+  
+  const { isDark, bgColor, headerBg, borderColor, textColor, textSecondary, textGreen, outputBg, progressBg, progressFill } = themeClasses;
 
   // Don't render anything until initialized to prevent flash
   if (!isInitialized) {
@@ -367,8 +374,9 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
         onClick={handleReopen}
         className="fixed z-50 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bottom-8 right-4 md:bottom-12 md:right-6"
         title="Reopen Developer Workflow"
+        aria-label="Reopen developer workflow terminal"
       >
-        <Terminal className="w-5 h-5 md:w-6 md:h-6" />
+        <Terminal className="w-5 h-5 md:w-6 md:h-6" aria-hidden="true" />
       </motion.button>
     );
   }
@@ -383,8 +391,9 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
         onClick={handleReopen}
         className={`fixed z-50 p-3 ${bgColor} ${textGreen} rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 bottom-8 right-4 md:bottom-12 md:right-6`}
         title="Restore Developer Workflow"
+        aria-label="Restore developer workflow terminal"
       >
-        <Terminal className="w-5 h-5 md:w-6 md:h-6" />
+        <Terminal className="w-5 h-5 md:w-6 md:h-6" aria-hidden="true" />
       </motion.button>
     );
   }
@@ -405,8 +414,8 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
           }}
           className={`fixed z-40 floating-cli-container ${
             isMaximized
-              ? 'inset-x-0 left-0 right-0 top-[5.5rem] bottom-0 m-0 md:inset-x-4 md:top-[5.5rem] md:bottom-4 md:m-0' // offset for header
-              : 'bottom-8 right-4 w-[calc(100vw-2rem)] h-80 md:bottom-12 md:right-8 md:w-80 md:h-80 lg:w-96 lg:h-96 xl:w-[28rem] xl:h-[28rem]'
+              ? 'inset-x-0 left-0 right-0 top-[5.5rem] bottom-0 m-0 md:inset-x-6 md:top-[5.5rem] md:bottom-6 md:m-0' // offset for header
+              : 'bottom-6 right-6 w-[calc(100vw-2rem)] h-[22rem] md:bottom-8 md:right-8 md:w-[22rem] md:h-[22rem] lg:w-[26rem] lg:h-[26rem] xl:w-[30rem] xl:h-[30rem]'
           }`}
           data-maximized={isMaximized}
           tabIndex={0}
@@ -415,101 +424,123 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
           {/* Terminal Window */}
           <div 
             ref={cliRef}
-            className={`${bgColor} backdrop-blur-sm rounded-lg shadow-2xl border ${borderColor} h-full flex flex-col`}
+            className={`${bgColor} backdrop-blur-md rounded-xl shadow-2xl ring-1 ring-white/10 border ${borderColor} h-full flex flex-col transition-all duration-200 hover:shadow-3xl`}
+            style={{
+              boxShadow: isDark 
+                ? '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05)'
+                : '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)'
+            }}
           >
             {/* Terminal Header */}
-            <div className={`flex items-center justify-between p-2 md:p-3 ${headerBg} rounded-t-lg border-b ${borderColor} flex-shrink-0 select-none`}>
-              <div className="flex items-center space-x-1 md:space-x-2 min-w-0 flex-1">
-                <Terminal className={`w-3 h-3 md:w-4 md:h-4 ${textGreen} flex-shrink-0`} />
-                <span className={`text-xs md:text-sm font-mono ${textColor} truncate`}>
+            <div className={`flex items-center justify-between p-3 md:p-4 ${headerBg} rounded-t-xl border-b ${borderColor} flex-shrink-0 select-none backdrop-blur-sm`}>
+              <div className="flex items-center space-x-2 md:space-x-3 min-w-0 flex-1">
+                <div className={`p-1.5 rounded-lg ${isDark ? 'bg-green-400/10' : 'bg-green-500/10'} flex-shrink-0`}>
+                  <Terminal className={`w-3.5 h-3.5 md:w-4 md:h-4 ${textGreen} flex-shrink-0`} />
+                </div>
+                <span className={`text-sm md:text-base font-semibold ${textColor} truncate tracking-tight`}>
                   <span className="md:hidden">Dev Workflow</span>
                   <span className="hidden md:inline">Development Workflow</span>
                 </span>
               </div>
-              <div className="flex items-center space-x-1 flex-shrink-0">
+              <div className="flex items-center space-x-2 flex-shrink-0">
                   <button
                     onClick={() => handleWindowControl('minimize')}
-                  className="hidden md:block w-2.5 h-2.5 md:w-3 md:h-3 bg-yellow-500 rounded-full hover:bg-yellow-400 transition-colors"
+                  className="hidden md:flex w-3.5 h-3.5 bg-yellow-500 rounded-full hover:bg-yellow-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
                     title="Minimize"
                   >
-                    <Minus className="w-1.5 h-1.5 md:w-2 md:h-2 text-gray-800 mx-auto" />
+                    <Minus className="w-2 h-2 text-yellow-900 group-hover:text-yellow-800" />
                   </button>
                 <button
                   onClick={() => handleWindowControl('maximize')}
-                  className="w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full hover:bg-green-400 transition-colors"
+                  className="flex w-3.5 h-3.5 bg-green-500 rounded-full hover:bg-green-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-500/50"
                   title={isMaximized ? "Restore" : "Maximize"}
                 >
-                  <Maximize2 className="w-1.5 h-1.5 md:w-2 md:h-2 text-gray-800 mx-auto" />
+                  <Maximize2 className="w-2 h-2 text-green-900 group-hover:text-green-800" />
                 </button>
                 <button
                   onClick={() => handleWindowControl('close')}
-                  className="w-2.5 h-2.5 md:w-3 md:h-3 bg-red-500 rounded-full hover:bg-red-400 transition-colors"
+                  className="flex w-3.5 h-3.5 bg-red-500 rounded-full hover:bg-red-400 transition-all duration-200 items-center justify-center group hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                   title="Close"
                 >
-                  <X className="w-1.5 h-1.5 md:w-2 md:h-2 text-gray-800 mx-auto" />
+                  <X className="w-2 h-2 text-red-900 group-hover:text-red-800" />
                 </button>
               </div>
             </div>
 
             {/* Terminal Content */}
-            <div className="flex-1 flex flex-col p-2 md:p-4 space-y-2 md:space-y-3 min-h-0">
+            <div className="flex-1 flex flex-col p-4 md:p-5 space-y-3 md:space-y-4 min-h-0">
               {/* Step Header */}
               <div className="flex items-center justify-between flex-shrink-0">
-                <div className="flex items-center space-x-1 md:space-x-2 min-w-0 flex-1">
-                  <div className="flex-shrink-0">
-                    {steps[currentStep].icon}
+                <div className="flex items-center space-x-2 md:space-x-3 min-w-0 flex-1">
+                  <div className={`p-2 rounded-lg ${isDark ? 'bg-blue-500/10 ring-1 ring-blue-500/20' : 'bg-blue-500/10 ring-1 ring-blue-500/20'} flex-shrink-0`}>
+                    <div className={`${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                      {steps[currentStep].icon}
+                    </div>
                   </div>
-                  <span className={`text-xs md:text-sm font-mono ${textGreen} truncate`}>
-                    <span className="md:hidden">S{steps[currentStep].id}</span>
-                    <span className="hidden md:inline">Step {steps[currentStep].id}: {steps[currentStep].title}</span>
-                  </span>
+                  <div className="min-w-0 flex-1">
+                    <span className={`text-sm md:text-base font-semibold ${textColor} truncate block`}>
+                      <span className="md:hidden">Step {steps[currentStep].id}</span>
+                      <span className="hidden md:inline">Step {steps[currentStep].id}: {steps[currentStep].title}</span>
+                    </span>
+                    <span className={`text-xs ${textSecondary} block md:hidden truncate`}>
+                      {steps[currentStep].title}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center space-x-1 md:space-x-2 flex-shrink-0">
                   <button
                     onClick={handleAutoPlayToggle}
-                    className={`p-1 rounded ${
-                      isAutoPlaying ? textGreen : textSecondary
-                    } hover:text-green-300 transition-colors`}
+                    className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500/50 ${
+                      isAutoPlaying 
+                        ? `${isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-500/20 text-green-600'}`
+                        : `${isDark ? 'bg-gray-700/50 text-gray-400 hover:text-green-400' : 'bg-gray-200/50 text-gray-600 hover:text-green-600'}`
+                    }`}
                     title={isAutoPlaying ? "Pause Auto-play" : "Resume Auto-play"}
                   >
-                    <Play className={`w-3 h-3 md:w-4 md:h-4 ${!isAutoPlaying ? 'rotate-90' : ''}`} />
+                    <Play className={`w-3.5 h-3.5 transition-transform duration-200 ${!isAutoPlaying ? 'rotate-90' : ''}`} />
                   </button>
                   <button
                     onClick={() => handleStepNavigation('prev')}
                     disabled={currentStep === 0}
-                    className={`p-1 rounded ${textSecondary} hover:${textGreen} disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
+                    className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 ${
+                      isDark ? 'bg-gray-700/50 text-gray-400 hover:text-blue-400' : 'bg-gray-200/50 text-gray-600 hover:text-blue-600'
+                    }`}
                     title="Previous Step"
                   >
-                    <ChevronLeft className="w-3 h-3 md:w-4 md:h-4" />
+                    <ChevronLeft className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => handleStepNavigation('next')}
                     disabled={currentStep === steps.length - 1}
-                    className={`p-1 rounded ${textSecondary} hover:${textGreen} disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
+                    className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 ${
+                      isDark ? 'bg-gray-700/50 text-gray-400 hover:text-blue-400' : 'bg-gray-200/50 text-gray-600 hover:text-blue-600'
+                    }`}
                     title="Next Step"
                   >
-                    <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
+                    <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
               {/* Progress Bar */}
-              <div className={`w-full ${progressBg} rounded-full h-1 flex-shrink-0`} role="progressbar">
+              <div className={`w-full ${progressBg} rounded-full h-2 flex-shrink-0 overflow-hidden`} role="progressbar" aria-valuenow={currentStep + 1} aria-valuemin={1} aria-valuemax={steps.length}>
                 <motion.div
-                  className={`${progressFill} h-1 rounded-full`}
+                  className={`${progressFill} h-2 rounded-full relative overflow-hidden`}
                   initial={{ width: 0 }}
                   animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-                  transition={{ duration: 0.5 }}
-                />
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
+                </motion.div>
               </div>
 
               {/* Command Line */}
-              <div className="flex items-center space-x-2 flex-shrink-0">
-                <span className="text-green-500 font-mono text-xs md:text-sm">$</span>
-                <span className="text-blue-500 font-mono text-xs md:text-sm truncate">
+              <div className={`flex items-center space-x-3 flex-shrink-0 p-3 rounded-lg ${isDark ? 'bg-gray-900/50 ring-1 ring-gray-700/50' : 'bg-gray-50/50 ring-1 ring-gray-200/50'} font-mono`}>
+                <span className={`${isDark ? 'text-green-400' : 'text-green-600'} text-sm md:text-base font-semibold`}>$</span>
+                <span className={`${isDark ? 'text-blue-400' : 'text-blue-600'} text-sm md:text-base truncate`}>
                   <span className="md:hidden">
-                    {steps[currentStep].command.length > 30 
-                      ? steps[currentStep].command.substring(0, 30) + '...'
+                    {steps[currentStep].command.length > 25 
+                      ? steps[currentStep].command.substring(0, 25) + '...'
                       : steps[currentStep].command
                     }
                   </span>
@@ -520,15 +551,17 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
               {/* Output Area */}
               <div 
                 ref={outputRef}
-                className={`flex-1 ${outputBg} rounded p-2 md:p-3 font-mono text-xs ${textColor} overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 min-h-0`}
+                className={`flex-1 ${outputBg} rounded-lg p-3 md:p-4 font-mono text-xs md:text-sm ${textColor} overflow-y-auto overflow-x-hidden min-h-0 ring-1 ${isDark ? 'ring-gray-700/50' : 'ring-gray-200/50'}`}
                 style={{ 
                   maxHeight: isMaximized 
-                    ? 'calc(100vh - 120px)'
-                    : 'clamp(100px, 35vh, 150px)'
+                    ? 'calc(100vh - 140px)'
+                    : 'clamp(120px, 40vh, 180px)',
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: isDark ? '#4B5563 #1F2937' : '#D1D5DB #F3F4F6'
                 }}
               >
                 {steps[currentStep].command.startsWith('vim') ? (
-                  <pre className="whitespace-pre-wrap break-words overflow-hidden bg-gray-900 text-green-300 rounded p-2">
+                  <pre className={`whitespace-pre-wrap break-words overflow-hidden rounded-lg p-3 ${isDark ? 'bg-gray-900 text-green-300 ring-1 ring-green-500/20' : 'bg-gray-100 text-green-700 ring-1 ring-green-500/20'}`}>
                     <code>{steps[currentStep].output}</code>
                   </pre>
                 ) : (
@@ -550,21 +583,35 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
               </div>
 
               {/* Status Indicator */}
-              <div className="flex items-center justify-between text-xs flex-shrink-0">
-                <div className="flex items-center space-x-1 md:space-x-2">
-                  <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${
-                    steps[currentStep].status === 'success' ? 'bg-green-400' :
-                    steps[currentStep].status === 'error' ? 'bg-red-400' :
-                    steps[currentStep].status === 'running' ? 'bg-yellow-400' :
-                    'bg-gray-400'
-                  }`} />
-                  <span className={`${textSecondary} capitalize text-xs`}>
-                    {steps[currentStep].status}
+              <div className="flex items-center justify-between text-sm flex-shrink-0">
+                <div className="flex items-center space-x-2 md:space-x-3">
+                  <div className={`relative flex items-center space-x-2 px-3 py-1.5 rounded-lg ${
+                    steps[currentStep].status === 'success' ? `${isDark ? 'bg-green-500/20 ring-1 ring-green-500/30' : 'bg-green-500/20 ring-1 ring-green-500/30'}` :
+                    steps[currentStep].status === 'error' ? `${isDark ? 'bg-red-500/20 ring-1 ring-red-500/30' : 'bg-red-500/20 ring-1 ring-red-500/30'}` :
+                    steps[currentStep].status === 'running' ? `${isDark ? 'bg-yellow-500/20 ring-1 ring-yellow-500/30' : 'bg-yellow-500/20 ring-1 ring-yellow-500/30'}` :
+                    `${isDark ? 'bg-gray-500/20 ring-1 ring-gray-500/30' : 'bg-gray-500/20 ring-1 ring-gray-500/30'}`
+                  }`}>
+                    <div className={`w-2 h-2 rounded-full ${
+                      steps[currentStep].status === 'success' ? 'bg-green-400' :
+                      steps[currentStep].status === 'error' ? 'bg-red-400' :
+                      steps[currentStep].status === 'running' ? 'bg-yellow-400 animate-pulse' :
+                      'bg-gray-400'
+                    }`} />
+                    <span className={`capitalize text-xs font-medium ${
+                      steps[currentStep].status === 'success' ? 'text-green-400' :
+                      steps[currentStep].status === 'error' ? 'text-red-400' :
+                      steps[currentStep].status === 'running' ? 'text-yellow-400' :
+                      'text-gray-400'
+                    }`}>
+                      {steps[currentStep].status}
+                    </span>
+                  </div>
+                </div>
+                <div className={`px-3 py-1.5 rounded-lg ${isDark ? 'bg-gray-700/50 ring-1 ring-gray-600/50' : 'bg-gray-200/50 ring-1 ring-gray-300/50'}`}>
+                  <span className={`${textSecondary} text-xs font-medium`}>
+                    {currentStep + 1} / {steps.length}
                   </span>
                 </div>
-                <span className={`${textSecondary} text-xs`}>
-                  {currentStep + 1} / {steps.length}
-                </span>
               </div>
             </div>
           </div>
@@ -576,4 +623,7 @@ Effective Coverage: ${getEffectiveCoverage(mockCoverage)}%
 
 FloatingCLI.displayName = 'FloatingCLI';
 
-export default React.memo(FloatingCLI);
+export default React.memo(FloatingCLI, (prevProps, nextProps) => {
+  // Custom comparison for better memoization
+  return prevProps.testMode === nextProps.testMode;
+});

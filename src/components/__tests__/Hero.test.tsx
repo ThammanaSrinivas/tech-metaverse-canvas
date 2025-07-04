@@ -4,6 +4,19 @@ import { BrowserRouter } from 'react-router-dom';
 import Hero from '@/components/Hero';
 import React from 'react';
 
+// Mock the theme context
+const mockThemeContext = {
+  theme: 'dark' as const,
+  setTheme: vi.fn(),
+  effectiveTheme: 'dark' as const,
+  toggleTheme: vi.fn(),
+};
+
+// Mock the useTheme hook
+vi.mock('@/contexts/ThemeContext', () => ({
+  useTheme: () => mockThemeContext,
+}));
+
 // Mock 3D components that cause ResizeObserver issues
 vi.mock('../Scene3D', () => ({
   default: () => <div data-testid="scene3d">Scene3D</div>,
@@ -17,16 +30,32 @@ vi.mock('../FloatingCLI', () => ({
   default: () => <div data-testid="floating-cli">FloatingCLI</div>,
 }));
 
+// Mock UI components
+vi.mock('@/components/ui/button', () => ({
+  Button: ({ children, onClick, ...props }: any) => (
+    <button onClick={onClick} {...props}>{children}</button>
+  ),
+}));
+
+vi.mock('../ui/ResumeButton', () => ({
+  default: ({ children, ...props }: any) => (
+    <button {...props}>Resume Button</button>
+  ),
+}));
+
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    span: ({ children, ...props }: any) => <span {...props}>{children}</span>,
+    h1: ({ children, ...props }: any) => <h1 {...props}>{children}</h1>,
     p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
   },
   useScroll: () => ({
     scrollYProgress: { get: () => 0 },
   }),
   useTransform: () => ({ get: () => 0 }),
+  AnimatePresence: ({ children }: any) => <div>{children}</div>,
 }));
 
 // Mock lucide-react icons
@@ -89,41 +118,37 @@ describe('Hero', () => {
   it('renders action buttons', () => {
     renderWithRouter(<Hero />);
     
-    expect(screen.getByText('View Projects')).toBeInTheDocument();
-    expect(screen.getByText('View Resume')).toBeInTheDocument();
+    expect(screen.getByText('View My Work')).toBeInTheDocument();
+    // Resume button text comes from ResumeButton component
   });
 
-  it('renders experience stats', () => {
+  it('renders animated text component', () => {
     renderWithRouter(<Hero />);
     
-    expect(screen.getByText('3+')).toBeInTheDocument();
-    expect(screen.getByText('Years Experience')).toBeInTheDocument();
-    expect(screen.getByText('System')).toBeInTheDocument();
-    expect(screen.getByText('Architecture')).toBeInTheDocument();
-    expect(screen.getByText('Full Stack')).toBeInTheDocument();
-    expect(screen.getByText('Development')).toBeInTheDocument();
+    // The animated text component should be present (with typewriter effect)
+    // Check for the animated text container and cursor
+    const animatedTextContainer = document.querySelector('.relative.inline-block');
+    expect(animatedTextContainer).toBeInTheDocument();
   });
 
-  it('scrolls to projects when View Projects button is clicked', () => {
+  it('scrolls to projects when View My Work button is clicked', () => {
     renderWithRouter(<Hero />);
     
-    const viewProjectsButton = screen.getByText('View Projects');
+    const viewProjectsButton = screen.getByText('View My Work');
     fireEvent.click(viewProjectsButton);
     
     expect(mockGetElementById).toHaveBeenCalledWith('projects');
     expect(mockScrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
   });
 
-  it('opens resume link when Download Resume button is clicked', () => {
+  it('contains resume button component', () => {
     renderWithRouter(<Hero />);
     
-    const downloadResumeButton = screen.getByText('View Resume');
-    fireEvent.click(downloadResumeButton);
-    
-    expect(mockOpen).toHaveBeenCalledWith(
-      'https://drive.google.com/file/d/1dl6EqMYEaTCljbrqoKPbaH48pccvPxcX/view?usp=sharing',
-      '_blank'
-    );
+    // ResumeButton is a separate component, just check it's rendered
+    // The specific resume functionality is tested in ResumeButton's own tests
+    const hero = document.querySelector('section');
+    expect(hero).toBeInTheDocument();
+    expect(screen.getByText('Resume Button')).toBeInTheDocument();
   });
 
   it('has correct section structure', () => {
@@ -133,10 +158,10 @@ describe('Hero', () => {
     expect(section).toBeInTheDocument();
   });
 
-  it('handles mouse hover on View Projects button', () => {
+  it('handles mouse hover on View My Work button', () => {
     renderWithRouter(<Hero />);
     
-    const viewProjectsButton = screen.getByText('View Projects');
+    const viewProjectsButton = screen.getByText('View My Work');
     
     fireEvent.mouseEnter(viewProjectsButton);
     fireEvent.mouseLeave(viewProjectsButton);

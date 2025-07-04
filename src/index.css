@@ -234,6 +234,100 @@
     }
   }
 
+  /* Glitch animations */
+  .glitch {
+    position: relative;
+    display: inline-block;
+  }
+
+  .glitch::before,
+  .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+  }
+
+  .glitch::before {
+    animation: glitch-1 0.5s ease-in-out;
+    color: #ff0080;
+    z-index: -1;
+  }
+
+  .glitch::after {
+    animation: glitch-2 0.5s ease-in-out;
+    color: #00f5ff;
+    z-index: -2;
+  }
+
+  @keyframes glitch-1 {
+    0%, 100% {
+      opacity: 0;
+      transform: translate(0);
+    }
+    10% {
+      opacity: 1;
+      transform: translate(-2px, -2px);
+    }
+    20% {
+      opacity: 1;
+      transform: translate(2px, 2px);
+    }
+    30% {
+      opacity: 1;
+      transform: translate(-2px, 2px);
+    }
+    40% {
+      opacity: 1;
+      transform: translate(2px, -2px);
+    }
+    50% {
+      opacity: 0;
+      transform: translate(0);
+    }
+  }
+
+  @keyframes glitch-2 {
+    0%, 100% {
+      opacity: 0;
+      transform: translate(0);
+    }
+    15% {
+      opacity: 1;
+      transform: translate(3px, 3px);
+    }
+    25% {
+      opacity: 1;
+      transform: translate(-3px, -3px);
+    }
+    35% {
+      opacity: 1;
+      transform: translate(3px, -3px);
+    }
+    45% {
+      opacity: 1;
+      transform: translate(-3px, 3px);
+    }
+    55% {
+      opacity: 0;
+      transform: translate(0);
+    }
+  }
+
+  /* Subtle glitch trigger */
+  .glitch-trigger:hover .glitch::before,
+  .glitch-trigger:hover .glitch::after {
+    animation-play-state: running;
+  }
+
+  .glitch::before,
+  .glitch::after {
+    animation-play-state: paused;
+  }
+
   /* Particle effect */
   .particle {
     position: absolute;

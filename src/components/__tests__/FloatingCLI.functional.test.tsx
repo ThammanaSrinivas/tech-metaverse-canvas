@@ -248,9 +248,9 @@ describe('FloatingCLI Functional Tests', () => {
     it('adapts to mobile viewport', () => {
       render(<FloatingCLI testMode />);
       // Check that both mobile and desktop versions are available
-      const s1Elements = screen.getAllByText('S1');
+      const step1Elements = screen.getAllByText('Step 1');
       const devWorkflowElements = screen.getAllByText('Dev Workflow');
-      expect(s1Elements.length).toBeGreaterThan(0);
+      expect(step1Elements.length).toBeGreaterThan(0);
       expect(devWorkflowElements.length).toBeGreaterThan(0);
     });
 
@@ -258,8 +258,8 @@ describe('FloatingCLI Functional Tests', () => {
       render(<FloatingCLI testMode />);
       const nextButton = screen.getByTitle('Next Step');
       fireEvent.click(nextButton);
-      const s2Elements = screen.getAllByText('S2');
-      expect(s2Elements.length).toBeGreaterThan(0);
+      const step2Elements = screen.getAllByText('Step 2');
+      expect(step2Elements.length).toBeGreaterThan(0);
     });
   });
 

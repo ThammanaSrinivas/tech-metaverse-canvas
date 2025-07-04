@@ -49,7 +49,8 @@ describe('FloatingCLI', () => {
 
   it('shows first step by default', () => {
     render(<FloatingCLI testMode />);
-    expect(screen.getByText('Step 1: Write Code')).toBeInTheDocument();
+    const step1Elements = screen.getAllByText(/Step 1.*Write Code/);
+    expect(step1Elements.length).toBeGreaterThan(0);
   });
 
   it('displays command line', () => {
@@ -134,7 +135,8 @@ describe('FloatingCLI', () => {
     const prevButton = screen.getByTitle('Previous Step');
     fireEvent.click(prevButton);
     
-    expect(screen.getByText('Step 1: Write Code')).toBeInTheDocument();
+    const step1Elements = screen.getAllByText(/Step 1.*Write Code/);
+    expect(step1Elements.length).toBeGreaterThan(0);
     expect(screen.getByText('1 / 6')).toBeInTheDocument();
   });
 
@@ -206,7 +208,8 @@ describe('FloatingCLI', () => {
       if (index > 0) {
         fireEvent.click(nextButton);
       }
-      expect(screen.getByText(new RegExp(step))).toBeInTheDocument();
+      const stepElements = screen.getAllByText(new RegExp(step));
+      expect(stepElements.length).toBeGreaterThan(0);
     });
   });
 
