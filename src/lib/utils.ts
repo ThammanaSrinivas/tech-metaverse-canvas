@@ -5,57 +5,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Theme utilities
-export const themeUtils = {
-  getSystemTheme: (): 'light' | 'dark' => {
-    if (typeof window === 'undefined') return 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  },
-  
-  saveTheme: (theme: string): void => {
-    if (typeof window !== 'undefined') {
-      try {
-      localStorage.setItem('theme', theme);
-      } catch (error) {
-        console.warn('Failed to save theme to localStorage:', error);
-      }
-    }
-  },
-  
-  loadTheme: (): string | null => {
-    if (typeof window !== 'undefined') {
-      try {
-      return localStorage.getItem('theme');
-      } catch (error) {
-        console.warn('Failed to load theme from localStorage:', error);
-        return null;
-      }
-    }
-    return null;
-  },
-  
-  applyTheme: (theme: 'light' | 'dark'): void => {
-    if (typeof document !== 'undefined') {
-      const root = document.documentElement;
-      
-      // Remove existing theme classes
-      root.classList.remove('light', 'dark');
-      
-      // Add the new theme class
-      root.classList.add(theme);
-      
-      // Also set a data attribute for additional styling if needed
-      if (root.setAttribute) {
-        root.setAttribute('data-theme', theme);
-      }
-      
-      // Ensure the theme is applied to the body as well
-      document.body.classList.remove('light', 'dark');
-      document.body.classList.add(theme);
-    }
-  }
-};
-
 // Form validation utilities
 export const validationUtils = {
   isValidEmail: (email: string): boolean => {

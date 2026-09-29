@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const renderHighlightedCode = (code: string, isDark: boolean): React.ReactNode => {
+export const renderHighlightedCode = (code: string): React.ReactNode => {
   return code.split('\n').map((line, idx) => {
     const parts: React.ReactNode[] = [];
     let partIndex = 0;
@@ -33,7 +33,7 @@ export const renderHighlightedCode = (code: string, isDark: boolean): React.Reac
       } else if (token === '<' || token === '>') {
         addHighlightedPart(token, 'text-muted-foreground');
       } else if (['{', '}', '(', ')', ';', ',', '.'].includes(token)) {
-        addHighlightedPart(token, isDark ? 'text-gray-300' : 'text-gray-700');
+        addHighlightedPart(token, 'text-gray-700');
       } else {
         parts.push(token);
       }

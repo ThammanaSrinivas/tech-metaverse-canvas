@@ -77,16 +77,8 @@ const Hero: React.FC = () => {
     <>
       <section
         id="home"
-        className="dark relative flex min-h-[92svh] items-center overflow-hidden bg-background text-foreground"
+        className="dark relative flex min-h-[100svh] items-center overflow-hidden bg-background text-foreground"
       >
-        <div
-          className="pointer-events-none absolute inset-0"
-          aria-hidden
-          style={{
-            background:
-              'radial-gradient(60% 55% at 78% 40%, rgba(42,161,54,.16), transparent 70%), radial-gradient(50% 40% at 10% 100%, rgba(15,122,24,.18), transparent 70%)',
-          }}
-        />
         <HeroSky />
         {/* keep the headline side a touch calmer than the sky around it */}
         <div

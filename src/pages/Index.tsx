@@ -9,7 +9,6 @@ import CommitTimeMachine from '@/components/CommitTimeMachine';
 import Contact from '@/components/Contact';
 import Footer from '@/components/Footer';
 import ZenShell from '@/components/ZenShell';
-import Starfield from '@/components/Starfield';
 import ZenCursor from '@/components/ZenCursor';
 import { ScrollProgress } from '@/components/zen/primitives';
 import { onZen } from '@/lib/zenEvents';
@@ -23,7 +22,6 @@ const Index = () => {
 
   return (
     <div className="relative min-h-screen text-foreground">
-      <Starfield />
       <ScrollProgress />
       <a href="#zenmode" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground">
         Skip to content

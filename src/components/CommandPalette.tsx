@@ -8,10 +8,9 @@ import {
   CommandItem,
   CommandSeparator,
 } from '@/components/ui/command';
-import { useTheme } from '@/contexts/ThemeContext';
 import { LAB, LINKS, SECTIONS } from '@/data/profile';
 import { emitZen } from '@/lib/zenEvents';
-import { Github, Hash, Sun, Moon, FileText, ExternalLink, Terminal, Swords } from 'lucide-react';
+import { Github, Hash, FileText, ExternalLink, Terminal, Swords } from 'lucide-react';
 
 interface CommandPaletteProps {
   open?: boolean;
@@ -22,7 +21,6 @@ const projects = [{ name: 'zenmode', url: LINKS.zenmode }, ...LAB.map(({ name, u
 
 const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, onOpenChange }) => {
   const [internalOpen, setInternalOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
 
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
@@ -91,10 +89,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, o
         <CommandSeparator />
 
         <CommandGroup heading="Actions">
-          <CommandItem onSelect={() => run(toggleTheme)}>
-            {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
-            <span>Switch to {theme === 'dark' ? 'light' : 'dark'} theme</span>
-          </CommandItem>
           <CommandItem onSelect={() => openUrl(LINKS.resume)}>
             <FileText className="mr-2 h-4 w-4" />
             <span>View resume</span>

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Menu, Search, X } from 'lucide-react';
 import { SECTIONS, PROFILE } from '@/data/profile';
 import { ZenMark } from '@/components/zen/primitives';
-import ThemeToggle from './ThemeToggle';
 import CommandPalette from './CommandPalette';
 
 const Navigation: React.FC = () => {
@@ -28,7 +27,8 @@ const Navigation: React.FC = () => {
       (entries) => entries.forEach((e) => e.isIntersecting && setActive(e.target.id)),
       { rootMargin: '-45% 0px -50% 0px' }
     );
-    SECTIONS.forEach(({ id }) => {
+    // 'home' has no nav link: observing it clears the highlight when you're back on the hero.
+    ['home', ...SECTIONS.map((x) => x.id)].forEach((id) => {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
@@ -73,7 +73,6 @@ const Navigation: React.FC = () => {
               <span>Search</span>
               <kbd className="font-mono text-[10px] tracking-wider">⌘K</kbd>
             </button>
-            <ThemeToggle />
             <button
               className="flex h-10 w-10 items-center justify-center rounded-full border bg-card lg:hidden"
               onClick={() => setMenuOpen((o) => !o)}

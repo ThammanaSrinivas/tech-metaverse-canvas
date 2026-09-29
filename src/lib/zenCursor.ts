@@ -26,7 +26,7 @@ const k = (b: number, dt: number) => 1 - Math.pow(b, dt);
 const BG_RE = /rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,\s/]+([\d.]+))?\s*\)/;
 
 /** Walks up to the first mostly-opaque background and reports whether it is dark. */
-function readsDark(el: Element | null): boolean {
+export function readsDark(el: Element | null): boolean {
   let node: Element | null = el;
   while (node) {
     const m = BG_RE.exec(getComputedStyle(node).backgroundColor);

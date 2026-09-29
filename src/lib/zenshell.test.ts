@@ -70,10 +70,6 @@ describe('zen shell', () => {
     expect(text('work acme')).toContain("unknown company 'acme'");
   });
 
-  it('switches theme explicitly or toggles', () => {
-    expect(runCommand('theme light', ctx).effect).toEqual({ type: 'theme', value: 'light' });
-    expect(runCommand('theme', ctx).effect).toEqual({ type: 'theme', value: 'toggle' });
-  });
 
   it('emits special blocks and effects', () => {
     expect(runCommand('neofetch', ctx).lines[0]).toEqual({ kind: 'neofetch' });
@@ -100,6 +96,6 @@ describe('zen shell', () => {
     expect(complete('work z')).toBe('work zoho');
     expect(complete('cat ab')).toBe('cat about.md');
     expect(complete('cat pay', { history: [], cwd: '~/work' })).toBe('cat paypal.md');
-    expect(complete('t')).toBe('t'); // ambiguous: theme, timemachine, top, tree
+    expect(complete('t')).toBe('t'); // ambiguous: timemachine, top, tree
   });
 });

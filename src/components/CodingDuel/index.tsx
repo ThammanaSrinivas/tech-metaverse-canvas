@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Swords } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
 import { useCodeExecution } from '@/hooks/useCodeExecution';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import type { Challenge } from '@/data/challenges';
@@ -31,8 +30,6 @@ function computeScore(
 }
 
 const CodingDuel: React.FC<CodingDuelProps> = ({ isOpen, onClose }) => {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
 
   const [state, setState] = useState<DuelState>('SELECTING');
   const [challenge, setChallenge] = useState<Challenge | null>(null);
@@ -160,14 +157,10 @@ const CodingDuel: React.FC<CodingDuelProps> = ({ isOpen, onClose }) => {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className={`relative w-full max-w-4xl max-h-[90vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden ${
-            isDark
-              ? 'bg-gray-900 border-gray-700'
-              : 'bg-white border-gray-200'
-          }`}
+          className={`relative w-full max-w-4xl max-h-[90vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden bg-card border-border`}
         >
           {/* Header */}
-          <div className={`flex items-center justify-between px-5 py-4 border-b flex-shrink-0 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+          <div className={`flex items-center justify-between px-5 py-4 border-b flex-shrink-0 border-gray-200`}>
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
                 <Swords className="w-5 h-5 text-primary" />

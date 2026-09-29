@@ -12,7 +12,6 @@ export type Line =
 export type Effect =
   | { type: 'open'; url: string }
   | { type: 'scroll'; id: string }
-  | { type: 'theme'; value: 'light' | 'dark' | 'toggle' }
   | { type: 'stars'; value: boolean | 'toggle' }
   | { type: 'duel' }
   | { type: 'clear' }
@@ -171,7 +170,7 @@ const COMMANDS: Record<string, Command> = {
         t('muted', 'files:    ls · cd · cat · tree · pwd · grep · open'),
         t('muted', 'me:       whoami · neofetch · work · stats · skills'),
         t('muted', 'calm:     breathe · fortune · stars'),
-        t('muted', 'play:     duel · timemachine · theme'),
+        t('muted', 'play:     duel · timemachine'),
         t('muted', 'shell:    history · man <cmd> · clear · exit'),
         t('out', 'tab completes · ↑/↓ history · ctrl+l clears · esc closes'),
       ],
@@ -333,19 +332,11 @@ const COMMANDS: Record<string, Command> = {
   },
   breathe: { help: 'one calm breath (4-4-4)', run: () => ({ lines: [{ kind: 'breathe' }] }) },
   stars: {
-    help: 'night sky in dark mode  [on|off]',
+    help: 'night sky in the ink sections  [on|off]',
     args: () => ['on', 'off'],
     run: ([v]) => {
       const value = v === 'on' ? true : v === 'off' ? false : 'toggle';
-      return { lines: [t('muted', `stars → ${value === 'toggle' ? 'toggled' : v}${value !== false ? ' (visible in dark theme)' : ''}`)], effect: { type: 'stars', value } };
-    },
-  },
-  theme: {
-    help: 'switch theme  [light|dark]',
-    args: () => ['light', 'dark'],
-    run: ([v]) => {
-      const value = v === 'light' || v === 'dark' ? v : 'toggle';
-      return { lines: [t('muted', `theme → ${value}`)], effect: { type: 'theme', value } };
+      return { lines: [t('muted', `stars → ${value === 'toggle' ? 'toggled' : v}`)], effect: { type: 'stars', value } };
     },
   },
   duel: { help: 'challenge me to a coding duel', run: () => ({ lines: [t('reward', '⚔ entering the arena…')], effect: { type: 'duel' } }) },

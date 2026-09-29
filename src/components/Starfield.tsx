@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
 import { useStarsEnabled } from '@/lib/stars';
 
 interface Star {
@@ -21,15 +20,12 @@ const pickColor = () => {
 };
 
 /**
- * Quiet night sky. `page`: fixed behind the whole site, dark theme only, with scroll
- * parallax. `band`: fills its (positioned) parent, any theme, for the ink sections.
- * Static for reduced-motion users; paused while the tab is hidden or off-screen.
+ * Quiet night sky for the ink sections: fills its (positioned) parent. Static for
+ * reduced-motion users; paused while the tab is hidden or off-screen.
  */
-const Starfield: React.FC<{ mode?: 'page' | 'band' }> = ({ mode = 'page' }) => {
+const Starfield: React.FC = () => {
   const ref = useRef<HTMLCanvasElement>(null);
-  const { theme } = useTheme();
-  const [enabled] = useStarsEnabled();
-  const active = enabled && (mode === 'band' || theme === 'dark');
+  const [active] = useStarsEnabled();
 
   useEffect(() => {
     const canvas = ref.current;
@@ -39,21 +35,21 @@ const Starfield: React.FC<{ mode?: 'page' | 'band' }> = ({ mode = 'page' }) => {
 
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const host = mode === 'band' ? canvas.parentElement! : null;
+    const host = canvas.parentElement!;
     let stars: Star[] = [];
     let w = 0;
     let h = 0;
     let visible = true;
 
     const resize = () => {
-      w = host ? host.clientWidth : window.innerWidth;
-      h = host ? host.clientHeight : window.innerHeight;
+      w = host.clientWidth;
+      h = host.clientHeight;
       canvas.width = w * dpr;
       canvas.height = h * dpr;
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = Math.round(Math.min(mode === 'band' ? 220 : 160, (w * h) / 9000));
+      const count = Math.round(Math.min(220, (w * h) / 9000));
       stars = Array.from({ length: count }, () => {
         const depth = 0.2 + Math.random() * 0.8;
         return {
@@ -71,11 +67,10 @@ const Starfield: React.FC<{ mode?: 'page' | 'band' }> = ({ mode = 'page' }) => {
     let raf = 0;
     const draw = (t: number) => {
       ctx.clearRect(0, 0, w, h);
-      const scroll = mode === 'page' ? window.scrollY : 0;
       for (const s of stars) {
         const twinkle = reduce ? 0.8 : 0.55 + 0.45 * Math.sin((t / 1000) * s.speed + s.phase);
-        // Drift upward very slowly; nearer stars move more with scroll.
-        const y = (((s.y - scroll * 0.08 * s.depth - (reduce ? 0 : t * 0.004 * s.depth)) % h) + h) % h;
+        // Drift upward very slowly; nearer stars move faster.
+        const y = (((s.y - (reduce ? 0 : t * 0.004 * s.depth)) % h) + h) % h;
         ctx.beginPath();
         ctx.fillStyle = `rgba(${s.color},${(twinkle * (0.35 + s.depth * 0.5)).toFixed(3)})`;
         ctx.arc(s.x, y, s.r, 0, Math.PI * 2);
@@ -92,33 +87,30 @@ const Starfield: React.FC<{ mode?: 'page' | 'band' }> = ({ mode = 'page' }) => {
       resize();
       restart();
     });
-    ro.observe(host ?? document.documentElement);
-    // Bands only animate while on screen.
+    ro.observe(host);
+    // Only animate while on screen.
     const io = new IntersectionObserver(([e]) => {
       visible = e.isIntersecting;
       if (visible) restart();
     });
     io.observe(canvas);
-    const onScroll = () => reduce && mode === 'page' && draw(0);
 
     resize();
     restart();
-    window.addEventListener('scroll', onScroll, { passive: true });
     document.addEventListener('visibilitychange', restart);
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
       io.disconnect();
-      window.removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', restart);
     };
-  }, [active, mode]);
+  }, [active]);
 
   if (!active) return null;
   return (
     <canvas
       ref={ref}
-      className={`pointer-events-none ${mode === 'page' ? 'fixed inset-0 -z-10' : 'absolute inset-0'}`}
+      className="pointer-events-none absolute inset-0"
       aria-hidden
     />
   );
