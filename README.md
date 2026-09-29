@@ -38,7 +38,7 @@ npm run snapshot:commits   # uses $GITHUB_TOKEN or `gh auth token`
 
 ## Deploy
 
-Firebase Hosting: project `srinivas-portfolio-1481f`, site `srinivas-t` (see `firebase.json`).
+Firebase Hosting: project `srinivas-portfolio-1481f`, site `srinivas-t`. `firebase.json` and `.firebaserc` are gitignored, so they live only on the deploying machine.
 
 ```sh
 npm run snapshot:commits && npm run build && firebase deploy --only hosting
