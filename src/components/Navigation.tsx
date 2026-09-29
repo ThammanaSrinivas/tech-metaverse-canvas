@@ -35,7 +35,7 @@ const Navigation: React.FC = () => {
     <>
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-          scrolled ? 'border-b bg-background/80 backdrop-blur-md' : 'border-b border-transparent'
+          scrolled ? 'border-b bg-background/95' : 'border-b border-transparent'
         }`}
       >
         <nav className="mx-auto flex h-16 max-w-[1120px] items-center gap-6 px-5" aria-label="Main">
@@ -82,7 +82,7 @@ const Navigation: React.FC = () => {
         </nav>
 
         {menuOpen && (
-          <div className="border-t bg-background/95 backdrop-blur-md lg:hidden">
+          <div className="border-t bg-background lg:hidden">
             <ul className="mx-auto grid max-w-[1120px] gap-1 px-5 py-3">
               {SECTIONS.map(({ id, label }, i) => (
                 <li key={id}>

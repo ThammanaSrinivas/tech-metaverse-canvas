@@ -286,7 +286,7 @@ const CommitTimeMachine: React.FC = () => {
               )}
 
               {hoveredCommitIndex !== null && commits?.[hoveredCommitIndex] && !detailOpen && (
-                <div className="pointer-events-none absolute left-4 top-4 max-w-[70%] rounded-xl border bg-popover/95 px-3 py-2 text-sm shadow-lg backdrop-blur">
+                <div className="pointer-events-none absolute left-4 top-4 max-w-[70%] rounded-xl border bg-popover/95 px-3 py-2 text-sm shadow-lg">
                   <p className="line-clamp-1">{commits[hoveredCommitIndex].commit.message.split('\n')[0]}</p>
                   <p className="font-mono text-xs text-muted-foreground">
                     {fmt(commits[hoveredCommitIndex].commit.author.date)} · click for diff

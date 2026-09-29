@@ -4,6 +4,7 @@ import { ArrowRight, FileText, Terminal } from 'lucide-react';
 import { LINKS, PROFILE, ZENMODE, JOBS } from '@/data/profile';
 import { MarkGlyph } from '@/components/zen/primitives';
 import { emitZen } from '@/lib/zenEvents';
+import HeroDots from './HeroDots';
 
 // Faint grid of mark shapes that fades in from the left, echoing the ZenMode hero art.
 const MarkPattern: React.FC = () => (
@@ -91,7 +92,7 @@ const Widget: React.FC<{ label: string; children: React.ReactNode; delay: number
       initial={reduce ? false : { opacity: 0, x: 24 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={`rounded-[22px] border border-white/15 bg-white/10 p-5 backdrop-blur-sm ${className}`}
+      className={`rounded-[22px] border border-white/15 bg-[#0B5C12]/55 p-5 ${className}`}
     >
       <p className="zen-label mb-3 text-white/60">{label}</p>
       {children}
@@ -112,6 +113,7 @@ const Hero: React.FC = () => {
         style={{ background: 'radial-gradient(120% 90% at 90% 0%, #2AA136 0%, #0F7A18 45%, #0B5C12 100%)' }}
       >
         <MarkPattern />
+        <HeroDots />
         <div className="relative grid gap-10 p-7 sm:p-10 md:grid-cols-[1.5fr_1fr] md:items-center md:p-14">
           <motion.div variants={stagger} initial={reduce ? false : 'hidden'} animate="show">
             <AssemblingMark />

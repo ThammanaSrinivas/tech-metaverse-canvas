@@ -3,9 +3,10 @@ import { motion, useMotionValue, useSpring } from 'framer-motion';
 
 const INTERACTIVE = 'a, button, [role="button"], [role="option"], summary, label, [data-cursor]';
 const TEXT_ENTRY = 'input, textarea, select, [contenteditable="true"]';
+const RING = 64; // rendered size; smaller states are GPU scales of it, never width/height changes
 
 /**
- * Zen cursor: a precise dot plus a ring that trails on a spring. The ring grows over
+ * Zen cursor: a precise dot plus a ring that trails slightly. The ring grows over
  * anything clickable and shows a short label from `data-cursor` ("open ↗", "drag").
  * White inside green/ink areas (`data-cursor-invert`), zen green elsewhere.
  * Mouse/trackpad only: touch devices and reduced-motion users keep the system cursor.
@@ -19,8 +20,9 @@ const ZenCursor: React.FC = () => {
   const [hidden, setHidden] = useState(true);
   const x = useMotionValue(-100);
   const y = useMotionValue(-100);
-  const rx = useSpring(x, { stiffness: 350, damping: 30, mass: 0.6 });
-  const ry = useSpring(y, { stiffness: 350, damping: 30, mass: 0.6 });
+  // Tight spring: a hint of trail without feeling late.
+  const rx = useSpring(x, { stiffness: 1100, damping: 60, mass: 0.35 });
+  const ry = useSpring(y, { stiffness: 1100, damping: 60, mass: 0.35 });
   const last = useRef<Element | null>(null);
 
   useEffect(() => {
@@ -39,14 +41,11 @@ const ZenCursor: React.FC = () => {
       if (e.pointerType !== 'mouse') return;
       x.set(e.clientX);
       y.set(e.clientY);
-      setHidden(false);
+      // React state only changes when the element under the pointer changes.
       const el = e.target as Element;
       if (el === last.current) return;
       last.current = el;
-      if (el.closest(TEXT_ENTRY)) {
-        setHidden(true); // native text caret reads better in inputs
-        return;
-      }
+      setHidden(!!el.closest(TEXT_ENTRY)); // native caret reads better in inputs
       const hit = el.closest(INTERACTIVE);
       setHover(!!hit);
       setLabel(hit?.getAttribute('data-cursor') || null);
@@ -54,11 +53,14 @@ const ZenCursor: React.FC = () => {
     };
     const onDown = () => setDown(true);
     const onUp = () => setDown(false);
-    const onLeave = () => setHidden(true);
+    const onLeave = () => {
+      last.current = null;
+      setHidden(true);
+    };
 
     window.addEventListener('pointermove', onMove, { passive: true });
-    window.addEventListener('pointerdown', onDown);
-    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointerdown', onDown, { passive: true });
+    window.addEventListener('pointerup', onUp, { passive: true });
     document.documentElement.addEventListener('pointerleave', onLeave);
     return () => {
       document.documentElement.classList.remove('zen-cursor');
@@ -72,34 +74,35 @@ const ZenCursor: React.FC = () => {
   if (!enabled) return null;
 
   const color = invert ? '#FFFFFF' : 'hsl(var(--primary))';
-  const size = label ? 64 : hover ? 44 : 30;
+  const scale = (label ? 1 : hover ? 44 / RING : 30 / RING) * (down ? 0.85 : 1);
+  const layer: React.CSSProperties = { position: 'fixed', left: 0, top: 0, pointerEvents: 'none', zIndex: 100, willChange: 'transform' };
 
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 z-[100]" style={{ opacity: hidden ? 0 : 1, transition: 'opacity .2s' }}>
+    <div aria-hidden style={{ opacity: hidden ? 0 : 1, transition: 'opacity .15s' }}>
       <motion.div
-        className="absolute left-0 top-0 flex items-center justify-center rounded-full"
-        style={{ x: rx, y: ry, translateX: '-50%', translateY: '-50%', borderColor: color, color }}
-        animate={{
-          width: size,
-          height: size,
-          borderWidth: label ? 0 : 1.5,
-          backgroundColor: label ? color : hover ? (invert ? 'rgba(255,255,255,.12)' : 'hsl(var(--primary) / .12)') : 'rgba(0,0,0,0)',
-          scale: down ? 0.85 : 1,
-        }}
-        transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+        style={{ ...layer, x: rx, y: ry, width: RING, height: RING, marginLeft: -RING / 2, marginTop: -RING / 2 }}
       >
-        {label && (
-          <span
-            className="font-mono text-[10px] uppercase tracking-[0.08em]"
-            style={{ color: invert ? '#0F7A18' : 'hsl(var(--primary-foreground))' }}
-          >
-            {label}
-          </span>
-        )}
+        <motion.div
+          className="flex h-full w-full items-center justify-center rounded-full"
+          style={{ border: `${label ? 0 : 1.5 * (RING / 30)}px solid ${color}`, color }}
+          animate={{
+            scale,
+            backgroundColor: label ? color : hover ? (invert ? 'rgba(255,255,255,.12)' : 'hsla(125,78%,27%,.12)') : 'rgba(0,0,0,0)',
+          }}
+          transition={{ type: 'spring', stiffness: 600, damping: 35 }}
+        >
+          {label && (
+            <span
+              className="font-mono text-[10px] uppercase tracking-[0.08em]"
+              style={{ color: invert ? '#0F7A18' : 'hsl(var(--primary-foreground))' }}
+            >
+              {label}
+            </span>
+          )}
+        </motion.div>
       </motion.div>
       <motion.div
-        className="absolute left-0 top-0 h-1.5 w-1.5 rounded-full"
-        style={{ x, y, translateX: '-50%', translateY: '-50%', backgroundColor: color, opacity: label ? 0 : 1 }}
+        style={{ ...layer, x, y, width: 6, height: 6, marginLeft: -3, marginTop: -3, borderRadius: 999, backgroundColor: color, opacity: label ? 0 : 1 }}
       />
     </div>
   );
