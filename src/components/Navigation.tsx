@@ -12,7 +12,11 @@ const Navigation: React.FC = () => {
   const [active, setActive] = useState<string | null>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    // "scrolled" = past the ink hero; over it the bar stays transparent and light-on-dark.
+    const onScroll = () => {
+      const hero = document.getElementById('home');
+      setScrolled(window.scrollY > (hero ? hero.offsetHeight - 64 : 24));
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -35,7 +39,7 @@ const Navigation: React.FC = () => {
     <>
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-          scrolled ? 'border-b bg-background/95' : 'border-b border-transparent'
+          scrolled ? 'border-b bg-background/95' : 'dark border-b border-transparent text-foreground'
         }`}
       >
         <nav className="mx-auto flex h-16 max-w-[1120px] items-center gap-6 px-5" aria-label="Main">

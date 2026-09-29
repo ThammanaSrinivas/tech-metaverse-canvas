@@ -131,9 +131,33 @@
   }
 }
 
-/* The zen cursor replaces the system pointer on mouse devices; text fields keep their caret. */
-html.zen-cursor, html.zen-cursor * { cursor: none !important; }
-html.zen-cursor :is(input, textarea, select, [contenteditable="true"]) { cursor: text !important; }
+/* The ZenMode pointer (ported from zenmodeos.com css/cursor.css). Colours are set per frame
+   by lib/zenCursor.ts from the ground under the pointer; this is structure only. */
+@media (hover: hover) and (pointer: fine) {
+  html.zm-pointer, html.zm-pointer * { cursor: none !important; }
+  html.zm-pointer :is(input, textarea, select, [contenteditable="true"]) { cursor: text !important; }
+}
+.zm-cur { position: fixed; inset: 0; z-index: 95; pointer-events: none; overflow: hidden; opacity: 0; transition: opacity 260ms ease; }
+.zm-cur.on { opacity: 1; }
+.zm-cur.typing { opacity: 0; }
+.zm-cur-in { position: absolute; left: 0; top: 0; will-change: transform; }
+.zm-cur svg { position: absolute; left: -24px; top: -24px; display: block; overflow: visible; transition: opacity 200ms ease; }
+.zm-cur-ring { fill: none; stroke: #12160F; stroke-width: 1.25; stroke-linecap: round; }
+.zm-cur-dot { fill: #12160F; }
+.zm-cur.down svg { opacity: .55; }
+.zm-cur-lab {
+  position: absolute; left: 28px; top: -7px;
+  font-family: "Departure Mono", ui-monospace, monospace; font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; white-space: nowrap; opacity: 0; transition: opacity 240ms ease;
+}
+.zm-cur.say .zm-cur-lab { opacity: .72; }
+.zm-cur.flip .zm-cur-lab { left: auto; right: 28px; }
+[data-magnet] { transition: transform 320ms cubic-bezier(.22, 1, .36, 1); }
+[data-magnet]:active { transition: transform 90ms ease; }
+@media (prefers-reduced-motion: reduce) {
+  .zm-cur { display: none; }
+  [data-magnet] { transition: none; transform: none !important; }
+}
 
 @layer components {
   /* Small ambient motions. All are disabled by the reduced-motion rule above. */

@@ -56,7 +56,7 @@ const FeatureIcon: React.FC<{ kind: IconKind }> = ({ kind }) => {
 };
 
 const ZenModeSection: React.FC = () => (
-  <Section id="zenmode" ink>
+  <Section id="zenmode">
     <SectionHeader index="01" title="What I'm building" />
 
     <Reveal>
@@ -123,18 +123,22 @@ const ZenModeSection: React.FC = () => (
       <div className="mt-8 flex flex-col items-center gap-4">
         <div className="flex flex-wrap justify-center gap-3">
           <a href={LINKS.playstore} target="_blank" rel="noopener noreferrer"
-            className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">
+            data-magnet
+            className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 font-semibold text-primary-foreground">
             <Play className="h-4 w-4" /> Get it on Google Play
           </a>
           <a href={LINKS.zenmode} target="_blank" rel="noopener noreferrer"
+            data-magnet
             className="inline-flex h-12 items-center gap-2 rounded-full border bg-card px-6 font-semibold transition-colors hover:border-primary">
             <Github className="h-4 w-4" /> Star on GitHub
           </a>
           <a href={LINKS.producthunt} target="_blank" rel="noopener noreferrer"
+            data-magnet
             className="inline-flex h-12 items-center gap-2 rounded-full border bg-card px-6 font-semibold transition-colors hover:border-primary">
             <Trophy className="h-4 w-4" /> Product Hunt
           </a>
           <a href={LINKS.zenmodeSite} target="_blank" rel="noopener noreferrer"
+            data-magnet
             className="inline-flex h-12 items-center gap-2 rounded-full border bg-card px-6 font-semibold transition-colors hover:border-primary">
             <Globe className="h-4 w-4" /> zenmodeos.com
           </a>

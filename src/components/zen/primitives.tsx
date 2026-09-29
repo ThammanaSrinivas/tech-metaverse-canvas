@@ -137,7 +137,7 @@ export const Section: React.FC<{ id: string; children: React.ReactNode; classNam
   const inner = <div className={`relative mx-auto w-full max-w-[1120px] px-5 py-16 md:py-24 ${className}`}>{children}</div>;
   if (!ink) return <section id={id}>{inner}</section>;
   return (
-    <section id={id} data-cursor-invert className="dark relative my-8 overflow-hidden bg-background text-foreground">
+    <section id={id} className="dark relative my-8 overflow-hidden bg-background text-foreground">
       <div
         className="pointer-events-none absolute inset-0"
         aria-hidden

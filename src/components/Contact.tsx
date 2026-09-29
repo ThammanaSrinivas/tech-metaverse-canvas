@@ -35,12 +35,14 @@ const Contact: React.FC = () => {
             <div className="mt-8 flex flex-wrap gap-3">
               <a
                 href={LINKS.email}
-                className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5"
+                data-magnet
+                className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 font-semibold text-primary-foreground"
               >
                 <Mail className="h-4 w-4" /> Email me
               </a>
               <button
                 onClick={copyEmail}
+                data-magnet
                 className="inline-flex h-12 items-center gap-2 rounded-full border bg-card px-5 font-mono text-sm transition-colors hover:border-primary"
                 aria-label="Copy email address"
               >

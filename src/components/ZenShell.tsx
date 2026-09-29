@@ -249,7 +249,6 @@ const ZenShell: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
             onClick={() => setOpen(true)}
-            data-cursor-invert
             className="group fixed bottom-5 right-5 z-40 flex h-12 items-center gap-2.5 rounded-full border px-4 font-mono text-xs uppercase tracking-[0.1em] shadow-lg shadow-black/20 transition-transform hover:-translate-y-0.5"
             style={{ background: INK.bg, borderColor: INK.line, color: INK.text }}
             aria-label="Open zen shell (backtick key)"
@@ -267,7 +266,6 @@ const ZenShell: React.FC = () => {
           <motion.div
             key="shell"
             role="dialog"
-            data-cursor-invert
             aria-label="Zen shell"
             initial={{ opacity: 0, y: 24, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
