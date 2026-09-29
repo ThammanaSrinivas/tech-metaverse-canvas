@@ -31,16 +31,21 @@ const snapshot = {
   })),
 };
 
+const trimCommit = (c) => ({
+  sha: c.sha,
+  html_url: c.html_url,
+  commit: { message: c.commit.message.split('\n')[0], author: { name: c.commit.author.name, date: c.commit.author.date } },
+  author: c.author ? { login: c.author.login, avatar_url: '' } : null,
+});
+
 for (const repo of picked) {
-  const branch = repo.default_branch;
-  snapshot[`/repos/${USER}/${repo.name}/branches?per_page=100`] = [{ name: branch, commit: { sha: '', url: '' }, protected: false }];
-  const commits = await get(`/repos/${USER}/${repo.name}/commits?per_page=30&sha=${encodeURIComponent(branch)}`);
-  snapshot[`/repos/${USER}/${repo.name}/commits?per_page=30&sha=${encodeURIComponent(branch)}`] = commits.map((c) => ({
-    sha: c.sha,
-    html_url: c.html_url,
-    commit: { message: c.commit.message.split('\n')[0], author: { name: c.commit.author.name, date: c.commit.author.date } },
-    author: c.author ? { login: c.author.login, avatar_url: '' } : null,
-  }));
+  const branchesPath = `/repos/${USER}/${repo.name}/branches?per_page=100`;
+  const branches = await get(branchesPath);
+  snapshot[branchesPath] = branches.map((b) => ({ name: b.name, commit: { sha: b.commit.sha, url: '' }, protected: b.protected }));
+  for (const b of branches) {
+    const path = `/repos/${USER}/${repo.name}/commits?per_page=30&sha=${encodeURIComponent(b.name)}`;
+    snapshot[path] = (await get(path)).map(trimCommit);
+  }
 }
 
 snapshot._generatedAt = new Date().toISOString();

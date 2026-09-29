@@ -13,6 +13,7 @@ const Projects: React.FC = () => (
             href={p.url}
             target="_blank"
             rel="noopener noreferrer"
+            data-cursor="open ↗"
             className="zen-tile group flex h-full flex-col p-6 hover:border-primary/50"
           >
             <div className="flex items-start justify-between gap-4">

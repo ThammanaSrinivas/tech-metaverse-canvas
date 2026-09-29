@@ -131,7 +131,29 @@
   }
 }
 
+/* The zen cursor replaces the system pointer on mouse devices; text fields keep their caret. */
+html.zen-cursor, html.zen-cursor * { cursor: none !important; }
+html.zen-cursor :is(input, textarea, select, [contenteditable="true"]) { cursor: text !important; }
+
 @layer components {
+  /* Small ambient motions. All are disabled by the reduced-motion rule above. */
+  .zen-flicker { animation: zen-flicker 2.4s ease-in-out infinite; transform-box: fill-box; }
+  @keyframes zen-flicker {
+    0%, 100% { transform: scale(1, 1); }
+    30% { transform: scale(0.96, 1.06); }
+    60% { transform: scale(1.03, 0.97); }
+  }
+  .zen-shine { animation: zen-shine 3.6s ease-in-out infinite; }
+  @keyframes zen-shine {
+    0%, 60% { transform: skewX(-20deg) translateX(0); }
+    100% { transform: skewX(-20deg) translateX(80px); }
+  }
+  .zen-drift { animation: zen-drift 40s linear infinite; }
+  @keyframes zen-drift {
+    from { transform: translateX(0); }
+    to { transform: translateX(-128px); }
+  }
+
   /* Kept for the Time Machine heading until it moves to SectionHeader. */
   .heading-primary { color: hsl(var(--foreground)); }
 

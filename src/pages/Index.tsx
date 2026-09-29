@@ -9,6 +9,9 @@ import CommitTimeMachine from '@/components/CommitTimeMachine';
 import Contact from '@/components/Contact';
 import Footer from '@/components/Footer';
 import ZenShell from '@/components/ZenShell';
+import Starfield from '@/components/Starfield';
+import ZenCursor from '@/components/ZenCursor';
+import { ScrollProgress } from '@/components/zen/primitives';
 import { onZen } from '@/lib/zenEvents';
 
 const CodingDuel = lazy(() => import('@/components/CodingDuel'));
@@ -19,7 +22,9 @@ const Index = () => {
   useEffect(() => onZen('duel', () => setDuelOpen(true)), []);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="relative min-h-screen text-foreground">
+      <Starfield />
+      <ScrollProgress />
       <a href="#zenmode" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground">
         Skip to content
       </a>
@@ -35,6 +40,7 @@ const Index = () => {
       </main>
       <Footer />
       <ZenShell />
+      <ZenCursor />
       <Suspense fallback={null}>
         <CodingDuel isOpen={duelOpen} onClose={() => setDuelOpen(false)} />
       </Suspense>

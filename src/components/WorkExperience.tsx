@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { JOBS, type Job } from '@/data/profile';
-import { Reveal, Section, SectionHeader } from '@/components/zen/primitives';
+import { CountUp, Reveal, Section, SectionHeader } from '@/components/zen/primitives';
 
 const JobCard: React.FC<{ job: Job }> = ({ job }) => {
   const [open, setOpen] = useState(false);
@@ -26,8 +26,8 @@ const JobCard: React.FC<{ job: Job }> = ({ job }) => {
 
         <div className="grid gap-3 sm:grid-cols-3">
           {job.stats.map((s) => (
-            <div key={s.label} className={`rounded-[20px] border p-5 ${now ? 'border-tint-line bg-card' : 'bg-secondary/60'}`}>
-              <p className={`font-mono text-4xl md:text-[2.75rem] ${now ? 'text-primary' : 'text-foreground'}`}>{s.value}</p>
+            <div key={s.label} className={`rounded-[20px] border p-5 transition-transform duration-300 hover:-translate-y-1 ${now ? 'border-tint-line bg-card' : 'bg-secondary/60'}`}>
+              <CountUp value={s.value} className={`block font-mono text-4xl md:text-[2.75rem] ${now ? 'text-primary' : 'text-foreground'}`} />
               <p className="mt-4 font-medium">{s.label}</p>
               <p className="text-sm text-muted-foreground">{s.sub}</p>
             </div>

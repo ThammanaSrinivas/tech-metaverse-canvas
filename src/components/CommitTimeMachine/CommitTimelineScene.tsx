@@ -45,7 +45,7 @@ const CommitTimelineScene: React.FC<CommitTimelineSceneProps> = ({
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   return (
-    <div className="h-[320px] w-full overflow-hidden rounded-[20px] border bg-background md:h-[420px]">
+    <div data-cursor="drag" className="h-[320px] w-full overflow-hidden rounded-[20px] border bg-background md:h-[420px]">
       <Canvas
         camera={{ position: [0, 2.2, 8.5], fov: 50 }}
         dpr={isMobile ? 1 : [1, 2]}

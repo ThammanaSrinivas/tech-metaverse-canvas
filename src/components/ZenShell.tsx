@@ -5,6 +5,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { JOBS, LAB, PROFILE } from '@/data/profile';
 import { complete, runCommand, SUGGESTIONS, type Line } from '@/lib/zenshell';
 import { emitZen, onZen } from '@/lib/zenEvents';
+import { setStarsEnabled, useStarsEnabled } from '@/lib/stars';
 import { ZenMark } from '@/components/zen/primitives';
 
 // The terminal is always ink, whatever the page theme: a dark window reads as "shell" in both.
@@ -93,12 +94,15 @@ const Breathe: React.FC = () => {
 const renderLine = (line: Line, i: number) => {
   if (line.kind === 'neofetch') return <Neofetch key={i} />;
   if (line.kind === 'breathe') return <Breathe key={i} />;
-  if (line.kind === 'cmd')
+  if (line.kind === 'cmd') {
+    // Echoed commands carry the directory they ran in: "~/work\tcat paypal.md".
+    const [dir, text] = line.text.split('\t');
     return (
       <p key={i} className="whitespace-pre-wrap break-words">
-        <span style={{ color: '#5BDF62' }}>{PROMPT}</span> <span style={{ color: INK.muted }}>~ %</span> {line.text}
+        <span style={{ color: '#5BDF62' }}>{PROMPT}</span> <span style={{ color: INK.muted }}>{dir} %</span> {text}
       </p>
     );
+  }
   return (
     <p key={i} className="whitespace-pre-wrap break-words" style={{ color: KIND_COLOR[line.kind] }}>
       {line.text}
@@ -113,6 +117,8 @@ const ZenShell: React.FC = () => {
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<string[]>([]);
   const [cursor, setCursor] = useState<number | null>(null);
+  const [cwd, setCwd] = useState('~');
+  const [starsOn] = useStarsEnabled();
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
@@ -159,7 +165,7 @@ const ZenShell: React.FC = () => {
 
   const exec = (raw: string) => {
     const cmd = raw.trim();
-    const echo: Line = { kind: 'cmd', text: raw };
+    const echo: Line = { kind: 'cmd', text: `${cwd}\t${raw}` };
     if (!cmd) {
       setLines((prev) => [...prev, echo]);
       return;
@@ -167,7 +173,8 @@ const ZenShell: React.FC = () => {
     const nextHistory = [...history, cmd];
     setHistory(nextHistory);
     setCursor(null);
-    const { lines: out, effect } = runCommand(cmd, { history: nextHistory });
+    const { lines: out, effect, cwd: nextCwd } = runCommand(cmd, { history: nextHistory, cwd });
+    if (nextCwd) setCwd(nextCwd);
 
     if (effect?.type === 'clear') {
       setLines([]);
@@ -185,6 +192,9 @@ const ZenShell: React.FC = () => {
       case 'theme':
         if (effect.value === 'toggle') toggleTheme();
         else setTheme(effect.value);
+        break;
+      case 'stars':
+        setStarsEnabled(effect.value === 'toggle' ? !starsOn : effect.value);
         break;
       case 'duel':
         setTimeout(() => {
@@ -204,7 +214,7 @@ const ZenShell: React.FC = () => {
       setInput('');
     } else if (e.key === 'Tab') {
       e.preventDefault();
-      setInput((v) => complete(v));
+      setInput((v) => complete(v, { history, cwd }));
     } else if (e.key === 'ArrowUp' && history.length) {
       e.preventDefault();
       const next = cursor === null ? history.length - 1 : Math.max(0, cursor - 1);
@@ -239,6 +249,7 @@ const ZenShell: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
             onClick={() => setOpen(true)}
+            data-cursor-invert
             className="group fixed bottom-5 right-5 z-40 flex h-12 items-center gap-2.5 rounded-full border px-4 font-mono text-xs uppercase tracking-[0.1em] shadow-lg shadow-black/20 transition-transform hover:-translate-y-0.5"
             style={{ background: INK.bg, borderColor: INK.line, color: INK.text }}
             aria-label="Open zen shell (backtick key)"
@@ -256,6 +267,7 @@ const ZenShell: React.FC = () => {
           <motion.div
             key="shell"
             role="dialog"
+            data-cursor-invert
             aria-label="Zen shell"
             initial={{ opacity: 0, y: 24, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -272,7 +284,7 @@ const ZenShell: React.FC = () => {
                 <span className="h-3 w-3 rounded-full" style={{ background: '#2AA136' }} />
               </span>
               <span className="flex-1 text-center text-xs" style={{ color: INK.muted }}>
-                {PROMPT}: ~ — zsh
+                {PROMPT}: {cwd} — zsh
               </span>
               <button
                 onClick={(e) => {
@@ -290,7 +302,7 @@ const ZenShell: React.FC = () => {
               {lines.map(renderLine)}
               <div className="flex items-center">
                 <span style={{ color: '#5BDF62' }}>{PROMPT}</span>
-                <span className="mx-1.5" style={{ color: INK.muted }}>~ %</span>
+                <span className="mx-1.5" style={{ color: INK.muted }}>{cwd} %</span>
                 <input
                   ref={inputRef}
                   value={input}

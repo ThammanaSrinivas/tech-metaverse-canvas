@@ -11,6 +11,7 @@ export const LINKS = {
   zenmode: 'https://github.com/ThammanaSrinivas/zenmode',
   zenmodeSite: 'https://zenmodeos.com/',
   playstore: 'https://play.google.com/store/apps/details?id=com.zenlauncher.zenmode',
+  producthunt: 'https://www.producthunt.com/products/zenmode-os-android-launcher',
   resume: RESUME_URL,
 } as const;
 
@@ -109,6 +110,13 @@ export const LAB: LabProject[] = [
 export const ZENMODE = {
   pitch: 'ZenMode OS turns your home screen into a calm space built around intent. It doesn’t lock you out. It adds a small pause at the moments you tend to lose time, and makes keeping your screen-time promise something you do together with friends.',
   award: 'Top ~10% of ~780 at FOSS Hack 2026',
+  // Public numbers only (Play listing, Product Hunt leaderboard). Internal installs/DAU stay in zenmode-brain.
+  stats: [
+    { value: '4.6', unit: '★', label: 'Play Store rating', sub: '24 reviews' },
+    { value: '500', unit: '+', label: 'installs', sub: 'Google Play' },
+    { value: '14', prefix: '#', unit: '', label: 'of 711 on Product Hunt', sub: 'launch day · 26 Sep 2026' },
+    { value: '7', prefix: '#', unit: '', label: 'most discussed', sub: '16 comments · top 1% of the day' },
+  ] as { value: string; prefix?: string; unit: string; label: string; sub: string }[],
   features: [
     { name: 'Zen Score', stat: '07/10', desc: 'Your day, out of 10', icon: 'score' },
     { name: 'Streaks', stat: '13 DAYS', desc: 'Promises kept', icon: 'streak' },

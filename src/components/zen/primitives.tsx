@@ -1,5 +1,6 @@
-import React from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, useInView, useReducedMotion, useScroll, useSpring } from 'framer-motion';
+import Starfield from '@/components/Starfield';
 
 // ZenMode mark on a 1024 grid, traced from the app icon. Rounded via stroke-linejoin.
 const MARK_POLYS = [
@@ -29,17 +30,78 @@ export const ZenMark: React.FC<{ size?: number; className?: string; title?: stri
   </svg>
 );
 
-/** Numbered section heading shared by every section: mono index chip, Clash title, hairline. */
-export const SectionHeader: React.FC<{ index: string; title: string; kicker?: string }> = ({ index, title, kicker }) => (
-  <div className="mb-8 md:mb-10">
-    <div className="flex items-center gap-4">
-      <span className="zen-label rounded-lg border border-tint-line bg-tint px-2.5 py-1 text-primary">{index}</span>
-      <h2 className="text-3xl md:text-4xl">{title}</h2>
-      <span className="h-px flex-1 bg-border" aria-hidden />
+/** Numbered section heading shared by every section: mono index chip, Clash title, hairline that draws in. */
+export const SectionHeader: React.FC<{ index: string; title: string; kicker?: string }> = ({ index, title, kicker }) => {
+  const reduce = useReducedMotion();
+  return (
+    <div className="mb-8 md:mb-10">
+      <div className="flex items-center gap-4">
+        <span className="zen-label rounded-lg border border-tint-line bg-tint px-2.5 py-1 text-primary">{index}</span>
+        <h2 className="text-3xl md:text-4xl">{title}</h2>
+        <motion.span
+          className="h-px flex-1 origin-left bg-border"
+          aria-hidden
+          initial={reduce ? false : { scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </div>
+      {kicker && <p className="mt-3 max-w-2xl text-muted-foreground md:ml-[4.25rem]">{kicker}</p>}
     </div>
-    {kicker && <p className="mt-3 max-w-2xl text-muted-foreground md:ml-[4.25rem]">{kicker}</p>}
-  </div>
-);
+  );
+};
+
+/**
+ * Counts the numeric part of a stat up from 0 when it scrolls into view: "40%", "10M+", "4.6", "#14".
+ * Values without a leading number (e.g. "1h→1m") render as-is.
+ */
+export const CountUp: React.FC<{ value: string; className?: string; duration?: number }> = ({
+  value,
+  className,
+  duration = 1.2,
+}) => {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-40px' });
+  const reduce = useReducedMotion();
+  // Ranges like "1h→1m" or "50ms → 5ms" read wrong mid-count, so they stay static.
+  const match = value.includes('→') ? null : value.match(/^([^\d]*)(\d+(?:\.\d+)?)(.*)$/);
+  const target = match ? parseFloat(match[2]) : 0;
+  const decimals = match?.[2].split('.')[1]?.length ?? 0;
+  const [n, setN] = useState(reduce || !match ? target : 0);
+
+  useEffect(() => {
+    if (!inView || reduce || !match) return;
+    let raf = 0;
+    const start = performance.now();
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / (duration * 1000));
+      setN(target * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inView]);
+
+  if (!match) return <span className={className}>{value}</span>;
+  return (
+    <span ref={ref} className={className} aria-label={value}>
+      <span aria-hidden>
+        {match[1]}
+        {n.toFixed(decimals)}
+        {match[3]}
+      </span>
+    </span>
+  );
+};
+
+/** Thin zen-green reading progress bar pinned under the nav. */
+export const ScrollProgress: React.FC = () => {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 140, damping: 30, restDelta: 0.001 });
+  return <motion.div className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-primary" style={{ scaleX }} aria-hidden />;
+};
 
 /** Fade-and-rise on first view; static when the user prefers reduced motion. */
 export const Reveal: React.FC<{ children: React.ReactNode; delay?: number; className?: string }> = ({
@@ -62,12 +124,27 @@ export const Reveal: React.FC<{ children: React.ReactNode; delay?: number; class
   );
 };
 
-export const Section: React.FC<{ id: string; children: React.ReactNode; className?: string }> = ({
+/**
+ * Page section on the 1120px grid. `ink` makes it a full-bleed black band (as on zenmodeos.com):
+ * the `dark` class re-scopes every design token inside, so children need no changes.
+ */
+export const Section: React.FC<{ id: string; children: React.ReactNode; className?: string; ink?: boolean }> = ({
   id,
   children,
   className = '',
-}) => (
-  <section id={id} className={`mx-auto w-full max-w-[1120px] px-5 py-16 md:py-24 ${className}`}>
-    {children}
-  </section>
-);
+  ink = false,
+}) => {
+  const inner = <div className={`relative mx-auto w-full max-w-[1120px] px-5 py-16 md:py-24 ${className}`}>{children}</div>;
+  if (!ink) return <section id={id}>{inner}</section>;
+  return (
+    <section id={id} data-cursor-invert className="dark relative my-8 overflow-hidden bg-background text-foreground">
+      <div
+        className="pointer-events-none absolute inset-0"
+        aria-hidden
+        style={{ background: 'radial-gradient(80% 60% at 85% 0%, rgba(42,161,54,.18), transparent 70%), radial-gradient(60% 50% at 0% 100%, rgba(15,122,24,.14), transparent 70%)' }}
+      />
+      <Starfield mode="band" />
+      {inner}
+    </section>
+  );
+};

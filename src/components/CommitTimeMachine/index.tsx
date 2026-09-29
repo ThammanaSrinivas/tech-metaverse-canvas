@@ -3,7 +3,6 @@ import { GitBranch, Play, Pause, AlertCircle, ChevronDown, Keyboard } from 'luci
 import { useQueryClient } from '@tanstack/react-query';
 import { useGitHubRepos, useRepoCommits, useRepoBranches, useCommitDetail } from '@/hooks/useCommitHistory';
 import { fetchCommitDetail } from '@/lib/github';
-import { useTheme } from '@/contexts/ThemeContext';
 import { Reveal, Section, SectionHeader } from '@/components/zen/primitives';
 import RepoSelector from './RepoSelector';
 import TimelineScrubber from './TimelineScrubber';
@@ -11,6 +10,9 @@ import CommitDetailPanel from './CommitDetailPanel';
 
 // three.js is the heaviest dependency on the page; load it only when this section renders.
 const CommitTimelineScene = lazy(() => import('./CommitTimelineScene'));
+
+// Bot/automation branches (Claude Code worktrees, nightly routines) are noise on a portfolio.
+const HIDDEN_BRANCH = /^(claude|routine)\//;
 
 const fmt = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
 
@@ -27,9 +29,8 @@ const CommitTimeMachine: React.FC = () => {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
 
   const queryClient = useQueryClient();
-  const { theme } = useTheme();
-  // Brand node colour per theme: zen.700 on paper, zen.300 on ink.
-  const nodeColor = theme === 'dark' ? '#5BDF62' : '#0F7A18';
+  // The section is always an ink band, so nodes use the on-ink accent (zen.300).
+  const nodeColor = '#5BDF62';
 
   const { data: repos, isLoading: reposLoading, error: reposError } = useGitHubRepos();
   const { data: branches, isLoading: branchesLoading } = useRepoBranches(selectedRepo);
@@ -46,7 +47,7 @@ const CommitTimeMachine: React.FC = () => {
   const sortedBranches = useMemo(() => {
     if (!branches) return [];
     const defaultNames = ['main', 'master', 'develop', 'dev'];
-    return [...branches].sort((a, b) => {
+    return branches.filter((b) => !HIDDEN_BRANCH.test(b.name)).sort((a, b) => {
       const aIdx = defaultNames.indexOf(a.name);
       const bIdx = defaultNames.indexOf(b.name);
       if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
@@ -84,11 +85,15 @@ const CommitTimeMachine: React.FC = () => {
       setDetailOpen(true);
       const sha = commits?.[index]?.sha;
       if (sha && selectedRepo) {
-        queryClient.fetchQuery({
-          queryKey: ['commit-detail', selectedRepo, sha],
-          queryFn: () => fetchCommitDetail(selectedRepo, sha),
-          staleTime: 10 * 60 * 1000,
-        });
+        queryClient
+          .fetchQuery({
+            queryKey: ['commit-detail', selectedRepo, sha],
+            queryFn: () => fetchCommitDetail(selectedRepo, sha),
+            staleTime: 10 * 60 * 1000,
+          })
+          .catch(() => {
+            // Rate-limited or offline: the panel falls back to the list data it already has.
+          });
       }
     },
     [commits, selectedRepo, queryClient]
@@ -157,7 +162,7 @@ const CommitTimeMachine: React.FC = () => {
   const error = (reposError || commitsError) as Error | null;
 
   return (
-    <Section id="time-machine">
+    <Section id="time-machine" ink>
       <SectionHeader
         index="05"
         title="Time Machine"
@@ -289,7 +294,12 @@ const CommitTimeMachine: React.FC = () => {
                 </div>
               )}
 
-              {detailOpen && commitDetail && <CommitDetailPanel commit={commitDetail} onClose={() => setDetailOpen(false)} />}
+              {detailOpen && commits?.[selectedCommitIndex] && (
+                <CommitDetailPanel
+                  commit={commitDetail ?? commits[selectedCommitIndex]}
+                  onClose={() => setDetailOpen(false)}
+                />
+              )}
             </div>
 
             {commits && commits.length > 1 && !isMobile && (
