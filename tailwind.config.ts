@@ -63,13 +63,19 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				neon: {
-					blue: '#00f5ff',
-					purple: '#bf00ff',
-					pink: '#ff0080',
-					green: '#39ff14',
-					orange: '#ff4500'
-				}
+				// ZenMode brand primitives (theme-independent). Semantic colours above follow light/dark.
+				zen: { 900: '#0B5C12', 700: '#0F7A18', 500: '#2AA136', 300: '#5BDF62', 100: '#BFF3C2', 50: '#E6F6E7' },
+				amber: { 800: '#7A5A00', 500: '#FFC800', 50: '#FFF8E1' },
+				ember: { 700: '#B34700', 500: '#FF6600', 300: '#FF8A3D' },
+				tint: { DEFAULT: 'hsl(var(--tint))', line: 'hsl(var(--tint-line))' },
+				reward: { DEFAULT: 'hsl(var(--reward))', surface: 'hsl(var(--reward-surface))' },
+				// Warm neutrals so legacy gray-* classes (Coding Duel) sit on the paper/ink palette.
+				gray: { 50: '#FAF9F5', 100: '#F2F1ED', 200: '#DBD9D2', 300: '#C9C8C1', 400: '#9E9E98', 500: '#70726A', 600: '#5E6058', 700: '#2B2B2B', 800: '#222222', 900: '#1A1A1A', 950: '#111111' }
+			},
+			fontFamily: {
+				display: ['"Clash Display"', 'Geist', 'system-ui', 'sans-serif'],
+				sans: ['Geist', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+				mono: ['"Departure Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -149,11 +155,7 @@ export default {
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-				'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-				'grid-pattern': 'linear-gradient(rgba(0, 245, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 245, 255, 0.1) 1px, transparent 1px)'
-			},
-			backgroundSize: {
-				'grid': '50px 50px'
+				'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))'
 			}
 		}
 	},

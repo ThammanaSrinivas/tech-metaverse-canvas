@@ -7,7 +7,7 @@ interface LeaderboardProps {
   challengeTitle: string;
 }
 
-const medalColors = ['text-yellow-500', 'text-gray-400', 'text-amber-600'];
+const medalColors = ['text-reward', 'text-gray-400', 'text-ember-700'];
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ entries, challengeTitle }) => {
   if (entries.length === 0) {

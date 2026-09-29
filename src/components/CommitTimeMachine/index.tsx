@@ -1,33 +1,48 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { GitBranch, Play, Pause, AlertCircle, ChevronDown } from 'lucide-react';
+import React, { useState, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
+import { GitBranch, Play, Pause, AlertCircle, ChevronDown, Keyboard } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGitHubRepos, useRepoCommits, useRepoBranches, useCommitDetail } from '@/hooks/useCommitHistory';
-import { languageColors } from '@/lib/github';
+import { fetchCommitDetail } from '@/lib/github';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Reveal, Section, SectionHeader } from '@/components/zen/primitives';
 import RepoSelector from './RepoSelector';
-import CommitTimelineScene from './CommitTimelineScene';
 import TimelineScrubber from './TimelineScrubber';
 import CommitDetailPanel from './CommitDetailPanel';
+
+// three.js is the heaviest dependency on the page; load it only when this section renders.
+const CommitTimelineScene = lazy(() => import('./CommitTimelineScene'));
+
+const fmt = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
 
 const CommitTimeMachine: React.FC = () => {
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string | undefined>(undefined);
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
   const [selectedCommitIndex, setSelectedCommitIndex] = useState<number>(-1);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [hoveredCommitIndex, setHoveredCommitIndex] = useState<number | null>(null);
   const [isExploring, setIsExploring] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [autoplay, setAutoplay] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
 
   const queryClient = useQueryClient();
+  const { theme } = useTheme();
+  // Brand node colour per theme: zen.700 on paper, zen.300 on ink.
+  const nodeColor = theme === 'dark' ? '#5BDF62' : '#0F7A18';
 
-  const { data: repos, isLoading: reposLoading, isError: reposError } = useGitHubRepos();
+  const { data: repos, isLoading: reposLoading, error: reposError } = useGitHubRepos();
   const { data: branches, isLoading: branchesLoading } = useRepoBranches(selectedRepo);
-  const {
-    data: commits,
-    isLoading: commitsLoading,
-  } = useRepoCommits(selectedRepo, 30, selectedBranch);
+  const { data: newestFirst, isLoading: commitsLoading, error: commitsError } = useRepoCommits(selectedRepo, 30, selectedBranch);
+  // GitHub returns newest first; the timeline reads left to right, oldest → newest.
+  const commits = useMemo(() => (newestFirst ? [...newestFirst].reverse() : undefined), [newestFirst]);
 
-  // Sort branches: common default names first, then alphabetical
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   const sortedBranches = useMemo(() => {
     if (!branches) return [];
     const defaultNames = ['main', 'master', 'develop', 'dev'];
@@ -41,32 +56,37 @@ const CommitTimeMachine: React.FC = () => {
     });
   }, [branches]);
 
-  // Auto-select first sorted branch
-  React.useEffect(() => {
-    if (sortedBranches.length > 0 && selectedBranch === undefined) {
-      setSelectedBranch(sortedBranches[0].name);
-    }
+  useEffect(() => {
+    if (sortedBranches.length > 0 && selectedBranch === undefined) setSelectedBranch(sortedBranches[0].name);
   }, [sortedBranches, selectedBranch]);
 
-  const activeIndex = hoveredCommitIndex ?? selectedCommitIndex;
-  const activeSha = commits && activeIndex >= 0 ? commits[activeIndex]?.sha : null;
+  useEffect(() => {
+    if (repos && repos.length > 0 && !selectedRepo) setSelectedRepo(repos[0].name);
+  }, [repos, selectedRepo]);
 
-  const { data: commitDetail } = useCommitDetail(selectedRepo, activeSha);
+  const selectedSha = commits && selectedCommitIndex >= 0 ? commits[selectedCommitIndex]?.sha ?? null : null;
+  const { data: commitDetail } = useCommitDetail(selectedRepo, selectedSha);
 
-  const handleCommitClick = useCallback(
+  const summary = useMemo(() => {
+    if (!commits?.length) return null;
+    const authors = new Set(commits.map((c) => c.author?.login ?? c.commit.author.name));
+    return {
+      count: commits.length,
+      from: fmt(commits[0].commit.author.date),
+      to: fmt(commits[commits.length - 1].commit.author.date),
+      authors: authors.size,
+    };
+  }, [commits]);
+
+  const openDetail = useCallback(
     (index: number) => {
       setSelectedCommitIndex(index);
-      if (commits && commits[index] && selectedRepo) {
+      setDetailOpen(true);
+      const sha = commits?.[index]?.sha;
+      if (sha && selectedRepo) {
         queryClient.fetchQuery({
-          queryKey: ['commit-detail', selectedRepo, commits[index].sha],
-          queryFn: async () => {
-            const res = await fetch(
-              `https://api.github.com/repos/ThammanaSrinivas/${selectedRepo}/commits/${commits[index].sha}`,
-              { headers: { Accept: 'application/vnd.github.v3+json' } }
-            );
-            if (!res.ok) throw new Error('Failed to fetch');
-            return res.json();
-          },
+          queryKey: ['commit-detail', selectedRepo, sha],
+          queryFn: () => fetchCommitDetail(selectedRepo, sha),
           staleTime: 10 * 60 * 1000,
         });
       }
@@ -74,265 +94,243 @@ const CommitTimeMachine: React.FC = () => {
     [commits, selectedRepo, queryClient]
   );
 
-  const handleRepoSelect = useCallback((repoName: string) => {
-    setSelectedRepo(repoName);
-    setSelectedBranch(undefined); // reset branch so it auto-selects default for new repo
+  const resetView = () => {
+    setAutoplay(false);
     setSelectedCommitIndex(-1);
+    setDetailOpen(false);
     setHoveredCommitIndex(null);
     setIsExploring(false);
     setProgress(0);
+  };
+
+  const handleRepoSelect = useCallback((repoName: string) => {
+    setSelectedRepo(repoName);
+    setSelectedBranch(undefined);
+    resetView();
   }, []);
 
   const handleBranchSelect = useCallback((branchName: string) => {
     setSelectedBranch(branchName);
-    setSelectedCommitIndex(-1);
-    setHoveredCommitIndex(null);
-    setIsExploring(false);
-    setProgress(0);
+    resetView();
     setBranchDropdownOpen(false);
   }, []);
 
-  const repoLanguage = useMemo(() => {
-    if (!repos || !selectedRepo) return null;
-    const repo = repos.find((r) => r.name === selectedRepo);
-    return repo?.language || null;
-  }, [repos, selectedRepo]);
-
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 480;
-
-  // Select first repo automatically
-  React.useEffect(() => {
-    if (repos && repos.length > 0 && !selectedRepo) {
-      setSelectedRepo(repos[0].name);
+  // ← / → walk the timeline, Enter opens the commit under the cursor.
+  const onSceneKey = (e: React.KeyboardEvent) => {
+    if (!commits?.length) return;
+    const last = commits.length - 1;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const cur = selectedCommitIndex < 0 ? 0 : selectedCommitIndex;
+      const next = Math.min(last, Math.max(0, cur + (e.key === 'ArrowRight' ? 1 : -1)));
+      setSelectedCommitIndex(next);
+      setDetailOpen(false);
+      setAutoplay(false);
+      setIsExploring(true);
+      setProgress(last ? next / last : 0);
+    } else if (e.key === 'Enter' && selectedCommitIndex >= 0) {
+      openDetail(selectedCommitIndex);
+    } else if (e.key === 'Escape') {
+      setDetailOpen(false);
     }
-  }, [repos, selectedRepo]);
+  };
+
+  // Fly: glide the camera from the first commit to the latest over ~12s. Any manual input stops it.
+  useEffect(() => {
+    if (!autoplay) return;
+    let raf = 0;
+    let last = performance.now();
+    const step = (t: number) => {
+      const dt = (t - last) / 1000;
+      last = t;
+      setProgress((p) => {
+        const next = Math.min(1, p + dt / 12);
+        if (next >= 1) setAutoplay(false);
+        return next;
+      });
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [autoplay]);
+
+  const error = (reposError || commitsError) as Error | null;
 
   return (
-    <section
-      id="commit-time-machine"
-      className="py-20 px-6 relative overflow-hidden"
-      role="region"
-      aria-label="Commit History Time Machine"
-    >
-      <div className="absolute top-10 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-56 h-56 bg-primary/3 rounded-full blur-3xl pointer-events-none" />
+    <Section id="time-machine">
+      <SectionHeader
+        index="05"
+        title="Time Machine"
+        kicker="Fly through the last 30 commits of my public repos. Drag to orbit, click a node for the diff."
+      />
 
-      <div className="container mx-auto max-w-6xl relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-5xl font-bold mb-6 text-foreground heading-primary">
-            Commit Time Machine
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Explore the evolution of projects through an interactive 3D timeline
-          </p>
-        </motion.div>
-
-        {reposError ? (
-          <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-6">
-              <AlertCircle className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <p className="text-muted-foreground text-lg">Unable to load repository data.</p>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Repo selector */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              viewport={{ once: true }}
-            >
+      {error ? (
+        <div className="zen-card flex flex-col items-center gap-3 px-6 py-16 text-center">
+          <AlertCircle className="h-8 w-8 text-muted-foreground" />
+          <p className="text-muted-foreground">{error.message}</p>
+          <a href="https://github.com/ThammanaSrinivas" target="_blank" rel="noopener noreferrer" className="zen-label text-primary">
+            browse on github ↗
+          </a>
+        </div>
+      ) : (
+        <Reveal>
+          <div className="zen-card p-4 md:p-6">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               {reposLoading ? (
-                <div className="flex justify-center gap-2">
+                <div className="flex gap-2">
                   {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="h-10 w-28 rounded-full bg-primary/10 animate-pulse" />
+                    <div key={i} className="h-9 w-28 animate-pulse rounded-full bg-secondary" />
                   ))}
                 </div>
               ) : repos ? (
-                <RepoSelector
-                  repos={repos}
-                  selectedRepo={selectedRepo}
-                  onSelect={handleRepoSelect}
-                />
+                <RepoSelector repos={repos} selectedRepo={selectedRepo} onSelect={handleRepoSelect} />
               ) : null}
-            </motion.div>
 
-            {/* Branch dropdown */}
-            {selectedRepo && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.15 }}
-                viewport={{ once: true }}
-                className="flex justify-center"
-              >
-                <div className="relative">
+              {selectedRepo && (
+                <div className="relative shrink-0">
                   <button
                     onClick={() => setBranchDropdownOpen(!branchDropdownOpen)}
                     disabled={branchesLoading}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-primary/20 bg-background/50 text-sm font-medium text-foreground hover:border-primary/40 transition-all duration-200 disabled:opacity-50"
+                    className="flex items-center gap-2 rounded-full border bg-card px-4 py-2 font-mono text-xs transition-colors hover:border-primary disabled:opacity-50"
+                    aria-haspopup="listbox"
+                    aria-expanded={branchDropdownOpen}
                   >
-                    <GitBranch className="w-4 h-4 text-primary" />
-                    <span>{branchesLoading ? 'Loading...' : selectedBranch || 'Select branch'}</span>
-                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${branchDropdownOpen ? 'rotate-180' : ''}`} />
+                    <GitBranch className="h-3.5 w-3.5 text-primary" />
+                    {branchesLoading ? 'loading…' : selectedBranch || 'branch'}
+                    <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${branchDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
-
                   {branchDropdownOpen && sortedBranches.length > 0 && (
                     <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setBranchDropdownOpen(false)}
-                      />
-                      <div className="absolute top-full mt-1 left-0 z-20 w-56 max-h-64 overflow-y-auto rounded-lg border border-primary/20 bg-background/95 backdrop-blur-xl shadow-xl">
+                      <div className="fixed inset-0 z-10" onClick={() => setBranchDropdownOpen(false)} />
+                      <ul role="listbox" className="absolute right-0 top-full z-20 mt-2 max-h-64 w-56 overflow-y-auto rounded-2xl border bg-popover p-1 shadow-xl">
                         {sortedBranches.map((branch) => (
-                          <button
-                            key={branch.name}
-                            onClick={() => handleBranchSelect(branch.name)}
-                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-primary/10 flex items-center gap-2 ${
-                              selectedBranch === branch.name
-                                ? 'text-primary font-medium bg-primary/5'
-                                : 'text-foreground'
-                            }`}
-                          >
-                            <GitBranch className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground" />
-                            <span className="truncate">{branch.name}</span>
-                            {selectedBranch === branch.name && (
-                              <span className="ml-auto text-xs text-primary">current</span>
-                            )}
-                          </button>
+                          <li key={branch.name}>
+                            <button
+                              role="option"
+                              aria-selected={selectedBranch === branch.name}
+                              onClick={() => handleBranchSelect(branch.name)}
+                              className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-mono text-xs hover:bg-secondary ${
+                                selectedBranch === branch.name ? 'text-primary' : ''
+                              }`}
+                            >
+                              <GitBranch className="h-3 w-3 shrink-0 text-muted-foreground" />
+                              <span className="truncate">{branch.name}</span>
+                            </button>
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     </>
                   )}
                 </div>
-              </motion.div>
+              )}
+            </div>
+
+            {summary && (
+              <p className="zen-label mt-4 text-muted-foreground">
+                <span className="text-primary">{summary.count}</span> commits · {summary.from} → {summary.to} ·{' '}
+                {summary.authors} author{summary.authors === 1 ? '' : 's'}
+              </p>
             )}
 
-            {/* 3D Scene or 2D Fallback */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              viewport={{ once: true }}
-              className="relative"
+            <div
+              className="relative mt-4 rounded-[20px] outline-none"
+              tabIndex={commits?.length ? 0 : -1}
+              onKeyDown={onSceneKey}
+              aria-label="Commit timeline. Use left and right arrows to move, Enter for details."
             >
               {commitsLoading ? (
-                <div className="w-full h-[320px] md:h-[420px] rounded-xl border border-primary/20 bg-background/30 animate-pulse flex items-center justify-center">
-                  <GitBranch className="w-8 h-8 text-primary/30 animate-spin" />
+                <div className="flex h-[320px] w-full animate-pulse items-center justify-center rounded-[20px] border bg-secondary/50 md:h-[420px]">
+                  <GitBranch className="h-8 w-8 text-primary/40" />
                 </div>
               ) : commits && commits.length > 0 ? (
                 isMobile ? (
-                  <div className="rounded-xl border border-primary/20 bg-background/30 p-4 max-h-[400px] overflow-y-auto">
-                    <div className="relative pl-6">
-                      <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-primary/30" />
-                      {commits.slice(0, 20).map((commit, i) => {
-                        const langColor = repoLanguage
-                          ? languageColors[repoLanguage] || '#6366f1'
-                          : '#6366f1';
-                        return (
-                          <div
-                            key={commit.sha}
-                            className={`relative mb-4 cursor-pointer group ${
-                              selectedCommitIndex === i ? 'opacity-100' : 'opacity-70 hover:opacity-100'
-                            }`}
-                            onClick={() => handleCommitClick(i)}
-                          >
-                            <div
-                              className="absolute -left-4 top-1.5 w-3 h-3 rounded-full border-2 border-background transition-transform group-hover:scale-125"
-                              style={{ backgroundColor: langColor }}
-                            />
-                            <p className="text-sm font-medium text-foreground line-clamp-1">
-                              {commit.commit.message.split('\n')[0]}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(commit.commit.author.date).toLocaleDateString()} &middot;{' '}
-                              <code className="text-primary">{commit.sha.slice(0, 7)}</code>
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <ol className="relative max-h-[420px] overflow-y-auto rounded-[20px] border bg-background/50 py-3 pl-8 pr-4">
+                    <span className="absolute bottom-0 left-[1.1rem] top-0 w-px bg-border" aria-hidden />
+                    {commits.map((commit, i) => ({ commit, i })).reverse().slice(0, 20).map(({ commit, i }) => (
+                      <li key={commit.sha}>
+                        <button onClick={() => openDetail(i)} className="relative w-full py-2 text-left">
+                          <span
+                            className="absolute -left-[0.95rem] top-3.5 h-2.5 w-2.5 rounded-full ring-4 ring-card"
+                            style={{ background: selectedCommitIndex === i ? '#FFC800' : nodeColor }}
+                          />
+                          <span className="line-clamp-1 text-sm">{commit.commit.message.split('\n')[0]}</span>
+                          <span className="font-mono text-xs text-muted-foreground">
+                            {fmt(commit.commit.author.date)} · {commit.sha.slice(0, 7)}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
                 ) : (
+                  <Suspense fallback={<div className="h-[320px] w-full animate-pulse rounded-[20px] border bg-secondary/50 md:h-[420px]" />}>
                   <CommitTimelineScene
                     commits={commits}
-                    repoLanguage={repoLanguage}
-                    selectedIndex={activeIndex}
+                    color={nodeColor}
+                    selectedIndex={hoveredCommitIndex ?? selectedCommitIndex}
                     isExploring={isExploring}
                     progress={progress}
                     onCommitHover={setHoveredCommitIndex}
-                    onCommitClick={handleCommitClick}
+                    onCommitClick={openDetail}
                   />
+                  </Suspense>
                 )
               ) : (
-                <div className="w-full h-[320px] rounded-xl border border-primary/20 bg-background/30 flex items-center justify-center">
-                  <p className="text-muted-foreground">No commits found for this repository.</p>
+                <div className="flex h-[320px] w-full items-center justify-center rounded-[20px] border">
+                  <p className="text-muted-foreground">No commits on this branch yet.</p>
                 </div>
               )}
 
-              {commitDetail && selectedCommitIndex >= 0 && (
-                <CommitDetailPanel
-                  commit={commitDetail}
-                  onClose={() => setSelectedCommitIndex(-1)}
-                />
+              {hoveredCommitIndex !== null && commits?.[hoveredCommitIndex] && !detailOpen && (
+                <div className="pointer-events-none absolute left-4 top-4 max-w-[70%] rounded-xl border bg-popover/95 px-3 py-2 text-sm shadow-lg backdrop-blur">
+                  <p className="line-clamp-1">{commits[hoveredCommitIndex].commit.message.split('\n')[0]}</p>
+                  <p className="font-mono text-xs text-muted-foreground">
+                    {fmt(commits[hoveredCommitIndex].commit.author.date)} · click for diff
+                  </p>
+                </div>
               )}
-            </motion.div>
 
-            {/* Controls */}
+              {detailOpen && commitDetail && <CommitDetailPanel commit={commitDetail} onClose={() => setDetailOpen(false)} />}
+            </div>
+
             {commits && commits.length > 1 && !isMobile && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.3 }}
-                viewport={{ once: true }}
-                className="flex flex-col md:flex-row items-center gap-4"
-              >
+              <div className="mt-5 flex flex-col items-center gap-4 md:flex-row">
                 <button
                   onClick={() => {
-                    setIsExploring(!isExploring);
-                    if (!isExploring) setProgress(0);
+                    if (autoplay || isExploring) {
+                      setAutoplay(false);
+                      setIsExploring(false);
+                    } else {
+                      setProgress(0);
+                      setIsExploring(true);
+                      setAutoplay(true);
+                    }
                   }}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 text-sm font-medium"
+                  className="flex shrink-0 items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5"
                 >
-                  {isExploring ? (
-                    <>
-                      <Pause className="w-4 h-4" /> Stop Exploring
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4" /> Explore Timeline
-                    </>
-                  )}
+                  {isExploring ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                  {isExploring ? 'Back to overview' : 'Fly the timeline'}
                 </button>
-
-                <div className="flex-1 w-full">
+                <div className="w-full flex-1">
                   <TimelineScrubber
                     value={Math.round(progress * 100)}
                     max={100}
                     onChange={(v) => {
+                      setAutoplay(false);
                       setProgress(v / 100);
                       setIsExploring(true);
                     }}
-                    label={
-                      commits
-                        ? `${Math.round(progress * (commits.length - 1)) + 1} / ${commits.length} commits`
-                        : undefined
-                    }
+                    label={`${Math.round(progress * (commits.length - 1)) + 1} / ${commits.length}`}
                   />
                 </div>
-              </motion.div>
+                <p className="zen-label hidden shrink-0 items-center gap-2 text-muted-foreground lg:flex">
+                  <Keyboard className="h-3.5 w-3.5" /> ← → · enter
+                </p>
+              </div>
             )}
           </div>
-        )}
-      </div>
-    </section>
+        </Reveal>
+      )}
+    </Section>
   );
 };
 

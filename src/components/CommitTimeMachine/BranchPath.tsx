@@ -29,7 +29,7 @@ const BranchPath: React.FC<BranchPathProps> = ({ points, color, tubeRadius = 0.0
         emissive={color}
         emissiveIntensity={0.4}
         roughness={0.4}
-        metalness={0.5}
+        metalness={0.1}
         transparent
         opacity={0.8}
       />

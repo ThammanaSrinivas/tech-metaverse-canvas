@@ -27,9 +27,7 @@ const CommitDetailPanel: React.FC<CommitDetailPanelProps> = ({ commit, onClose }
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 10, scale: 0.95 }}
         transition={{ duration: 0.2 }}
-        className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-20
-          bg-background/90 backdrop-blur-xl border border-primary/30 rounded-xl p-5
-          shadow-2xl shadow-primary/5"
+        className="absolute bottom-4 left-4 right-4 z-20 rounded-[20px] border bg-popover/95 p-5 shadow-2xl backdrop-blur-xl md:left-auto md:right-4 md:w-96"
       >
         <button
           onClick={onClose}
@@ -42,7 +40,7 @@ const CommitDetailPanel: React.FC<CommitDetailPanelProps> = ({ commit, onClose }
         </button>
 
         <div className="flex items-start gap-3 mb-3">
-          <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 flex-shrink-0">
+          <div className="p-2 rounded-lg bg-tint border border-tint-line flex-shrink-0">
             <GitCommit className="w-4 h-4 text-primary" />
           </div>
           <div className="min-w-0 flex-1">
@@ -56,16 +54,16 @@ const CommitDetailPanel: React.FC<CommitDetailPanelProps> = ({ commit, onClose }
         </div>
 
         <div className="flex items-center gap-3 text-xs mb-3">
-          <code className="px-2 py-1 rounded bg-primary/10 text-primary font-mono">
+          <code className="rounded-md bg-tint px-2 py-1 font-mono text-primary">
             {commit.sha.slice(0, 7)}
           </code>
           {commit.stats && (
             <>
-              <span className="flex items-center gap-1 text-green-500">
+              <span className="flex items-center gap-1 text-primary">
                 <Plus className="w-3 h-3" />
                 {commit.stats.additions}
               </span>
-              <span className="flex items-center gap-1 text-red-500">
+              <span className="flex items-center gap-1 text-destructive">
                 <Minus className="w-3 h-3" />
                 {commit.stats.deletions}
               </span>
@@ -74,7 +72,7 @@ const CommitDetailPanel: React.FC<CommitDetailPanelProps> = ({ commit, onClose }
         </div>
 
         {commit.files && commit.files.length > 0 && (
-          <div className="border-t border-primary/10 pt-3 mt-3">
+          <div className="border-t pt-3 mt-3">
             <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
               <FileText className="w-3 h-3" />
               {commit.files.length} file{commit.files.length !== 1 ? 's' : ''} changed
@@ -86,9 +84,9 @@ const CommitDetailPanel: React.FC<CommitDetailPanelProps> = ({ commit, onClose }
                     {file.filename.split('/').pop()}
                   </span>
                   <span className="flex-shrink-0 ml-2">
-                    <span className="text-green-500">+{file.additions}</span>
+                    <span className="text-primary">+{file.additions}</span>
                     {' '}
-                    <span className="text-red-500">-{file.deletions}</span>
+                    <span className="text-destructive">-{file.deletions}</span>
                   </span>
                 </div>
               ))}

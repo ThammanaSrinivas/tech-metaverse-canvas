@@ -1,288 +1,143 @@
-import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { HeroScene } from './HeroScene';
-import ParticleEffect from './ParticleEffect';
-const FloatingCLI = lazy(() => import('./FloatingCLI'));
-import { Button } from '@/components/ui/button';
-import { ChevronDown, Mouse, ArrowRight } from 'lucide-react';
-import { animationUtils, performanceUtils } from '@/lib/utils';
-import ResumeButton from './ui/ResumeButton';
-import { useTheme } from '@/contexts/ThemeContext';
+import React from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { ArrowRight, FileText, Terminal } from 'lucide-react';
+import { LINKS, PROFILE, ZENMODE, JOBS } from '@/data/profile';
+import { MarkGlyph } from '@/components/zen/primitives';
+import { emitZen } from '@/lib/zenEvents';
 
-const AnimatedText: React.FC = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [displayedText, setDisplayedText] = useState('');
-  const [isTyping, setIsTyping] = useState(true);
-  const texts = [
-    "3+ Years Experience",
-    "System Architecture", 
-    "Full Stack Development"
-  ];
+// Faint grid of mark shapes that fades in from the left, echoing the ZenMode hero art.
+const MarkPattern: React.FC = () => (
+  <svg
+    className="pointer-events-none absolute inset-0 h-full w-full"
+    aria-hidden
+    preserveAspectRatio="xMaxYMin slice"
+    viewBox="0 0 1280 640"
+  >
+    <defs>
+      <linearGradient id="hero-fade" x1="0" x2="1">
+        <stop offset="0.3" stopColor="#fff" stopOpacity="0" />
+        <stop offset="1" stopColor="#fff" stopOpacity="1" />
+      </linearGradient>
+      <mask id="hero-mask">
+        <rect width="1280" height="640" fill="url(#hero-fade)" />
+      </mask>
+    </defs>
+    <g mask="url(#hero-mask)" opacity="0.09">
+      {Array.from({ length: 6 }).flatMap((_, row) =>
+        Array.from({ length: 11 }).map((__, col) => (
+          <g key={`${row}-${col}`} transform={`translate(${col * 128 - (row % 2) * 64} ${row * 128 - 40}) scale(0.1)`}>
+            <MarkGlyph fill="#FFFFFF" />
+          </g>
+        ))
+      )}
+    </g>
+  </svg>
+);
 
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    const currentText = texts[currentIndex];
-    
-    if (isTyping) {
-      // Typing effect
-      if (displayedText.length < currentText.length) {
-        timeoutId = setTimeout(() => {
-          setDisplayedText(currentText.slice(0, displayedText.length + 1));
-        }, 100); // Typing speed
-      } else {
-        // Finished typing, wait before starting to delete
-        timeoutId = setTimeout(() => {
-          setIsTyping(false);
-        }, 2000); // Pause duration
-      }
-    } else {
-      // Deleting effect
-      if (displayedText.length > 0) {
-        timeoutId = setTimeout(() => {
-          setDisplayedText(displayedText.slice(0, -1));
-        }, 50); // Deleting speed
-      } else {
-        // Finished deleting, move to next text
-        setCurrentIndex((prev) => (prev + 1) % texts.length);
-        setIsTyping(true);
-      }
-    }
-
-    return () => clearTimeout(timeoutId);
-  }, [currentIndex, displayedText, isTyping, texts]);
-
+const Widget: React.FC<{ label: string; children: React.ReactNode; delay: number; className?: string }> = ({
+  label,
+  children,
+  delay,
+  className = '',
+}) => {
+  const reduce = useReducedMotion();
   return (
-    <div className="relative inline-block min-w-[200px] sm:min-w-[250px] h-[1.5em] overflow-hidden">
-      <span className="text-primary font-semibold whitespace-nowrap flex items-center">
-        {displayedText}
-        <motion.span
-          animate={{ opacity: [1, 0, 1] }}
-          transition={{ duration: 1, repeat: Infinity }}
-          className="inline-block ml-1 w-0.5 h-[1.2em] bg-primary align-text-bottom"
-          style={{ verticalAlign: 'baseline' }}
-        />
-      </span>
-    </div>
+    <motion.div
+      initial={reduce ? false : { opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      className={`rounded-[22px] border border-white/15 bg-white/10 p-5 backdrop-blur-sm ${className}`}
+    >
+      <p className="zen-label mb-3 text-white/60">{label}</p>
+      {children}
+    </motion.div>
   );
 };
 
-interface HeroProps {
-  onDuelTrigger?: () => void;
-}
-
-const Hero: React.FC<HeroProps> = ({ onDuelTrigger }) => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [glitchTrigger, setGlitchTrigger] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll();
-  const { theme } = useTheme();
-  
-  // Parallax effects - reduced on mobile
-  const y1 = useTransform(scrollYProgress, [0, 1], [0, isMobile ? -50 : -100]);
-  const y2 = useTransform(scrollYProgress, [0, 1], [0, isMobile ? -100 : -200]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-
-  useEffect(() => {
-    // Detect mobile device
-    const checkMobile = () => {
-      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-        window.innerWidth <= 768;
-      setIsMobile(isMobileDevice);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-
-    // Only add mouse tracking on desktop — throttled to 16ms (~60fps)
-    if (!isMobile) {
-      const handleMouseMove = performanceUtils.throttle((e: MouseEvent) => {
-        if (containerRef.current) {
-          const position = animationUtils.getMousePosition(e, containerRef.current);
-          setMousePosition(position);
-        }
-      }, 16);
-
-      window.addEventListener('mousemove', handleMouseMove);
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('resize', checkMobile);
-      };
-    }
-
-    return () => window.removeEventListener('resize', checkMobile);
-  }, [isMobile]);
-
-  const scrollToProjects = () => {
-    const projectsSection = document.getElementById('projects');
-    if (projectsSection) {
-      projectsSection.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const textVariants = {
-    hidden: { opacity: 0, y: isMobile ? 20 : 50 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: isMobile ? 0.5 : 0.8,
-        ease: 'easeOut',
-      },
-    },
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: isMobile ? 0.1 : 0.2,
-        duration: isMobile ? 0.3 : 0.5,
-      },
-    },
-  };
+const Hero: React.FC = () => {
+  const now = JOBS.find((j) => j.current)!;
+  const zoho = JOBS.find((j) => j.id === 'zoho')!;
 
   return (
-    <section 
-      ref={containerRef}
-      id="home" 
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-background via-background/95 to-background/90 pt-20 sm:pt-24 md:pt-20 lg:pt-24"
-    >
-      {/* Particle Effect */}
-      <ParticleEffect />
-      
-      {/* Animated background grid - reduced opacity on mobile */}
-      <div className={`absolute inset-0 grid-bg opacity-${isMobile ? '5' : '20'} animate-grid-move`}></div>
-      
-      {/* 3D Stars Scene - optimized for mobile performance */}
-      <div className="absolute inset-0">
-        <HeroScene />
-      </div>
-      
-      
-      {/* Gradient overlays for depth */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background/80"></div>
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/20 to-transparent"></div>
-      
-      {/* Content */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        style={{ y: y1, opacity }}
-        className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full flex flex-col items-center justify-center min-h-[60vh]"
+    <section id="home" className="mx-auto w-full max-w-[1120px] px-5 pt-24">
+      <div
+        className="relative overflow-hidden rounded-[28px] text-white"
+        style={{ background: 'radial-gradient(120% 90% at 90% 0%, #2AA136 0%, #0F7A18 45%, #0B5C12 100%)' }}
       >
-        <motion.div
-          variants={textVariants}
-          className="mb-6 sm:mb-8 lg:mb-12"
-        >
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-bold mb-3 sm:mb-4 lg:mb-6 tracking-tight leading-tight heading-primary glitch-trigger">
-            <motion.span 
-              className={`text-foreground inline-block glitch ${glitchTrigger ? 'animate-pulse' : ''}`}
-              data-text="Digital Architect"
-              whileHover={{ 
-                scale: 1.02,
-                textShadow: "0 0 20px rgba(0, 245, 255, 0.5)"
-              }}
-              transition={{ duration: 0.3 }}
-              onHoverStart={() => setGlitchTrigger(true)}
-              onHoverEnd={() => setGlitchTrigger(false)}
-            >
-              Digital Architect
-            </motion.span>
-          </h1>
-        </motion.div>
+        <MarkPattern />
+        <div className="relative grid gap-10 p-7 sm:p-10 md:grid-cols-[1.5fr_1fr] md:items-center md:p-14">
+          <div>
+            <svg width="64" height="64" viewBox="0 0 1024 1024" aria-hidden className="mb-8">
+              <rect width="1024" height="1024" rx="230" fill="#FFFFFF" />
+              <MarkGlyph fill="#0F7A18" hole="#FFFFFF" />
+            </svg>
+            <p className="zen-label mb-3 text-white/70">Hi, I'm</p>
+            <h1 className="text-[2.75rem] leading-[1.02] sm:text-6xl md:text-7xl">{PROFILE.name}</h1>
+            <p className="mt-4 text-lg text-white/80 sm:text-xl">{PROFILE.tagline}</p>
 
-        <motion.div
-          variants={textVariants}
-          style={{ y: y2 }}
-          className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground mb-8 sm:mb-12 lg:mb-16 max-w-4xl mx-auto leading-relaxed font-light px-2 sm:px-4"
-        >
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <motion.span
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-            >
-              Crafting immersive digital experiences with
-            </motion.span>
-            <AnimatedText />
-          </div>
-        </motion.div>
-
-        {/* CTA Buttons */}
-        <motion.div
-          variants={textVariants}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-12 sm:mb-16 lg:mb-20"
-        >
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="group"
-          >
-            <Button
-              onClick={scrollToProjects}
-              size="lg"
-              className="relative overflow-hidden bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group-hover:shadow-primary/25"
-            >
-              <motion.span
-                className="relative z-10 flex items-center gap-2"
-                initial={false}
-                animate={{ x: 0 }}
-                whileHover={{ x: 4 }}
-              >
-                View My Work
-                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </motion.span>
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                initial={false}
-                whileHover={{ scale: 1.05 }}
-              />
-            </Button>
-          </motion.div>
-
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="group"
-          >
-            <ResumeButton 
-              variant="outline"
-              size="lg"
-              className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/25"
-            />
-          </motion.div>
-
-          <motion.div
-            whileHover={{ scale: 1.05, rotate: 5 }}
-            whileTap={{ scale: 0.95 }}
-            className="group cursor-pointer"
-            onClick={() => {
-              const contactSection = document.getElementById('contact');
-              if (contactSection) {
-                contactSection.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}
-          >
-            <div className="relative p-4 rounded-full bg-muted hover:bg-muted/80 transition-all duration-300 group-hover:shadow-lg">
-              <ChevronDown className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors animate-bounce" />
-              <motion.div
-                className="absolute inset-0 rounded-full border-2 border-primary opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-110 transition-all duration-300"
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.6 }}
-              />
+            <div className="mt-6 flex flex-wrap gap-2">
+              <span className="zen-pill border-white/25 bg-white/10">
+                <span className="h-1.5 w-1.5 rounded-full bg-zen-300" /> SWE @ {now.company}
+              </span>
+              <span className="zen-pill border-white bg-white text-zen-700">Founder, ZenMode OS</span>
+              <span className="zen-pill border-white/25 text-white/80">Open source</span>
             </div>
-          </motion.div>
-        </motion.div>
-      </motion.div>
 
-      {/* Floating CLI Workflow - lazy loaded for performance */}
-      <Suspense fallback={null}>
-        <FloatingCLI onDuelTrigger={onDuelTrigger} />
-      </Suspense>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <a
+                href="#work"
+                className="inline-flex h-12 items-center gap-2 rounded-full bg-white px-6 font-semibold text-zen-700 transition-transform hover:-translate-y-0.5"
+              >
+                See my work <ArrowRight className="h-4 w-4" />
+              </a>
+              <a
+                href={LINKS.resume}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-12 items-center gap-2 rounded-full border border-white/40 px-6 font-semibold transition-colors hover:bg-white/10"
+              >
+                <FileText className="h-4 w-4" /> Resume
+              </a>
+              <button
+                onClick={() => emitZen('shell')}
+                className="hidden items-center gap-2 px-2 font-mono text-xs uppercase tracking-[0.1em] text-white/70 transition-colors hover:text-white sm:inline-flex"
+              >
+                <Terminal className="h-3.5 w-3.5" /> press <kbd className="rounded border border-white/30 px-1.5">`</kbd> for zen shell
+              </button>
+            </div>
+          </div>
+
+          <div className="grid gap-3">
+            <Widget label="Now" delay={0.15}>
+              <p className="font-display text-2xl">{now.company}</p>
+              <p className="text-sm text-white/70">
+                {now.role} · since {now.period.split(' — ')[0]}
+              </p>
+            </Widget>
+            <Widget label="Building" delay={0.25}>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-display text-2xl">ZenMode OS</p>
+                  <p className="text-sm text-white/70">{ZENMODE.award}</p>
+                </div>
+                <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden className="shrink-0">
+                  <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="5" />
+                  <circle cx="22" cy="22" r="18" fill="none" stroke="#FFC800" strokeWidth="5" strokeLinecap="round"
+                    strokeDasharray="102 113" transform="rotate(-90 22 22)" />
+                </svg>
+              </div>
+            </Widget>
+            <Widget label="Previously" delay={0.35} className="hidden md:block">
+              <p className="font-mono text-3xl">{zoho.stats[0].value}</p>
+              <p className="text-sm text-white/70">{zoho.stats[0].label} at {zoho.company}</p>
+            </Widget>
+          </div>
+        </div>
+      </div>
+
+      <p className="mx-auto mt-10 max-w-2xl text-center text-lg leading-relaxed text-muted-foreground">
+        {PROFILE.intro}
+      </p>
     </section>
   );
 };

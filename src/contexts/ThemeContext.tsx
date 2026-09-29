@@ -21,23 +21,23 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('dark');
+  // Saved choice wins; otherwise follow the OS. index.html applies the same rule pre-render to avoid a flash.
+  const [theme, setThemeState] = useState<Theme>(() => {
+    const saved = themeUtils.loadTheme();
+    return saved === 'light' || saved === 'dark' ? saved : themeUtils.getSystemTheme();
+  });
 
   useEffect(() => {
-    const savedTheme = themeUtils.loadTheme() as Theme;
-    if (savedTheme && ['light', 'dark'].includes(savedTheme)) {
-      setTheme(savedTheme);
-    }
-  }, []);
-
-  useEffect(() => {
-    themeUtils.saveTheme(theme);
     themeUtils.applyTheme(theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+  // Persist only explicit choices, so visitors who never toggle keep following their OS.
+  const setTheme = (next: Theme) => {
+    themeUtils.saveTheme(next);
+    setThemeState(next);
   };
+
+  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, effectiveTheme: theme, toggleTheme }}>

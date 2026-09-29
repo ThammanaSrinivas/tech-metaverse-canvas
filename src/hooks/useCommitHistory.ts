@@ -1,22 +1,26 @@
 import { useQuery } from '@tanstack/react-query';
 import {
-  fetchGitHubData,
+  fetchRepos,
   fetchRepoBranches,
   fetchRepoCommits,
   fetchCommitDetail,
   type GitHubRepo,
 } from '@/lib/github';
 
+/** Pinned repos first (flagship leads), then the most recently pushed originals. */
+const PINNED = ['zenmode', 'tech-metaverse-canvas', 'habitica-mcp-server'];
+
 export function useGitHubRepos() {
   return useQuery({
-    queryKey: ['github-activity'],
-    queryFn: fetchGitHubData,
-    staleTime: 5 * 60 * 1000,
-    retry: 1,
-    select: (data) =>
-      data.repos
-        .filter((r: GitHubRepo) => !r.fork)
-        .slice(0, 6),
+    queryKey: ['github-repos'],
+    queryFn: fetchRepos,
+    staleTime: 15 * 60 * 1000,
+    retry: false,
+    select: (repos: GitHubRepo[]) => {
+      const own = repos.filter((r) => !r.fork && r.name !== 'ThammanaSrinivas');
+      const pinned = PINNED.map((n) => own.find((r) => r.name === n)).filter(Boolean) as GitHubRepo[];
+      return [...pinned, ...own.filter((r) => !PINNED.includes(r.name))].slice(0, 6);
+    },
   });
 }
 
@@ -26,7 +30,7 @@ export function useRepoBranches(repoName: string | null) {
     queryFn: () => fetchRepoBranches(repoName!),
     enabled: !!repoName,
     staleTime: 5 * 60 * 1000,
-    retry: 1,
+    retry: false,
   });
 }
 
@@ -36,7 +40,7 @@ export function useRepoCommits(repoName: string | null, perPage = 30, branch?: s
     queryFn: () => fetchRepoCommits(repoName!, perPage, branch),
     enabled: !!repoName,
     staleTime: 5 * 60 * 1000,
-    retry: 1,
+    retry: false,
   });
 }
 
@@ -44,8 +48,8 @@ export function useCommitDetail(repoName: string | null, sha: string | null) {
   return useQuery({
     queryKey: ['commit-detail', repoName, sha],
     queryFn: () => fetchCommitDetail(repoName!, sha!),
-    enabled: false, // fetched on demand
+    enabled: false, // filled by an explicit click (see CommitTimeMachine), never on hover
     staleTime: 10 * 60 * 1000,
-    retry: 1,
+    retry: false,
   });
 }

@@ -4,12 +4,11 @@ import { OrbitControls } from '@react-three/drei';
 import BranchPath from './BranchPath';
 import CommitNode from './CommitNode';
 import TimelineCamera from './TimelineCamera';
-import { languageColors } from '@/lib/github';
 import type { GitHubCommit } from '@/lib/github';
 
 interface CommitTimelineSceneProps {
   commits: GitHubCommit[];
-  repoLanguage: string | null;
+  color: string;
   selectedIndex: number;
   isExploring: boolean;
   progress: number;
@@ -22,39 +21,38 @@ function buildCurvePoints(
   yOffset: number
 ): [number, number, number][] {
   if (commits.length === 0) return [];
-  const spacing = 12 / Math.max(commits.length - 1, 1);
+  // A loose helix: time runs left → right, the path breathes in y and z so the camera has depth to fly through.
+  const spacing = 14 / Math.max(commits.length - 1, 1);
   return commits.map((_, i) => {
-    const x = -6 + i * spacing;
-    const z = Math.sin(i * 0.4) * 0.5;
-    return [x, yOffset, z] as [number, number, number];
+    const x = -7 + i * spacing;
+    const y = yOffset + Math.sin(i * 0.35) * 0.6;
+    const z = Math.cos(i * 0.35) * 1.2;
+    return [x, y, z] as [number, number, number];
   });
 }
 
 const CommitTimelineScene: React.FC<CommitTimelineSceneProps> = ({
   commits,
-  repoLanguage,
+  color,
   selectedIndex,
   isExploring,
   progress,
   onCommitHover,
   onCommitClick,
 }) => {
-  const color = repoLanguage
-    ? languageColors[repoLanguage] || '#6366f1'
-    : '#6366f1';
-
   const points = useMemo(() => buildCurvePoints(commits, 0), [commits]);
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   return (
-    <div className="w-full h-[320px] md:h-[420px] rounded-xl overflow-hidden border border-primary/20">
+    <div className="h-[320px] w-full overflow-hidden rounded-[20px] border bg-background md:h-[420px]">
       <Canvas
-        camera={{ position: [0, 1, 8], fov: 50 }}
+        camera={{ position: [0, 2.2, 8.5], fov: 50 }}
         dpr={isMobile ? 1 : [1, 2]}
         gl={{ antialias: !isMobile }}
       >
-        <ambientLight intensity={0.4} />
+        <ambientLight intensity={0.6} />
+        <gridHelper args={[20, 20, color, color]} position={[0, -1.2, 0]} material-transparent material-opacity={0.08} />
         <pointLight position={[5, 5, 5]} intensity={0.8} />
         <pointLight position={[-5, 3, -3]} intensity={0.4} color={color} />
 
@@ -72,7 +70,8 @@ const CommitTimelineScene: React.FC<CommitTimelineSceneProps> = ({
           <CommitNode
             key={commits[i]?.sha || i}
             position={pos}
-            color={color}
+            color={selectedIndex === i ? '#FFC800' : color}
+            isLatest={i === points.length - 1}
             isSelected={selectedIndex === i}
             onPointerOver={() => onCommitHover(i)}
             onPointerOut={() => onCommitHover(null)}

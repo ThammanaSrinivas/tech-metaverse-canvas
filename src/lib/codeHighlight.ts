@@ -19,19 +19,19 @@ export const renderHighlightedCode = (code: string, isDark: boolean): React.Reac
       if (!token) return;
 
       if (['import', 'export', 'const', 'let', 'var', 'function', 'interface', 'type', 'from', 'return', 'if', 'else', 'for', 'while', 'new', 'class', 'extends', 'implements', 'async', 'await', 'try', 'catch', 'throw', 'switch', 'case', 'break', 'default'].includes(token)) {
-        addHighlightedPart(token, isDark ? 'text-purple-400' : 'text-purple-600');
+        addHighlightedPart(token, 'text-primary');
       } else if (['React', 'useState', 'useEffect'].includes(token)) {
-        addHighlightedPart(token, isDark ? 'text-purple-400' : 'text-purple-600');
+        addHighlightedPart(token, 'text-primary');
       } else if (token.match(/^['"`][^'"`]*['"`]$/)) {
-        addHighlightedPart(token, isDark ? 'text-green-400' : 'text-green-600');
+        addHighlightedPart(token, 'text-reward');
       } else if (['true', 'false', 'null', 'undefined'].includes(token)) {
-        addHighlightedPart(token, isDark ? 'text-orange-400' : 'text-orange-600');
+        addHighlightedPart(token, 'text-destructive');
       } else if (['motion', 'div', 'h3', 'p'].includes(token)) {
-        addHighlightedPart(token, isDark ? 'text-blue-400' : 'text-blue-600');
+        addHighlightedPart(token, 'text-muted-foreground');
       } else if (token.match(/^\d+\.?\d*$/)) {
-        addHighlightedPart(token, isDark ? 'text-yellow-400' : 'text-yellow-600');
+        addHighlightedPart(token, 'text-destructive');
       } else if (token === '<' || token === '>') {
-        addHighlightedPart(token, isDark ? 'text-blue-400' : 'text-blue-600');
+        addHighlightedPart(token, 'text-muted-foreground');
       } else if (['{', '}', '(', ')', ';', ',', '.'].includes(token)) {
         addHighlightedPart(token, isDark ? 'text-gray-300' : 'text-gray-700');
       } else {

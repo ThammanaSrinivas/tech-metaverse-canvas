@@ -9,45 +9,16 @@ import {
   CommandSeparator,
 } from '@/components/ui/command';
 import { useTheme } from '@/contexts/ThemeContext';
-import { RESUME_URL } from '@/components/ui/ResumeButton';
-import {
-  Home,
-  User,
-  Briefcase,
-  Code2,
-  FolderKanban,
-  Github,
-  Mail,
-  Sun,
-  Moon,
-  FileText,
-  ExternalLink,
-  Activity,
-} from 'lucide-react';
-
-const navCommands = [
-  { name: 'Home', href: '#home', icon: Home },
-  { name: 'About', href: '#about', icon: User },
-  { name: 'Work Experience', href: '#work-experience', icon: Briefcase },
-  { name: 'Technical Skills', href: '#technical-skills', icon: Code2 },
-  { name: 'Projects', href: '#projects', icon: FolderKanban },
-  { name: 'GitHub Activity', href: '#github-activity', icon: Activity },
-  { name: 'Contact', href: '#contact', icon: Mail },
-];
-
-const projectCommands = [
-  { name: 'Random Android Project', url: 'https://github.com/randomAndroidProject/randomAndroidProject' },
-  { name: 'Tech Metaverse Canvas', url: 'https://github.com/ThammanaSrinivas/tech-metaverse-canvas' },
-  { name: 'Habitica MCP Server', url: 'https://github.com/ThammanaSrinivas/habitica-mcp-server' },
-  { name: 'Spring MVC CRUD API', url: 'https://github.com/ThammanaSrinivas/SpringMVCPracticeCRUDRestfulAPI' },
-  { name: 'RAG Experiment', url: 'https://github.com/ThammanaSrinivas/RAG_experiment' },
-  { name: 'SaiKiCoin', url: 'https://github.com/ThammanaSrinivas/SaiKiCoin' },
-];
+import { LAB, LINKS, SECTIONS } from '@/data/profile';
+import { emitZen } from '@/lib/zenEvents';
+import { Github, Hash, Sun, Moon, FileText, ExternalLink, Terminal, Swords } from 'lucide-react';
 
 interface CommandPaletteProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
+
+const projects = [{ name: 'zenmode', url: LINKS.zenmode }, ...LAB.map(({ name, url }) => ({ name, url }))];
 
 const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, onOpenChange }) => {
   const [internalOpen, setInternalOpen] = useState(false);
@@ -67,40 +38,51 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, o
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open, setOpen]);
 
-  const scrollTo = (href: string) => {
-    const el = document.querySelector(href);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  const run = (fn: () => void) => {
     setOpen(false);
+    fn();
   };
+  const openUrl = (url: string) => run(() => window.open(url, '_blank', 'noopener,noreferrer'));
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Type a command or search..." />
+      <CommandInput placeholder="Jump to a section, project or action…" />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandEmpty>Nothing here. Try “work” or “shell”.</CommandEmpty>
 
-        <CommandGroup heading="Navigation">
-          {navCommands.map((cmd) => (
-            <CommandItem key={cmd.href} onSelect={() => scrollTo(cmd.href)}>
-              <cmd.icon className="mr-2 h-4 w-4" />
-              <span>{cmd.name}</span>
+        <CommandGroup heading="Sections">
+          {SECTIONS.map(({ id, label }) => (
+            <CommandItem
+              key={id}
+              onSelect={() => run(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }))}
+            >
+              <Hash className="mr-2 h-4 w-4 text-primary" />
+              <span>{label}</span>
             </CommandItem>
           ))}
         </CommandGroup>
 
         <CommandSeparator />
 
+        <CommandGroup heading="Play">
+          <CommandItem onSelect={() => run(() => emitZen('shell'))}>
+            <Terminal className="mr-2 h-4 w-4 text-primary" />
+            <span>Open zen shell</span>
+            <kbd className="ml-auto font-mono text-[10px] text-muted-foreground">`</kbd>
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => emitZen('duel'))}>
+            <Swords className="mr-2 h-4 w-4 text-primary" />
+            <span>Start a coding duel</span>
+          </CommandItem>
+        </CommandGroup>
+
+        <CommandSeparator />
+
         <CommandGroup heading="Projects">
-          {projectCommands.map((cmd) => (
-            <CommandItem
-              key={cmd.url}
-              onSelect={() => {
-                window.open(cmd.url, '_blank', 'noopener,noreferrer');
-                setOpen(false);
-              }}
-            >
+          {projects.map((p) => (
+            <CommandItem key={p.url} onSelect={() => openUrl(p.url)}>
               <Github className="mr-2 h-4 w-4" />
-              <span>{cmd.name}</span>
+              <span>{p.name}</span>
               <ExternalLink className="ml-auto h-3 w-3 text-muted-foreground" />
             </CommandItem>
           ))}
@@ -109,27 +91,13 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, o
         <CommandSeparator />
 
         <CommandGroup heading="Actions">
-          <CommandItem
-            onSelect={() => {
-              toggleTheme();
-              setOpen(false);
-            }}
-          >
-            {theme === 'dark' ? (
-              <Sun className="mr-2 h-4 w-4" />
-            ) : (
-              <Moon className="mr-2 h-4 w-4" />
-            )}
-            <span>Toggle Theme ({theme === 'dark' ? 'Light' : 'Dark'})</span>
+          <CommandItem onSelect={() => run(toggleTheme)}>
+            {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+            <span>Switch to {theme === 'dark' ? 'light' : 'dark'} theme</span>
           </CommandItem>
-          <CommandItem
-            onSelect={() => {
-              window.open(RESUME_URL, '_blank', 'noopener,noreferrer');
-              setOpen(false);
-            }}
-          >
+          <CommandItem onSelect={() => openUrl(LINKS.resume)}>
             <FileText className="mr-2 h-4 w-4" />
-            <span>View Resume</span>
+            <span>View resume</span>
             <ExternalLink className="ml-auto h-3 w-3 text-muted-foreground" />
           </CommandItem>
         </CommandGroup>

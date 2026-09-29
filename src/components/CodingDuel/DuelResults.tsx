@@ -91,7 +91,7 @@ const DuelResults: React.FC<DuelResultsProps> = ({
           </button>
         </div>
       ) : (
-        <p className="text-sm text-green-500">Score saved!</p>
+        <p className="text-sm text-primary">Score saved!</p>
       )}
 
       <div className="flex items-center gap-3 pt-2">

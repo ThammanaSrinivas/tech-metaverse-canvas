@@ -10,7 +10,7 @@ interface TimelineCameraProps {
 
 const TimelineCamera: React.FC<TimelineCameraProps> = ({ points, progress, isExploring }) => {
   const { camera } = useThree();
-  const targetPos = useRef(new THREE.Vector3(0, 0, 8));
+  const targetPos = useRef(new THREE.Vector3(0, 2.2, 8.5));
   const targetLook = useRef(new THREE.Vector3(0, 0, 0));
 
   const curve = useMemo(() => {
@@ -27,13 +27,11 @@ const TimelineCamera: React.FC<TimelineCameraProps> = ({ points, progress, isExp
       targetLook.current.copy(point);
     } else {
       // Default orbit-like view
-      targetPos.current.set(0, 1, 8);
+      targetPos.current.set(0, 2.2, 8.5);
       targetLook.current.set(0, 0, 0);
     }
 
-    camera.position.lerp(targetPos.current, delta * 2);
-    const lookTarget = new THREE.Vector3();
-    lookTarget.copy(camera.position).lerp(targetLook.current, 0.5);
+    camera.position.lerp(targetPos.current, Math.min(1, delta * 2));
     camera.lookAt(targetLook.current);
   });
 

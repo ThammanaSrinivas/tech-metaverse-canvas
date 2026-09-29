@@ -20,13 +20,13 @@ const TimerBar: React.FC<TimerBarProps> = ({ elapsed, timeLimit, testsPassed, te
       <div className="flex-1">
         <div className="h-2 rounded-full bg-primary/10 overflow-hidden">
           <motion.div
-            className={`h-full rounded-full ${isLow ? 'bg-red-500' : 'bg-primary'}`}
+            className={`h-full rounded-full ${isLow ? 'bg-destructive' : 'bg-primary'}`}
             animate={{ width: `${pct}%` }}
             transition={{ duration: 0.5 }}
           />
         </div>
       </div>
-      <span className={`font-mono text-sm font-semibold tabular-nums ${isLow ? 'text-red-500' : 'text-foreground'}`}>
+      <span className={`font-mono text-sm font-semibold tabular-nums ${isLow ? 'text-destructive' : 'text-foreground'}`}>
         {minutes}:{String(seconds).padStart(2, '0')}
       </span>
       <span className="text-xs text-muted-foreground">

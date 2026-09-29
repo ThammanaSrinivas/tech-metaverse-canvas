@@ -22,7 +22,7 @@ const TestRunner: React.FC<TestRunnerProps> = ({ results, totalTests }) => {
           : results.map((r, i) => (
               <div
                 key={i}
-                className={`flex items-start gap-2 text-xs ${r.passed ? 'text-green-500' : 'text-red-500'}`}
+                className={`flex items-start gap-2 text-xs ${r.passed ? 'text-primary' : 'text-destructive'}`}
               >
                 {r.passed ? (
                   <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
@@ -32,10 +32,10 @@ const TestRunner: React.FC<TestRunnerProps> = ({ results, totalTests }) => {
                 <div>
                   <span className="font-mono">{r.label}</span>
                   {r.error && (
-                    <p className="text-red-400 mt-0.5">{r.error}</p>
+                    <p className="text-destructive mt-0.5">{r.error}</p>
                   )}
                   {!r.passed && !r.error && (
-                    <p className="text-red-400 mt-0.5">
+                    <p className="text-destructive mt-0.5">
                       Got: {JSON.stringify(r.actual)}
                     </p>
                   )}

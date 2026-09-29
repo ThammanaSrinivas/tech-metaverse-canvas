@@ -7,6 +7,8 @@ interface CommitNodeProps {
   color: string;
   size?: number;
   isSelected?: boolean;
+  /** The newest commit breathes, like a live cursor. */
+  isLatest?: boolean;
   onPointerOver?: () => void;
   onPointerOut?: () => void;
   onClick?: () => void;
@@ -17,6 +19,7 @@ const CommitNode: React.FC<CommitNodeProps> = ({
   color,
   size = 0.15,
   isSelected = false,
+  isLatest = false,
   onPointerOver,
   onPointerOut,
   onClick,
@@ -25,12 +28,15 @@ const CommitNode: React.FC<CommitNodeProps> = ({
   const glowRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
-  useFrame((_, delta) => {
+  useFrame(({ clock }, delta) => {
+    // Clamp: a long frame (tab resumed, slow device) would otherwise overshoot the lerp and blow the node up.
+    const k = Math.min(1, delta * 5);
     if (meshRef.current) {
-      const targetScale = hovered || isSelected ? 1.4 : 1;
+      const pulse = isLatest ? 1 + Math.sin(clock.elapsedTime * 2) * 0.15 : 1;
+      const targetScale = (hovered || isSelected ? 1.5 : 1) * pulse;
       meshRef.current.scale.lerp(
         new THREE.Vector3(targetScale, targetScale, targetScale),
-        delta * 5
+        k
       );
     }
     if (glowRef.current) {
@@ -40,7 +46,7 @@ const CommitNode: React.FC<CommitNodeProps> = ({
           hovered || isSelected ? 2.5 : 1.8,
           hovered || isSelected ? 2.5 : 1.8
         ),
-        delta * 5
+        k
       );
     }
   });
@@ -80,9 +86,9 @@ const CommitNode: React.FC<CommitNodeProps> = ({
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={hovered || isSelected ? 0.8 : 0.3}
-          roughness={0.3}
-          metalness={0.6}
+          emissiveIntensity={hovered || isSelected ? 0.7 : 0.35}
+          roughness={0.45}
+          metalness={0.1}
         />
       </mesh>
     </group>

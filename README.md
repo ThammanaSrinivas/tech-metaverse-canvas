@@ -1,90 +1,45 @@
-# Tech Metaverse Canvas Portfolio
+# srinivas-t.web.app
 
-A modern, interactive portfolio for a digital architect and developer. Features a 3D hero, animated CLI workflow, categorized technical skills, and robust testing.
+Personal site of Thammana Srinivas, live at **https://srinivas-t.web.app**.
+Styled with the ZenMode OS v3 design system (paper / ink, zen green, Clash Display · Geist · Departure Mono).
 
-## Features
-- **Floating Developer Workflow CLI**: Animated, draggable CLI showing a 6-step dev workflow (write code, run tests, fix, deploy, etc.).
-- **3D Hero Section**: Eye-catching intro with rainbow-gradient title.
-- **About & Technical Skills**: About and collapsible, categorized skills with icons.
-- **Contact**: Modern icons, up-to-date links.
-- **Robust Testing**: Unit, functional, and performance tests with 90%+ coverage.
+## What's on the page
 
-## Developer Workflow CLI
-- Drag and drop anywhere on the page (desktop/mobile).
-- Steps: Write Code → Run Tests → See Failure → Fix → All Pass → Deploy/Coverage.
-- Fully accessible and responsive.
+| Section | Notes |
+|---|---|
+| Hero | Brand-green block, current role and ZenMode widgets |
+| 01 ZenMode | The launcher I build: hero art, feature tiles, store links |
+| 02 Day job | PayPal and Zoho stat cards with expandable highlights |
+| 03 Toolbox | Grouped skill chips |
+| 04 Lab | Smaller experiments |
+| 05 Time Machine | 3D flight through a repo's last 30 commits (three.js, lazy-loaded) |
+| 06 Say hi | Email and links |
 
-## Testing
+Plus the **zen shell** (press <kbd>`</kbd>): a small terminal with `neofetch`, `work`, `breathe`, `duel`, `open`, `cd` and a few easter eggs. The **coding duel** opens from the shell or the <kbd>⌘K</kbd> palette.
 
-### Unit Tests (UT)
-- Test individual functions, hooks, and React components in isolation.
-- Example: utils, About, Contact, ThemeToggle, FloatingCLI, ThemeContext.
+All copy lives in `src/data/profile.ts`. Sections, the shell and the command palette read from it, so edit it there.
 
-### Functional Tests (FT)
-- Simulate user flows and UI interactions.
-- Example: Completing the CLI workflow, navigating steps, theme switching, mobile responsiveness.
-
-### Performance Tests (PT)
-- Measure render time, memory usage, and responsiveness of key components (e.g., FloatingCLI).
-
-### How to Run
-- **All tests:** `npm run test:all`
-- **Unit tests:** `npm run test:unit`
-- **Functional tests:** `npm run test:functional`
-- **Performance tests:** `npm run test:performance`
-- **Coverage:** `npm run test:coverage`
-
-### Build Enforcement
-- The build script (`npm run build`) will run all tests (UT, FT, PT) before building. If any test fails, the build fails.
-
-## Getting Started
+## Develop
 
 ```sh
 npm install
-npm run dev
+npm run dev          # http://localhost:8080
+npm run build        # runs the tests, then builds to dist/
+npx vitest run       # tests only
 ```
 
-## Technologies
-- Vite, React, TypeScript, shadcn-ui, Tailwind CSS
+## GitHub data
 
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+The Time Machine calls the GitHub API unauthenticated (60 requests/hour per visitor) and caches answers in `sessionStorage`. When the API is rate-limited it falls back to `public/gh-snapshot.json`. Refresh that snapshot before deploying:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+npm run snapshot:commits   # uses $GITHUB_TOKEN or `gh auth token`
 ```
 
-**Edit a file directly in GitHub**
+## Deploy
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Firebase Hosting: project `srinivas-portfolio-1481f`, site `srinivas-t` (see `firebase.json`).
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+npm run snapshot:commits && npm run build && firebase deploy --only hosting
+```
