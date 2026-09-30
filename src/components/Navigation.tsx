@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Menu, Search, X } from 'lucide-react';
 import { SECTIONS, PROFILE } from '@/data/profile';
-import { ZenMark } from '@/components/zen/primitives';
+import { Monogram } from '@/components/zen/primitives';
 import CommandPalette from './CommandPalette';
 
 const Navigation: React.FC = () => {
@@ -44,7 +44,7 @@ const Navigation: React.FC = () => {
       >
         <nav className="mx-auto flex h-16 max-w-[1120px] items-center gap-6 px-5" aria-label="Main">
           <a href="#home" className="flex items-center gap-2.5" aria-label={`${PROFILE.name}, home`}>
-            <ZenMark size={28} title="" />
+            <Monogram size={28} title="" />
             <span className="font-display text-lg">{PROFILE.shortName}</span>
           </a>
 

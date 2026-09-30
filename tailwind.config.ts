@@ -69,7 +69,8 @@ export default {
 				ember: { 700: '#B34700', 500: '#FF6600', 300: '#FF8A3D' },
 				tint: { DEFAULT: 'hsl(var(--tint))', line: 'hsl(var(--tint-line))' },
 				reward: { DEFAULT: 'hsl(var(--reward))', surface: 'hsl(var(--reward-surface))' },
-				// Warm neutrals so legacy gray-* classes (Coding Duel) sit on the paper/ink palette.
+				highlight: 'hsl(var(--highlight) / <alpha-value>)',
+				// Warm neutrals so legacy gray-* classes (Coding Duel) stay quiet next to any palette.
 				gray: { 50: '#FAF9F5', 100: '#F2F1ED', 200: '#DBD9D2', 300: '#C9C8C1', 400: '#9E9E98', 500: '#70726A', 600: '#5E6058', 700: '#2B2B2B', 800: '#222222', 900: '#1A1A1A', 950: '#111111' }
 			},
 			fontFamily: {

@@ -5,7 +5,8 @@ import { JOBS, LAB, PROFILE } from '@/data/profile';
 import { complete, runCommand, SUGGESTIONS, type Line } from '@/lib/zenshell';
 import { emitZen, onZen } from '@/lib/zenEvents';
 import { setStarsEnabled, useStarsEnabled } from '@/lib/stars';
-import { ZenMark } from '@/components/zen/primitives';
+import { Monogram } from '@/components/zen/primitives';
+import { useBrandTheme } from '@/theme/runtime';
 import { readsDark } from '@/lib/zenCursor';
 
 // Two skins, always the opposite of the ground behind the shell: an ink terminal over
@@ -14,14 +15,14 @@ interface Skin {
   bg: string; raised: string; line: string; text: string; muted: string;
   accent: string; reward: string; error: string;
 }
-const INK_SKIN: Skin = {
-  bg: '#111111', raised: '#1A1A1A', line: '#2B2B2B', text: '#F5F5F1', muted: '#9E9E98',
-  accent: '#5BDF62', reward: '#FFC800', error: '#FF8A3D',
-};
-const PAPER_SKIN: Skin = {
-  bg: '#FAF9F5', raised: '#F2F1ED', line: '#DBD9D2', text: '#111111', muted: '#666861',
-  accent: '#0F7A18', reward: '#7A5A00', error: '#B34700',
-};
+// Values come from the palette generator (src/theme/tokens.ts → --shell-*), so a palette swap restyles the shell.
+const skin = (k: 'dark' | 'light'): Skin => ({
+  bg: `var(--shell-${k}-bg)`, raised: `var(--shell-${k}-raised)`, line: `var(--shell-${k}-line)`,
+  text: `var(--shell-${k}-text)`, muted: `var(--shell-${k}-muted)`, accent: `var(--shell-${k}-accent)`,
+  reward: `var(--shell-${k}-reward)`, error: `var(--shell-${k}-error)`,
+});
+const INK_SKIN = skin('dark');
+const PAPER_SKIN = skin('light');
 const kindColor = (k: string, sk: Skin) =>
   ({ out: sk.text, muted: sk.muted, accent: sk.accent, reward: sk.reward, error: sk.error, cmd: sk.text })[k] ?? sk.text;
 
@@ -65,6 +66,7 @@ const BOOT: Line[] = [
 
 const Neofetch: React.FC<{ sk: Skin }> = ({ sk }) => {
   const now = JOBS.find((j) => j.current)!;
+  const { palette } = useBrandTheme();
   const rows: [string, string][] = [
     ['os', 'ZenMode OS / human 1.0'],
     ['host', `${now.company} · ${now.role}`],
@@ -72,11 +74,11 @@ const Neofetch: React.FC<{ sk: Skin }> = ({ sk }) => {
     ['shell', 'zen shell 1.0'],
     ['peak load', '10M+ jobs/day'],
     ['langs', 'Java · Kotlin · TypeScript · Go · Python'],
-    ['theme', 'paper / ink · zen green'],
+    ['palette', palette.name.toLowerCase()],
   ];
   return (
     <div className="my-2 flex gap-5">
-      <ZenMark size={84} title="ZenMode" className="shrink-0" />
+      <Monogram size={84} className="shrink-0" />
       <div className="min-w-0">
         <p style={{ color: sk.accent }}>{PROMPT}</p>
         <p style={{ color: sk.muted }}>{'-'.repeat(PROMPT.length)}</p>
@@ -88,7 +90,7 @@ const Neofetch: React.FC<{ sk: Skin }> = ({ sk }) => {
           </p>
         ))}
         <div className="mt-2 flex gap-1" aria-hidden>
-          {['#0F7A18', '#5BDF62', '#FFC800', '#FF6600', '#F2F1ED', '#2B2B2B'].map((c) => (
+          {[palette.dark, palette.primary, palette.secondary, palette.highlight, palette.light].map((c) => (
             <span key={c} className="h-3 w-5 rounded-sm" style={{ background: c }} />
           ))}
         </div>
@@ -114,7 +116,7 @@ const Breathe: React.FC<{ sk: Skin }> = ({ sk }) => {
       <div className="flex h-20 w-20 items-center justify-center">
         <motion.span
           className="block rounded-full"
-          style={{ background: 'radial-gradient(circle, #5BDF62 0%, #0F7A18 70%)' }}
+          style={{ background: `radial-gradient(circle, ${sk.accent} 0%, ${sk.accent} 35%, transparent 72%)` }}
           initial={{ width: 24, height: 24, opacity: 0.8 }}
           animate={
             reduce ? { width: 48, height: 48 }
@@ -161,6 +163,7 @@ const ZenShell: React.FC = () => {
   const [cursor, setCursor] = useState<number | null>(null);
   const [cwd, setCwd] = useState('~');
   const [starsOn] = useStarsEnabled();
+  const { palette } = useBrandTheme();
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
@@ -320,9 +323,9 @@ const ZenShell: React.FC = () => {
           >
             <div className="flex items-center gap-2 border-b px-4 py-3" style={{ borderColor: windowSk.line, background: windowSk.raised }}>
               <span className="flex gap-1.5" aria-hidden>
-                <span className="h-3 w-3 rounded-full" style={{ background: '#FF6600' }} />
-                <span className="h-3 w-3 rounded-full" style={{ background: '#FFC800' }} />
-                <span className="h-3 w-3 rounded-full" style={{ background: '#2AA136' }} />
+                <span className="h-3 w-3 rounded-full" style={{ background: palette.highlight }} />
+                <span className="h-3 w-3 rounded-full" style={{ background: palette.secondary }} />
+                <span className="h-3 w-3 rounded-full" style={{ background: palette.primary }} />
               </span>
               <span className="flex-1 text-center text-xs" style={{ color: windowSk.muted }}>
                 {PROMPT}: {cwd} — zsh

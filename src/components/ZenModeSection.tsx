@@ -58,6 +58,8 @@ const FeatureIcon: React.FC<{ kind: IconKind }> = ({ kind }) => {
 const ZenModeSection: React.FC = () => (
   <Section id="zenmode">
     <SectionHeader index="01" title="What I'm building" />
+    {/* Everything below the heading is the product, so it wears the ZenMode OS brand (.zen tokens). */}
+    <div className="zen">
 
     <Reveal>
       <a href={LINKS.zenmode} target="_blank" rel="noopener noreferrer" data-cursor="view" className="block overflow-hidden rounded-[22px] border">
@@ -148,6 +150,7 @@ const ZenModeSection: React.FC = () => (
         </p>
       </div>
     </Reveal>
+    </div>
   </Section>
 );
 

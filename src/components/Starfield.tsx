@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useStarsEnabled } from '@/lib/stars';
+import { useBrandTheme } from '@/theme/runtime';
+import { toRgb } from '@/theme/color';
 
 interface Star {
   x: number;
@@ -11,14 +13,6 @@ interface Star {
   color: string;
 }
 
-// Mostly paper-white, a few zen greens, one or two amber: the brand pairing budget, as a sky.
-const pickColor = () => {
-  const roll = Math.random();
-  if (roll < 0.04) return '255,200,0';
-  if (roll < 0.16) return '91,223,98';
-  return '245,245,241';
-};
-
 /**
  * Quiet night sky for the ink sections: fills its (positioned) parent. Static for
  * reduced-motion users; paused while the tab is hidden or off-screen.
@@ -26,6 +20,8 @@ const pickColor = () => {
 const Starfield: React.FC = () => {
   const ref = useRef<HTMLCanvasElement>(null);
   const [active] = useStarsEnabled();
+  const { sky } = useBrandTheme();
+  const [bright, primary, , highlight] = sky;
 
   useEffect(() => {
     const canvas = ref.current;
@@ -33,6 +29,12 @@ const Starfield: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Mostly the bright neutral, some primary, a rare highlighter star.
+    const tones = [bright, primary, highlight].map((h) => toRgb(h).join(','));
+    const pickColor = () => {
+      const roll = Math.random();
+      return roll < 0.04 ? tones[2] : roll < 0.16 ? tones[1] : tones[0];
+    };
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const host = canvas.parentElement!;
@@ -104,7 +106,7 @@ const Starfield: React.FC = () => {
       io.disconnect();
       document.removeEventListener('visibilitychange', restart);
     };
-  }, [active]);
+  }, [active, bright, primary, highlight]);
 
   if (!active) return null;
   return (

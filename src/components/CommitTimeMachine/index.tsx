@@ -3,6 +3,7 @@ import { GitBranch, Play, Pause, AlertCircle, ChevronDown, Keyboard } from 'luci
 import { useQueryClient } from '@tanstack/react-query';
 import { useGitHubRepos, useRepoCommits, useRepoBranches, useCommitDetail } from '@/hooks/useCommitHistory';
 import { fetchCommitDetail } from '@/lib/github';
+import { useBrandTheme } from '@/theme/runtime';
 import { Reveal, Section, SectionHeader } from '@/components/zen/primitives';
 import RepoSelector from './RepoSelector';
 import TimelineScrubber from './TimelineScrubber';
@@ -29,8 +30,11 @@ const CommitTimeMachine: React.FC = () => {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
 
   const queryClient = useQueryClient();
-  // The section is always an ink band, so nodes use the on-ink accent (zen.300).
-  const nodeColor = '#5BDF62';
+  // The section is always a dark band: nodes use the palette's dark-scope accent, the
+  // selected commit the highlighter.
+  const { dark } = useBrandTheme();
+  const nodeColor = dark.primary;
+  const pickColor = dark.highlight;
 
   const { data: repos, isLoading: reposLoading, error: reposError } = useGitHubRepos();
   const { data: branches, isLoading: branchesLoading } = useRepoBranches(selectedRepo);
@@ -256,7 +260,7 @@ const CommitTimeMachine: React.FC = () => {
                         <button onClick={() => openDetail(i)} className="relative w-full py-2 text-left">
                           <span
                             className="absolute -left-[0.95rem] top-3.5 h-2.5 w-2.5 rounded-full ring-4 ring-card"
-                            style={{ background: selectedCommitIndex === i ? '#FFC800' : nodeColor }}
+                            style={{ background: selectedCommitIndex === i ? pickColor : nodeColor }}
                           />
                           <span className="line-clamp-1 text-sm">{commit.commit.message.split('\n')[0]}</span>
                           <span className="font-mono text-xs text-muted-foreground">
@@ -271,6 +275,7 @@ const CommitTimeMachine: React.FC = () => {
                   <CommitTimelineScene
                     commits={commits}
                     color={nodeColor}
+                    selectedColor={pickColor}
                     selectedIndex={hoveredCommitIndex ?? selectedCommitIndex}
                     isExploring={isExploring}
                     progress={progress}

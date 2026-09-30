@@ -3,8 +3,10 @@
 @tailwind utilities;
 
 /*
- * ZenMode OS v3 design tokens (source: zenmode-brain/docs/brand/v3-assets/zenmode.figmatokens.json).
- * Light = paper, dark = ink. Zen green is the working accent; amber is the single reward hue.
+ * Two brands, one token system.
+ *  - Personal: generated from a five-colour palette (src/theme). Swap palettes there.
+ *  - ZenMode OS v3 (.zen below): paper / ink / zen green / amber, from zenmode.figmatokens.json.
+ *    Only the ZenMode section uses it, so the product is the one vivid green on the page.
  * Values are HSL channels so Tailwind opacity modifiers (bg-primary/10) keep working.
  */
 @font-face {
@@ -27,8 +29,14 @@
 }
 
 @layer base {
-  :root,
-  .light {
+  /* Personal colour tokens (:root) and the dark-section scope (.dark) are generated at runtime
+     from src/theme/palettes.ts by src/theme/tokens.ts, into <style id="palette-tokens">. */
+  :root {
+    --radius: 0.75rem;              /* shadcn primitives; cards use rounded-[20px] */
+  }
+
+  /* ZenMode OS v3, scoped to the ZenMode section. */
+  .zen {
     --background: 48 16% 94%;       /* paper.base  #F2F1ED */
     --foreground: 0 0% 7%;          /* ink         #111111 */
     --card: 48 33% 97%;             /* paper.raised #FAF9F5 */
@@ -37,52 +45,21 @@
     --popover-foreground: 0 0% 7%;
     --primary: 125 78% 27%;         /* zen.700     #0F7A18 */
     --primary-foreground: 120 100% 97%;
-    --secondary: 45 16% 90%;        /* paper.sunk  #EAE8E2 */
+    --secondary: 45 16% 90%;
     --secondary-foreground: 0 0% 7%;
     --muted: 45 16% 90%;
-    --muted-foreground: 77 4% 39%;  /* stone.560   #666861 */
-    --accent: 124 47% 93%;          /* zen.050     #E6F6E7 */
+    --muted-foreground: 77 4% 39%;  /* stone.560 */
+    --accent: 124 47% 93%;
     --accent-foreground: 125 78% 27%;
-    --destructive: 24 100% 35%;     /* ember.700   #B34700 */
-    --destructive-foreground: 30 100% 96%;
-    --border: 47 11% 84%;           /* paper.hairline #DBD9D2 */
+    --border: 47 11% 84%;
     --input: 47 11% 84%;
     --ring: 125 78% 27%;
-    --radius: 0.75rem;              /* shadcn primitives; cards use rounded-[20px] */
-
-    --tint: 124 47% 93%;            /* the one tinted surface */
-    --tint-line: 124 36% 85%;       /* zen.050-line #C8E7CA */
-    --reward: 44 100% 24%;          /* amber.800 text on paper */
-    --reward-surface: 46 100% 94%;  /* amber.on   #FFF8E1 */
-    --node: 125 78% 27%;            /* 3D timeline nodes */
-  }
-
-  .dark {
-    --background: 0 0% 7%;          /* ink.base    #111111 */
-    --foreground: 60 18% 95%;       /* paper.ink   #F5F5F1 */
-    --card: 0 0% 10%;               /* ink.surface #1A1A1A */
-    --card-foreground: 60 18% 95%;
-    --popover: 0 0% 13%;            /* ink.raised  #222222 */
-    --popover-foreground: 60 18% 95%;
-    --primary: 123 67% 62%;         /* zen.300     #5BDF62 */
-    --primary-foreground: 0 0% 7%;
-    --secondary: 0 0% 13%;
-    --secondary-foreground: 60 18% 95%;
-    --muted: 0 0% 13%;
-    --muted-foreground: 60 3% 61%;  /* stone.300   #9E9E98 */
-    --accent: 97 38% 9%;            /* ink.gain    #16210F */
-    --accent-foreground: 123 67% 62%;
-    --destructive: 24 100% 62%;     /* ember.300   #FF8A3D */
-    --destructive-foreground: 0 0% 7%;
-    --border: 0 0% 17%;             /* ink.line    #2B2B2B */
-    --input: 0 0% 17%;
-    --ring: 123 67% 62%;
-
-    --tint: 97 38% 9%;
-    --tint-line: 105 29% 17%;
-    --reward: 47 100% 50%;          /* amber.500   #FFC800 */
-    --reward-surface: 45 45% 11%;
-    --node: 123 67% 62%;
+    --tint: 124 47% 93%;            /* zen.050 */
+    --tint-line: 124 36% 85%;
+    --reward: 44 100% 24%;          /* amber.800 */
+    --reward-surface: 46 100% 94%;
+    --node: 125 78% 27%;
+    color: hsl(var(--foreground));
   }
 
   * {

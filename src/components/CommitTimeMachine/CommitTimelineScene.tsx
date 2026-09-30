@@ -9,6 +9,7 @@ import type { GitHubCommit } from '@/lib/github';
 interface CommitTimelineSceneProps {
   commits: GitHubCommit[];
   color: string;
+  selectedColor: string;
   selectedIndex: number;
   isExploring: boolean;
   progress: number;
@@ -34,6 +35,7 @@ function buildCurvePoints(
 const CommitTimelineScene: React.FC<CommitTimelineSceneProps> = ({
   commits,
   color,
+  selectedColor,
   selectedIndex,
   isExploring,
   progress,
@@ -70,7 +72,7 @@ const CommitTimelineScene: React.FC<CommitTimelineSceneProps> = ({
           <CommitNode
             key={commits[i]?.sha || i}
             position={pos}
-            color={selectedIndex === i ? '#FFC800' : color}
+            color={selectedIndex === i ? selectedColor : color}
             isLatest={i === points.length - 1}
             isSelected={selectedIndex === i}
             onPointerOver={() => onCommitHover(i)}

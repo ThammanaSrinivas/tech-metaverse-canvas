@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion, useScroll, useSpring } from 'framer-motion';
 import Starfield from '@/components/Starfield';
+import { useBrandTheme } from '@/theme/runtime';
+import { MONOGRAM_PATH } from './monogramPath';
 
 // ZenMode mark on a 1024 grid, traced from the app icon. Rounded via stroke-linejoin.
 const MARK_POLYS = [
@@ -29,6 +31,21 @@ export const ZenMark: React.FC<{ size?: number; className?: string; title?: stri
     <MarkGlyph fill="#FFFFFF" hole="#0F7A18" />
   </svg>
 );
+
+/** Personal "TS" monogram: palette primary tile, best-contrast letters. Follows the live palette. */
+export const Monogram: React.FC<{ size?: number; className?: string; title?: string }> = ({
+  size = 32,
+  className,
+  title = 'Thammana Srinivas',
+}) => {
+  const { monoTile, monoInk } = useBrandTheme();
+  return (
+    <svg width={size} height={size} viewBox="0 0 1024 1024" className={className} role="img" aria-label={title}>
+      <rect width={1024} height={1024} rx={230} fill={monoTile} />
+      <path d={MONOGRAM_PATH} fill={monoInk} />
+    </svg>
+  );
+};
 
 /** Numbered section heading shared by every section: mono index chip, Clash title, hairline that draws in. */
 export const SectionHeader: React.FC<{ index: string; title: string; kicker?: string }> = ({ index, title, kicker }) => {
@@ -96,11 +113,11 @@ export const CountUp: React.FC<{ value: string; className?: string; duration?: n
   );
 };
 
-/** Thin zen-green reading progress bar pinned under the nav. */
+/** Thin reading progress bar pinned under the nav, in the palette highlighter. */
 export const ScrollProgress: React.FC = () => {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 140, damping: 30, restDelta: 0.001 });
-  return <motion.div className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-primary" style={{ scaleX }} aria-hidden />;
+  return <motion.div className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-highlight" style={{ scaleX }} aria-hidden />;
 };
 
 /** Fade-and-rise on first view; static when the user prefers reduced motion. */

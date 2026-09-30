@@ -14,6 +14,8 @@ import { ScrollProgress } from '@/components/zen/primitives';
 import { onZen } from '@/lib/zenEvents';
 
 const CodingDuel = lazy(() => import('@/components/CodingDuel'));
+// Palette lab: localhost only, tree-shaken out of production builds.
+const PalettePanel = import.meta.env.DEV ? lazy(() => import('@/components/PalettePanel')) : null;
 
 const Index = () => {
   const [duelOpen, setDuelOpen] = useState(false);
@@ -41,6 +43,7 @@ const Index = () => {
       <ZenCursor />
       <Suspense fallback={null}>
         <CodingDuel isOpen={duelOpen} onClose={() => setDuelOpen(false)} />
+        {PalettePanel && <PalettePanel />}
       </Suspense>
     </div>
   );

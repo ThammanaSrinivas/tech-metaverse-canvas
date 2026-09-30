@@ -3,38 +3,29 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, FileText, Terminal } from 'lucide-react';
 import { LINKS, PROFILE, ZENMODE, JOBS } from '@/data/profile';
 import { emitZen } from '@/lib/zenEvents';
+import { useBrandTheme } from '@/theme/runtime';
+import { MONOGRAM_PATH } from '@/components/zen/monogramPath';
 import HeroSky from './HeroSky';
 
-// The mark assembles from its three pieces on load.
-const PIECES = [
-  { points: '214,214 416,214 214,416', from: { x: -120, y: -120 } },
-  { points: '810,810 607,810 810,607', from: { x: 120, y: 120 } },
-  { points: '600.6,216 810,216 810,423.4 423.4,810 214,810 214,602.6', from: { x: 0, y: 0, scale: 0.6 } },
-];
-
-const AssemblingMark: React.FC = () => {
+// The monogram pops in: tile springs up, then the letters settle.
+const HeroMark: React.FC = () => {
   const reduce = useReducedMotion();
+  const { monoTile, monoInk } = useBrandTheme();
   return (
     <svg width="64" height="64" viewBox="0 0 1024 1024" aria-hidden className="mb-8 overflow-visible">
-      <rect width="1024" height="1024" rx="230" fill="#0F7A18" />
-      {PIECES.map((p, i) => (
-        <motion.polygon
-          key={p.points}
-          points={p.points}
-          fill="#FFFFFF"
-          stroke="#FFFFFF"
-          strokeWidth={80}
-          strokeLinejoin="round"
-          style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
-          initial={reduce ? false : { opacity: 0, ...p.from }}
-          animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.15 + i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-        />
-      ))}
-      <motion.circle cx={510} cy={510} r={40} fill="#0F7A18"
-        initial={reduce ? false : { scale: 0 }} animate={{ scale: 1 }}
+      <motion.rect
+        width="1024" height="1024" rx="230" fill={monoTile}
         style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
-        transition={{ delay: 0.75, type: 'spring', stiffness: 300, damping: 12 }} />
+        initial={reduce ? false : { scale: 0.4, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.1 }}
+      />
+      <motion.path
+        d={MONOGRAM_PATH} fill={monoInk}
+        initial={reduce ? false : { opacity: 0, y: 60 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      />
     </svg>
   );
 };
@@ -84,18 +75,18 @@ const Hero: React.FC = () => {
         <div
           className="pointer-events-none absolute inset-0"
           aria-hidden
-          style={{ background: 'radial-gradient(45% 55% at 25% 50%, rgba(17,17,17,.55), transparent 75%)' }}
+          style={{ background: 'radial-gradient(45% 55% at 25% 50%, hsl(var(--background) / .6), transparent 75%)' }}
         />
         <div className="relative mx-auto grid w-full max-w-[1120px] gap-10 px-5 pb-20 pt-28 md:grid-cols-[1.5fr_1fr] md:items-center">
           <motion.div variants={stagger} initial={reduce ? false : 'hidden'} animate="show">
-            <AssemblingMark />
+            <HeroMark />
             <motion.p variants={rise} className="zen-label mb-3 text-primary">Hi, I'm</motion.p>
             <motion.h1 variants={rise} className="text-[2.75rem] leading-[1.02] sm:text-6xl md:text-7xl">{PROFILE.name}</motion.h1>
             <motion.p variants={rise} className="mt-4 text-lg text-muted-foreground sm:text-xl">{PROFILE.tagline}</motion.p>
 
             <motion.div variants={rise} className="mt-6 flex flex-wrap gap-2">
               <span className="zen-pill border-white/15 bg-white/[0.04]">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" /> SWE @ {now.company}
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-highlight" /> SWE @ {now.company}
               </span>
               <span className="zen-pill border-tint-line bg-tint text-primary">Founder, ZenMode OS</span>
               <span className="zen-pill border-white/15 text-muted-foreground">Open source</span>
@@ -142,7 +133,7 @@ const Hero: React.FC = () => {
                 </div>
                 <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden className="shrink-0">
                   <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="5" />
-                  <circle cx="22" cy="22" r="18" fill="none" stroke="#FFC800" strokeWidth="5" strokeLinecap="round"
+                  <circle cx="22" cy="22" r="18" fill="none" className="stroke-highlight" strokeWidth="5" strokeLinecap="round"
                     strokeDasharray="102 113" transform="rotate(-90 22 22)" />
                 </svg>
               </div>
