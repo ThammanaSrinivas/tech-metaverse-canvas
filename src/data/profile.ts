@@ -113,7 +113,7 @@ export const ZENMODE = {
   // Public numbers only (Play listing, Product Hunt leaderboard). Internal installs/DAU stay in zenmode-brain.
   stats: [
     { value: '4.6', unit: '★', label: 'Play Store rating', sub: '24 reviews' },
-    { value: '500', unit: '+', label: 'installs', sub: 'Google Play' },
+    { value: '1K', unit: '+', label: 'installs', sub: 'Google Play' },
     { value: '14', prefix: '#', unit: '', label: 'of 711 on Product Hunt', sub: 'launch day · 26 Sep 2026' },
     { value: '7', prefix: '#', unit: '', label: 'most discussed', sub: '16 comments · top 1% of the day' },
   ] as { value: string; prefix?: string; unit: string; label: string; sub: string }[],

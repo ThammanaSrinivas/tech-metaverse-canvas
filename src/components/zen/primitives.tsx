@@ -81,8 +81,10 @@ export const CountUp: React.FC<{ value: string; className?: string; duration?: n
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: '-40px' });
   const reduce = useReducedMotion();
-  // Ranges like "1h→1m" or "50ms → 5ms" read wrong mid-count, so they stay static.
-  const match = value.includes('→') ? null : value.match(/^([^\d]*)(\d+(?:\.\d+)?)(.*)$/);
+  // Ranges like "1h→1m" or "50ms → 5ms" read wrong mid-count, and single-step numbers like
+  // "1K" would just flip 0→1, so both stay static.
+  const parsed = value.includes('→') ? null : value.match(/^([^\d]*)(\d+(?:\.\d+)?)(.*)$/);
+  const match = parsed && !(Number.isInteger(parseFloat(parsed[2])) && parseFloat(parsed[2]) < 2) ? parsed : null;
   const target = match ? parseFloat(match[2]) : 0;
   const decimals = match?.[2].split('.')[1]?.length ?? 0;
   const [n, setN] = useState(reduce || !match ? target : 0);
