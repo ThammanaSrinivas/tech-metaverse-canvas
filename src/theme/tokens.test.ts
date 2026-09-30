@@ -3,6 +3,7 @@ import { PALETTES, type Palette } from './palettes';
 import { contrastReport, deriveTheme, themeCss } from './tokens';
 import { contrast, readableOn } from './color';
 import { autoAssign } from '@/components/PalettePanel';
+import { paletteFromParam, paletteToParam } from './runtime';
 
 // Deliberately awkward inputs: pale accents, a near-black primary, a mid-grey light neutral.
 const AWKWARD: Palette[] = [
@@ -45,5 +46,19 @@ describe('palette panel auto-assign', () => {
 
   it('needs five colours', () => {
     expect(autoAssign('#fff000, #000fff')).toBeNull();
+  });
+});
+
+describe('share links', () => {
+  it('round-trips a palette through the ?p= param', () => {
+    const calm = PALETTES[0];
+    expect(paletteToParam(calm)).toBe('EDEBE6-403B33-94C7B6-D6E1C7-FE5D26');
+    expect(paletteFromParam(paletteToParam(calm))).toEqual({ ...calm, name: 'Shared' });
+  });
+
+  it('ignores malformed params', () => {
+    expect(paletteFromParam('EDEBE6-403B33')).toBeUndefined();
+    expect(paletteFromParam('zzzzzz-403B33-94C7B6-D6E1C7-FE5D26')).toBeUndefined();
+    expect(paletteFromParam(null)).toBeUndefined();
   });
 });

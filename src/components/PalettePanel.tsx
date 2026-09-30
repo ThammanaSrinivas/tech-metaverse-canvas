@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Check, ClipboardCopy, Palette as PaletteIcon, RotateCcw, Wand2, X } from 'lucide-react';
+import { Check, ClipboardCopy, Link2, Palette as PaletteIcon, RotateCcw, Wand2, X } from 'lucide-react';
 import { PALETTES, type Palette } from '@/theme/palettes';
-import { applyPalette, resetPalette, useBrandTheme } from '@/theme/runtime';
+import { applyPalette, resetPalette, shareLink, useBrandTheme } from '@/theme/runtime';
 import { contrastReport } from '@/theme/tokens';
 import { isHex, luminance, normalizeHex, toHsl } from '@/theme/color';
 
-// Localhost-only tool for trying palettes on the real page. Not bundled in production.
+// Palette lab: try palettes on the real page. Shown on localhost, or on the live site with ?lab
+// (for design reviews); loaded as its own chunk so regular visitors never download it.
 
 const ROLES: { key: keyof Omit<Palette, 'name'>; label: string; hint: string }[] = [
   { key: 'light', label: 'Light', hint: 'page background' },
@@ -35,7 +36,7 @@ const PalettePanel: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Palette>(theme.palette);
   const [paste, setPaste] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<'code' | 'link' | null>(null);
 
   useEffect(() => setDraft(theme.palette), [theme.palette]);
 
@@ -52,13 +53,15 @@ const PalettePanel: React.FC = () => {
     const roles = autoAssign(paste);
     if (roles) set({ name: 'Custom', ...roles });
   };
-  const copy = async () => {
-    const p = draft;
+  const copy = async (what: 'code' | 'link') => {
+    const p = theme.palette;
     await navigator.clipboard.writeText(
-      `{ name: '${p.name}', light: '${p.light}', dark: '${p.dark}', primary: '${p.primary}', secondary: '${p.secondary}', highlight: '${p.highlight}' },`
+      what === 'link'
+        ? shareLink(p)
+        : `{ name: '${p.name}', light: '${p.light}', dark: '${p.dark}', primary: '${p.primary}', secondary: '${p.secondary}', highlight: '${p.highlight}' },`
     );
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    setCopied(what);
+    setTimeout(() => setCopied(null), 1500);
   };
 
   const report = contrastReport(theme);
@@ -77,7 +80,7 @@ const PalettePanel: React.FC = () => {
   return (
     <div className="fixed bottom-5 left-5 z-50 max-h-[80vh] w-[340px] overflow-y-auto rounded-[22px] border bg-popover p-4 text-sm shadow-2xl">
       <div className="mb-3 flex items-center justify-between">
-        <p className="zen-label text-muted-foreground">Palette lab · localhost only</p>
+        <p className="zen-label text-muted-foreground">Palette lab · preview only</p>
         <button onClick={() => setOpen(false)} aria-label="Close palette panel" className="rounded-md p-1 hover:bg-secondary">
           <X className="h-4 w-4" />
         </button>
@@ -125,6 +128,8 @@ const PalettePanel: React.FC = () => {
         ))}
       </div>
 
+      <p className="mt-3 text-xs text-muted-foreground">Changes only affect your browser. Share link sends this exact palette.</p>
+
       <div className="mt-4 flex gap-2">
         <input
           value={paste}
@@ -155,8 +160,11 @@ const PalettePanel: React.FC = () => {
       </div>
 
       <div className="mt-4 flex gap-2">
-        <button onClick={copy} className="flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-3 py-2 font-semibold text-primary-foreground">
-          {copied ? <Check className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />} {copied ? 'Copied' : 'Copy as code'}
+        <button onClick={() => copy('link')} title="Link that opens this exact palette" className="flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-3 py-2 font-semibold text-primary-foreground">
+          {copied === 'link' ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />} {copied === 'link' ? 'Copied' : 'Share link'}
+        </button>
+        <button onClick={() => copy('code')} title="Copy as a palettes.ts entry" className="flex items-center gap-1 rounded-full border px-3 py-2 hover:border-primary">
+          {copied === 'code' ? <Check className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
         </button>
         <button onClick={resetPalette} title="Back to ACTIVE_PALETTE" className="flex items-center gap-1 rounded-full border px-3 py-2 hover:border-primary">
           <RotateCcw className="h-4 w-4" />

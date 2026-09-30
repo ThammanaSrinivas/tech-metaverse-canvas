@@ -12,10 +12,11 @@ import ZenShell from '@/components/ZenShell';
 import ZenCursor from '@/components/ZenCursor';
 import { ScrollProgress } from '@/components/zen/primitives';
 import { onZen } from '@/lib/zenEvents';
+import { labEnabled } from '@/theme/runtime';
 
 const CodingDuel = lazy(() => import('@/components/CodingDuel'));
-// Palette lab: localhost only, tree-shaken out of production builds.
-const PalettePanel = import.meta.env.DEV ? lazy(() => import('@/components/PalettePanel')) : null;
+// Palette lab: localhost, or ?lab on the live site. Its own chunk, fetched only when enabled.
+const PalettePanel = labEnabled() ? lazy(() => import('@/components/PalettePanel')) : null;
 
 const Index = () => {
   const [duelOpen, setDuelOpen] = useState(false);
