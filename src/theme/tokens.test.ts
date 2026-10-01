@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ACTIVE_PALETTE, ACTIVE_RATIO, ACTIVE_TYPE, PALETTES, THEMES, TYPE_SCALE, TYPOGRAPHY, findPalette, findType, type Palette } from './palettes';
+import { ACTIVE_PALETTE, ACTIVE_RATIO, ACTIVE_TYPE, FONT_FACES, PALETTES, THEMES, TYPE_SCALE, TYPOGRAPHY, findPalette, findType, type Palette } from './palettes';
 import { contrastReport, deriveTheme, dotReads, themeCss } from './tokens';
 import { contrast, readableOn } from './color';
 import { autoAssign } from '@/components/PalettePanel';
@@ -127,6 +127,15 @@ describe('logo dot', () => {
     expect(deriveTheme(findPalette('Calm')!).monoDot).toBe('#FE5D26');
     expect(dotReads('#5DBF9F', '#5BBF9E')).toBe(false); // same colour: no dot
     expect(dotReads('#9A9A9A', '#8C8C8C')).toBe(false); // greys: no hue to lean on
+  });
+});
+
+describe('active typography', () => {
+  it('declares all four voices, and every one of them has a vendored font file', () => {
+    const set = findType(ACTIVE_TYPE)!;
+    const voices = [set.display, set.accent, set.sans, set.mono];
+    expect(voices.every(Boolean), 'display, accent, sans and mono are all set').toBe(true);
+    for (const family of voices) expect(FONT_FACES.some((f) => f.family === family), `${family} has a font file`).toBe(true);
   });
 });
 
