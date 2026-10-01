@@ -8,6 +8,7 @@ import { MaskWords, maskStagger } from '@/components/zen/primitives';
 import { postFor, readMinutes } from '@/content/writing';
 import { PROFILE, formatDate } from '@/data/profile';
 import { usePageMeta } from '@/lib/usePageMeta';
+import { articleMeta, notFoundMeta } from '@/site/meta';
 import NotFound from './NotFound';
 
 /** One article: reading-width column, the site's type scale, draft notes called out. */
@@ -15,7 +16,7 @@ const WritingPost: React.FC = () => {
   const { slug } = useParams();
   const post = postFor(slug);
   const reduce = useReducedMotion();
-  usePageMeta(post ? post.title : 'Not found', post?.summary);
+  usePageMeta(post ? articleMeta(post) : notFoundMeta(`/writing/${slug}`));
   if (!post) return <NotFound />;
 
   return (

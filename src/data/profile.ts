@@ -22,6 +22,8 @@ export const PROFILE = {
   name: 'Thammana Srinivas',
   shortName: 'Srinivas',
   tagline: 'Software engineer. Building a calmer phone.',
+  /** Who and where, for the home page's <title> and link previews. */
+  headline: 'Software Engineer at PayPal, building ZenMode OS',
   /** The brand line, with the phrase the highlighter marks. */
   idea: { before: 'I build ', mark: 'innovative systems at scale', after: '. Platforms at PayPal by day, ZenMode OS on my own time.' },
   intro:

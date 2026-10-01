@@ -1,51 +1,134 @@
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This repo is **public**: never write private details here or in the site (personal Gmail, phone, account IDs).
 
 ## Project Overview
 
-Personal site (https://thammanasrinivas.com; Firebase site `srinivas-t`, custom domain via Cloudflare DNS, records DNS-only) built with React 18, TypeScript, Vite and Tailwind, styled with the ZenMode OS v3 design system. Deployed to Firebase Hosting (project `srinivas-portfolio-1481f`, site `srinivas-t`).
+The personal brand site of **Thammana Srinivas** (Software Engineer 2 at PayPal, founder of ZenMode OS),
+built to read as a senior engineer and tech lead to Google-level companies. Live at
+https://thammanasrinivas.com (also https://srinivas-t.web.app). React 18 + TypeScript + Vite 5 +
+Tailwind + framer-motion, Firebase Hosting (project `srinivas-portfolio-1481f`, site `srinivas-t`).
+Domain on Cloudflare Registrar, Cloudflare DNS (records DNS-only, not proxied), Cloudflare Email
+Routing for the public address `srinivas@thammanasrinivas.com`.
 
 ## Commands
 
 ```bash
-npm run dev              # Start dev server on port 8080 (Vite HMR)
-npm run build            # Production build (runs ALL tests first, fails on test failure)
-npm run build:dev        # Dev build without running tests
-npm run lint             # ESLint check (strict: --max-warnings 0)
-npm run preview          # Preview production build
-
-# Testing (Vitest)
-npm run test             # Watch mode
-npm run test:unit        # Unit tests only (verbose)
-npm run test:functional  # Functional/integration tests
-npm run test:performance # Performance tests
-npm run test:all         # All test types sequentially
-npm run test:coverage    # Coverage report (target: 90%+)
-npm run test:ui          # Vitest UI dashboard
+npm run dev              # dev server on port 8080 (shows the dev-only brand lab)
+npm run build            # ALL tests + coverage, then vite build + prerender (fails on any test failure)
+npm run lint             # ESLint (--max-warnings 0) + brand lint
+npm run lint:brand       # colour/font literals outside the token files fail
+npm run preview          # serve dist/ (serves work.html at /work, like Firebase)
+npm run snapshot:commits # refresh public/gh-snapshot.json (Time Machine fallback)
+npx vitest run src/site  # one folder / file
 ```
 
-To run a single test file: `npx vitest run src/components/__tests__/FloatingCLI.test.tsx`
+Deploy (after `npm run build`): `firebase deploy --only hosting --project srinivas-portfolio-1481f`,
+with the Firebase account that owns the project (`firebase login:list`; pass `--account <it>` if
+another account is the default, else it fails with "Failed to get Firebase project").
+
+## Brand (decided; don't change without the owner)
+
+- **Idea:** "I build innovative systems at scale." **Values:** Curiosity, Clarity, Ownership. Each
+  value carries a design rule; `src/theme/brand.json` holds both (meaning lives there, not in code).
+- **Palette: Calm Glow** (`active` in `src/theme/colors.json`, which wins over this mirror):
+  light `#F4F2EC`, dark `#2B2722`, primary jade `#5DBF9F`, secondary `#D4E7C8`, highlight orange
+  `#FE5D26`. One accent per screen; orange is the single "I built this" highlighter and the logo dot.
+  Never PayPal/Google blue.
+- **Type: Builder set** (`src/theme/typography.json`, modular scale ratio 1.25): Bricolage Grotesque
+  700 for display, Instrument Serif italic as the accent voice for ONE word per heading (write
+  `*word*` in titles; `src/lib/rich.ts`), Manrope for body, Space Mono for every number. All
+  vendored in `public/fonts` (no Google Fonts at runtime).
+- **Logo:** the "platform T" monogram (T carrying an S, orange dot), `src/components/zen/monogramPath.ts`.
+- **Layout feel:** paper page with ink bands (hero, Time Machine), like zenmodeos.com. No theme toggle.
+- **Name and links:** always "Thammana Srinivas" (short: "Srinivas"). LinkedIn `/in/thammanasrinivas`,
+  GitHub `ThammanaSrinivas`. All links and facts come from `src/data/profile.ts`.
+
+## Content rules
+
+- Every fact (jobs, numbers, links, awards) lives in `src/data/profile.ts` or `src/content/writing/`;
+  never hardcode copy in a component.
+- **Never invent numbers, labels or claims.** Only use figures the owner gave (resume / LinkedIn /
+  answers). If a visual needs a unit you don't have, say less rather than make one up.
+- **Zoho internals:** publish only what is public (the Catalyst job-scheduling docs) or what the owner
+  wrote for the article. The owner said Redis sorted sets must not be mentioned publicly.
+- Use they/them for anyone whose pronouns aren't stated.
 
 ## Architecture
 
-**Stack:** React 18 + TypeScript + Vite 5 + Tailwind CSS + shadcn-ui + framer-motion + three.js (Time Machine only) + Firebase Hosting
+**Path alias:** `@/*` → `./src/*`. **Router:** React Router 6 data router (`createBrowserRouter` in
+`src/App.tsx`), routes generated from the page registry, each page a lazy chunk.
 
-**Path alias:** `@/*` maps to `./src/*`
+- **Pages:** registered once in `src/site/pages.ts` (SOURCE OF TRUTH; each page also implements its
+  zen-shell directory; `draft` = dev-only; `nested` = `/:slug` children) and mapped to components in
+  `src/site/routes.tsx`. Nav, mobile menu, footer, ⌘K palette, routes, "Next" links, sitemap test,
+  page meta and the shell's filesystem all derive from it. Live pages: zenmode, work, writing,
+  beyond, lab, time-machine, explore, contact (+ home, 404).
+- **Writing:** `src/content/writing/index.ts` (SOURCE OF TRUTH) lists articles (Markdown next to it,
+  at `/writing/<slug>`) and external posts (open in a new tab). Drafts are dropped from production
+  builds entirely (`import.meta.env.DEV || !DRAFT_X`, keep each flag a literal).
+  Markdown renders in `src/components/Markdown.tsx`; a fenced ```` ```diagram <id> ```` block mounts a
+  live diagram from `src/components/diagrams/index.ts` (lazy).
+- **Brand tokens (three files):** `colors.json`, `typography.json`, `brand.json` in `src/theme/`.
+  `tokens.ts` derives `:root` / `.dark` / `.zen` tokens with every text pairing pushed to WCAG AA,
+  measured *as painted* (`asEmitted`: after the HSL rounding the CSS vars apply). `runtime.ts` injects
+  font-face rules and `--font-*` / `--fs-*` vars before first paint. Components read
+  `useBrandTheme()`, CSS vars or Tailwind token classes; `npm run lint:brand` (also a unit test) fails
+  on any colour literal or font name elsewhere (`brand-lint-ignore` on a line opts out). The brand lab
+  (`PalettePanel.tsx`, `?theme=`/`?palette=`/`?type=`) exists in dev builds only.
+- **Zen shell** (`ZenShell.tsx` + pure interpreter `src/lib/zenshell.ts`): backtick key or
+  `emitZen('shell')`. **Event bus** `src/lib/zenEvents.ts`. **Cursor** `src/lib/zenCursor.ts`
+  (port of zenmodeos.com's; `data-cursor`, `data-magnet`).
+- **Commit Time Machine** (`src/components/CommitTimeMachine/`): lazy three.js. GitHub calls via
+  `getJson` in `src/lib/github.ts` (sessionStorage cache, fallback `public/gh-snapshot.json`); commit
+  details fetched only on click/Enter to save the 60 req/hour budget.
+- **CodingDuel** (`src/components/CodingDuel/`): lazy modal; code runs via `new Function()`, own browser only.
 
-**Content:** every fact about me (jobs, stats, toolbox, lab projects, links) lives in `src/data/profile.ts`. Sections, the zen shell and the command palette all read from it — never hardcode copy in a component.
+## SEO and link previews
 
-**Brand tokens (two brands, three files):** `src/theme/colors.json` holds every colour (five-role personal palettes, `system` white/black/danger/cursor, the `zenmode` brand incl. its `.zen` tokens, and `active`); `src/theme/typography.json` holds every font (vendored `faces`, `fallbacks`, typography `sets`, `zenmode` fonts, the modular type `scale`, and `active`); `src/theme/brand.json` holds the meaning (idea, values) and lab combos. `palettes.ts` types them. `tokens.ts` derives colour tokens (`:root`, `.dark`, `.zen`) with every text pairing pushed to WCAG AA; `runtime.ts` generates the font-face rules, `--font-*` and `--fs-*` variables, all injected before first paint (nothing font- or colour-specific is written in `index.css`). `npm run lint:brand` (part of `npm run lint`, and a unit test) fails on any colour literal, hand-written font-face/font-family, or brand font name outside those files; `brand-lint-ignore` on a line opts out. Components read `useBrandTheme()`, CSS vars or Tailwind token classes. A brand lab (`PalettePanel.tsx`) exists in dev builds only (`?theme=`, `?palette=`, `?type=` on localhost). **Pages** are registered once in `src/site/pages.ts` (each implements its zen-shell directory; `draft` pages are dev-only, `nested` pages get `/:slug` children) and mapped to components in `src/site/routes.tsx`; nav, footer, ⌘K, routes, sitemap test and the shell's filesystem derive from it. **Writing:** Markdown posts in `src/content/writing/`, drafts dropped from production builds.
+- **`src/site/meta.ts` is the SOURCE OF TRUTH for every URL's title, description, canonical and
+  social card.** Runtime: `usePageMeta(pageMeta(page) | articleMeta(post) | HOME_META | notFoundMeta(path))`.
+  Build: the Vite plugin `scripts/prerender.ts` writes `dist/<path>.html` per URL in `ROUTE_META`
+  with that meta baked into `<head>`, because LinkedIn / WhatsApp / Slack / X never run JS. The body
+  is still client-rendered. `applyMetaToHtml` throws if `index.html` loses one of its tags: keep the
+  tag shapes in `index.html` as they are.
+- **Firebase must serve those files:** `firebase.json` is gitignored (local only) and needs
+  `"cleanUrls": true`, `"trailingSlash": false`, the `** → /index.html` rewrite, immutable caching on
+  `/assets/**`, and the security headers (CSP `default-src 'self'`, `script-src 'self'`,
+  `connect-src 'self' https://api.github.com`, `frame-ancestors 'none'`; HSTS, nosniff, DENY,
+  Referrer-Policy, Permissions-Policy, COOP). Any new third-party origin needs a CSP change.
+- **`public/sitemap.xml` is hand-written**; tests fail unless it equals home + live pages + published
+  articles, and unless `ROUTE_META` matches it.
+- **Social cards:** 1200×630 PNG. Site default `public/og-image.png`; per article `public/og/<slug>.png`
+  set as `image` on the article (a test checks the file exists). Dark espresso card, brand fonts,
+  title with the accent word in Instrument Serif, one proof visual.
+- **New article checklist:** entry in `src/content/writing/index.ts` → Markdown file → `<loc>` in
+  sitemap.xml → social card in `public/og/` → build → deploy → refresh the preview at
+  https://www.linkedin.com/post-inspector/ before posting (LinkedIn caches previews).
+- Google Search Console is set up for thammanasrinivas.com with the sitemap submitted.
 
-**Page:** `src/pages/Index.tsx` composes Hero → ZenModeSection → WorkExperience → TechnicalSkills → Projects (Lab) → CommitTimeMachine → Contact, plus `ZenShell` and the lazy `CodingDuel`.
+## Motion, accessibility, mobile (lessons already paid for)
 
-- **No theme toggle**: the page is one fixed composition, paper with ink bands (hero, Time Machine), like zenmodeos.com. `Section ink` / the hero apply the `dark` class locally, which re-scopes the tokens in `index.css` for that block only.
-- **Zen shell** (`ZenShell.tsx` + pure interpreter `src/lib/zenshell.ts`, tested in `zenshell.test.ts`): opened with the backtick key or `emitZen('shell')`. Virtual filesystem built from `profile.ts`; commands return lines, an optional effect (open/scroll/stars/duel/clear/exit) and an optional new cwd.
-- **Cursor** (`src/lib/zenCursor.ts`): port of zenmodeos.com's pointer; ground colour read from the computed background under the pointer; `data-cursor` labels, `data-magnet` buttons.
-- **Event bus** (`src/lib/zenEvents.ts`): `emitZen('shell' | 'duel')` lets the nav, palette and shell open each other without prop drilling.
-- **Commit Time Machine** (`src/components/CommitTimeMachine/`): three.js scene is lazy-loaded. GitHub calls go through `getJson` in `src/lib/github.ts` (sessionStorage cache, clear rate-limit error, fallback to `public/gh-snapshot.json` generated by `npm run snapshot:commits`). Commit details are fetched only on click/Enter, never on hover, to save the 60 req/hour budget.
-- **CodingDuel** (`src/components/CodingDuel/`): lazy-loaded modal. User code runs via `new Function()` in `useCodeExecution` — no sandbox, own browser only. Leaderboard in `localStorage` (`duel-leaderboard`).
+- **Page transitions** use the View Transitions API through React Router: import `Link` / `NavLink` /
+  `useGo` from `@/components/zen/Link`, never straight from react-router-dom. Persistent chrome has
+  unique `view-transition-name`s in `index.css` (`[data-site-header]`, cursor, shell launcher/window);
+  a duplicate name aborts every transition silently.
+- **Reduced motion is respected everywhere:** transitions off, scroll storytelling static. Moving
+  content that plays on its own needs a Pause control (WCAG 2.2.2); under reduced motion it starts
+  paused with a Play button (see `AdmissionControl.tsx`).
+- **Canvas:** no `ctx.roundRect` (iOS < 16 lacks it; use the arcTo helper), redraw after resize, pause
+  off screen (IntersectionObserver), and show a text fallback if drawing throws.
+- **Mobile menu** (`Navigation.tsx`): never lock body scroll with `overflow: hidden` (iOS Safari
+  re-lays out the page, which looks like a reload); never fade an opaque panel in from opacity 0 over
+  content (the page shows through); the menu's `AnimatePresence` is keyed by pathname so it leaves
+  with the old page instead of flashing over the new one.
+- Targets: Lighthouse accessibility, best practices and SEO at 100, performance 90+. Don't preload
+  the three.js scene; idle preload skips data-saver / 2G.
 
-**Tests:** Vitest + jsdom (`src/test/setup.ts`). Test scripts pass with no matching files so `npm run build` isn't blocked by empty globs.
+## Tests and TypeScript
 
-**TypeScript config:** relaxed strictness (`noImplicitAny: false`, `strictNullChecks: false`). Three unused shadcn files (`alert-dialog`, `calendar`, `pagination`) have pre-existing `buttonVariants` import errors under `tsc`; Vite builds regardless.
+Vitest + jsdom (`src/test/setup.ts`). Brand, contrast, type-scale, sitemap and meta rules are unit
+tests, so `npm run build` refuses to ship a broken brand or SEO. TypeScript is relaxed
+(`noImplicitAny: false`, `strictNullChecks: false`); three unused shadcn files (`alert-dialog`,
+`calendar`, `pagination`) have pre-existing `buttonVariants` errors under `tsc`; Vite builds regardless.

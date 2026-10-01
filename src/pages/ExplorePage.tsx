@@ -8,13 +8,14 @@ import { PROFILE } from '@/data/profile';
 import { pageFor } from '@/site/pages';
 import { BRAND } from '@/theme/palettes';
 import { usePageMeta } from '@/lib/usePageMeta';
+import { pageMeta } from '@/site/meta';
 
 // The dots from the original hero, given a room of their own: something you find, not
 // something in the way. Full-bleed ink, the sky follows the pointer, the brand idea floats on top.
 const ExplorePage: React.FC = () => {
   const page = pageFor('explore');
   const reduce = useReducedMotion();
-  usePageMeta(page.title, page.lead);
+  usePageMeta(pageMeta(page));
 
   return (
     <section data-ink-top className="dark relative flex min-h-[100svh] items-center overflow-hidden bg-background text-foreground">

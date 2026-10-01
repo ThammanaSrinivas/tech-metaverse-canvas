@@ -3,10 +3,11 @@ import { Link } from '@/components/zen/Link';
 import { ArrowRight } from 'lucide-react';
 import { PAGES } from '@/site/pages';
 import { usePageMeta } from '@/lib/usePageMeta';
+import { notFoundMeta } from '@/site/meta';
 
 const NotFound = () => {
   const { pathname } = useLocation();
-  usePageMeta('Not found');
+  usePageMeta(notFoundMeta(pathname));
   return (
     <section className="mx-auto w-full max-w-[1120px] px-5 pb-24 pt-40">
       <p className="zen-label text-muted-foreground">404</p>

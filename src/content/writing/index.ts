@@ -18,6 +18,8 @@ export interface Article extends PostBase {
   /** ISO yyyy-mm-dd */
   date: string;
   body: string;
+  /** Social card for link previews, 1200×630, under public/. Without one, the site's card is used. */
+  image?: string;
 }
 
 export interface ExternalPost extends PostBase {
@@ -55,6 +57,7 @@ const ALL: Post[] = [
           tags: ['Distributed systems', 'Kafka', 'Leadership'],
           draft: DRAFT_SCHEDULING,
           body: scheduling10m,
+          image: '/og/scheduling-10m-cron-jobs.png',
         },
       ]
     : []),

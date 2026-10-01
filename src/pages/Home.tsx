@@ -3,10 +3,11 @@ import { Link } from '@/components/zen/Link';
 import { ArrowRight, ArrowUpRight, Mail } from 'lucide-react';
 import Hero from '@/components/Hero';
 import { Reveal, Rich, SectionHeader } from '@/components/zen/primitives';
-import { LINKS, PROFILE } from '@/data/profile';
+import { LINKS } from '@/data/profile';
 import { PAGES, type PageId } from '@/site/pages';
 import { BRAND } from '@/theme/palettes';
 import { usePageMeta } from '@/lib/usePageMeta';
+import { HOME_META } from '@/site/meta';
 
 // Home is the index: who I am (hero), what I stand for (values), and doors to every page.
 // Details live on their own pages, the way zenmodeos.com splits product, story and docs.
@@ -62,7 +63,7 @@ const DotsArt = () => (
 );
 
 const Home: React.FC = () => {
-  usePageMeta(null, PROFILE.intro);
+  usePageMeta(HOME_META);
   return (
     <>
       <Hero />
