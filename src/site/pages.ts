@@ -8,6 +8,8 @@
 // in routes.tsx (also type-checked), done. Index numbers follow the order here.
 import { BEYOND, JOBS, JOURNEY, LAB, LINKS, PROFILE, SPEAKING, TOOLBOX, ZENMODE, formatDate } from '@/data/profile';
 import { BRAND } from '@/theme/palettes';
+import { POSTS, PUBLISHED } from '@/content/writing';
+import { plain } from '@/lib/rich';
 
 export interface ShellFile {
   body: string;
@@ -34,6 +36,10 @@ interface PageDef {
   proof: string;
   /** zen-cli: the directories this page adds under ~ (at least one: the page's own). */
   shell: readonly [ShellDir, ...ShellDir[]];
+  /** Only on localhost (dev builds) until it is ready: hidden from nav, routes, shell, sitemap. */
+  draft?: boolean;
+  /** Has child routes (`<path>/:slug`), e.g. one per article. */
+  nested?: boolean;
 }
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -95,6 +101,23 @@ const DEFS = [
         name: 'toolbox',
         route: '/work#toolbox',
         files: Object.fromEntries(TOOLBOX.map((g) => [`${slug(g.group)}.txt`, { body: g.items.join('\n') }])),
+      },
+    ],
+  },
+  {
+    id: 'writing',
+    path: '/writing',
+    label: 'Writing',
+    title: '*Writing*',
+    lead: 'Engineering write-ups: what I built, the trade-offs behind it, and what I would do differently.',
+    proof: PUBLISHED.length ? `${PUBLISHED.length} write-up${PUBLISHED.length > 1 ? 's' : ''}` : 'drafts in progress',
+    // the page goes live with its first published post
+    draft: PUBLISHED.length === 0,
+    nested: true,
+    shell: [
+      {
+        name: 'writing',
+        files: Object.fromEntries(POSTS.map((p) => [`${p.slug}.md`, { body: md(`# ${plain(p.title)}`, p.summary, '', p.body) }])),
       },
     ],
   },
@@ -199,7 +222,10 @@ export interface SitePage extends PageDef {
   index: string;
 }
 
-export const PAGES: readonly SitePage[] = DEFS.map((p, i) => ({ ...p, index: String(i + 1).padStart(2, '0') }));
+/** The pages this build shows: drafts only on localhost. Index numbers follow what is shown. */
+export const PAGES: readonly SitePage[] = (DEFS as readonly PageDef[])
+  .filter((p) => import.meta.env.DEV || !p.draft)
+  .map((p, i) => ({ ...(p as SitePage), index: String(i + 1).padStart(2, '0') }));
 
 export const pageFor = (id: PageId) => PAGES.find((p) => p.id === id)!;
 

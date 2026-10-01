@@ -7,7 +7,7 @@ import Layout from "@/components/Layout";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import { PAGES } from "@/site/pages";
-import { PAGE_COMPONENTS } from "@/site/routes";
+import { CHILD_COMPONENTS, PAGE_COMPONENTS } from "@/site/routes";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +24,10 @@ const App = () => (
             {PAGES.map(({ id, path }) => {
               const Component = PAGE_COMPONENTS[id];
               return <Route key={id} path={path} element={<Component />} />;
+            })}
+            {PAGES.filter((p) => p.nested && CHILD_COMPONENTS[p.id]).map(({ id, path }) => {
+              const Child = CHILD_COMPONENTS[id]!;
+              return <Route key={`${id}-child`} path={`${path}/:slug`} element={<Child />} />;
             })}
             <Route path="*" element={<NotFound />} />
           </Route>

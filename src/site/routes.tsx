@@ -9,6 +9,7 @@ import { whenIdle } from '@/lib/idle';
 const LOADERS: Record<PageId, () => Promise<{ default: ComponentType }>> = {
   zenmode: () => import('@/pages/ZenModePage'),
   work: () => import('@/pages/WorkPage'),
+  writing: () => import('@/pages/WritingPage'),
   beyond: () => import('@/pages/BeyondPage'),
   lab: () => import('@/pages/LabPage'),
   'time-machine': () => import('@/pages/TimeMachinePage'),
@@ -19,6 +20,11 @@ const LOADERS: Record<PageId, () => Promise<{ default: ComponentType }>> = {
 export const PAGE_COMPONENTS = Object.fromEntries(
   Object.entries(LOADERS).map(([id, load]) => [id, lazy(load)])
 ) as Record<PageId, LazyExoticComponent<ComponentType>>;
+
+/** Child routes of `nested` pages (`<path>/:slug`). */
+export const CHILD_COMPONENTS: Partial<Record<PageId, LazyExoticComponent<ComponentType>>> = {
+  writing: lazy(() => import('@/pages/WritingPost')),
+};
 
 /** Heavy pieces inside pages, warmed up the same way. */
 const EXTRAS = [() => import('@/components/CommitTimeMachine/CommitTimelineScene')];
