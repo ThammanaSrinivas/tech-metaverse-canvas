@@ -80,7 +80,7 @@ const Beyond: React.FC = () => (
     </Section>
     <Section id="beyond" className="pt-0 md:pt-0">
       <SectionHeader title="Also" />
-      <div className="grid gap-3 md:grid-cols-3 md:gap-4">
+      <div className="grid gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-4">
         {BEYOND.map((b, i) => (
           <Reveal key={b.title} delay={0.05 * i} className="h-full">
             <div className="zen-tile h-full p-6">

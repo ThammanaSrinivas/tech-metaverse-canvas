@@ -12,7 +12,7 @@ import { emitZen } from '@/lib/zenEvents';
  * Phone menu: a full-screen sheet under the bar. Big, thumb-sized page titles with their proof
  * line, the current page marked, quick actions at the bottom. Locks page scroll while open.
  */
-const MobileMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+const MobileMenu: React.FC<{ onClose: () => void; ink: boolean }> = ({ onClose, ink }) => {
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -25,22 +25,24 @@ const MobileMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   }, [onClose]);
 
   return (
+    // A solid panel unrolling from under the bar (clip-path), never a cross-fade over the page:
+    // fading made the page and the menu show through each other, which read as a reload.
     <motion.div
       id="mobile-menu"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-[45] flex flex-col overflow-y-auto bg-background pt-[72px] lg:hidden"
+      initial={{ clipPath: 'inset(0 0 100% 0)' }}
+      animate={{ clipPath: 'inset(0 0 0% 0)' }}
+      exit={{ clipPath: 'inset(0 0 100% 0)' }}
+      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+      className={`fixed inset-0 z-[45] flex flex-col overflow-y-auto bg-background pt-[72px] text-foreground lg:hidden ${ink ? 'dark' : ''}`}
     >
       <nav aria-label="Pages" className="mx-auto w-full max-w-[1120px] flex-1 px-5 py-4">
         <ul>
           {PAGES.map(({ id, label, path, index, proof }, i) => (
             <motion.li
               key={id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.03 * i, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.08 + 0.025 * i, duration: 0.25 }}
               className="border-b"
             >
               <NavLink to={path} onClick={onClose} className="flex items-center gap-4 py-4">
@@ -123,15 +125,17 @@ const Navigation: React.FC = () => {
       {/*
         Over an ink top the bar is transparent and full-width. Once solid it floats: inset from the
         edges, rounded, with a soft shadow. No backdrop blur: it costs a lot on phones while scrolling.
+        Opening the phone menu never changes the bar (that morph read as a glitch); the menu sheet
+        takes the bar's mode instead: ink under a transparent bar, paper under a floating one.
       */}
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-[padding] duration-300 ease-out ${
-          solid || menuOpen ? 'px-2 pt-2 md:px-4 md:pt-3' : 'px-0 pt-0'
+          solid ? 'px-2 pt-2 md:px-4 md:pt-3' : 'px-0 pt-0'
         }`}
       >
         <div
           className={`mx-auto transition-[max-width,background-color,border-color,border-radius,box-shadow] duration-300 ease-out ${
-            solid || menuOpen
+            solid
               ? 'max-w-[1160px] rounded-2xl border bg-background/95 shadow-[0_10px_30px_-14px_hsl(var(--foreground)/0.3)]'
               : 'dark max-w-full rounded-none border border-transparent text-foreground'
           }`}
@@ -193,7 +197,7 @@ const Navigation: React.FC = () => {
         </nav>
         </div>
       </header>
-      <AnimatePresence>{menuOpen && <MobileMenu onClose={closeMenu} />}</AnimatePresence>
+      <AnimatePresence>{menuOpen && <MobileMenu onClose={closeMenu} ink={!solid} />}</AnimatePresence>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </>
   );

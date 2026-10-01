@@ -312,6 +312,16 @@ const COMMANDS: Record<string, Command> = {
     help: '',
     run: () => ({ lines: [t('error', `${PROFILE.shortName.toLowerCase()} is not in the sudoers file. this incident will be reported to your zen score.`)] }),
   },
+  badminton: {
+    help: '',
+    run: () => ({
+      lines: [
+        t('accent', '🏸 match history vs. sister'),
+        t('reward', 'W W W W W W W W W W W W'),
+        t('muted', 'record: undefeated · rematches welcome'),
+      ],
+    }),
+  },
   doomscroll: { help: '', run: () => ({ lines: [t('reward', 'doomscroll detected. streak at risk.'), t('muted', 'try `breathe` instead.')] }) },
   rm: { help: '', run: () => ({ lines: [t('error', 'rm: permission denied. nothing here is disposable.')] }) },
   vim: { help: '', run: () => ({ lines: [t('muted', 'you are now trapped in vim. just kidding. :q')] }) },
@@ -331,7 +341,7 @@ const OPEN_TARGETS: Record<string, string> = {
   ...Object.fromEntries(LAB.map((p) => [p.name, p.url])),
 };
 
-const HIDDEN = new Set(['sudo', 'doomscroll', 'rm', 'vim', ':q', 'coffee']);
+const HIDDEN = new Set(['sudo', 'doomscroll', 'badminton', 'rm', 'vim', ':q', 'coffee']);
 const ALIASES: Record<string, string> = {
   projects: 'ls ~/lab', lab: 'ls ~/lab', goto: 'cd', ll: 'ls -l', dir: 'ls', toolbox: 'skills', about: 'cat ~/about.md',
   resume: 'open resume', contact: 'cat ~/contact.txt', '?': 'help', scroll: 'doomscroll', q: 'exit', quit: 'exit', cls: 'clear',

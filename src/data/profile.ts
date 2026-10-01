@@ -72,6 +72,7 @@ export const BEYOND = [
   { label: 'Leads', title: 'Scrum master', body: 'Runs the agile ceremonies for my team at PayPal, on top of engineering work.' },
   { label: 'Certified', title: 'OCI 2025 Generative AI Professional', body: 'Oracle Cloud Infrastructure certification in applied generative AI.' },
   { label: 'Community', title: 'FOSS United', body: 'Open-source community; ZenMode OS placed in the top ~10% of ~780 at FOSS Hack 2026.' },
+  { label: 'Plays', title: 'Badminton', body: 'Record against my sister: undefeated. Rematches welcome. 🏸' },
 ] as const;
 
 export const JOBS: Job[] = [

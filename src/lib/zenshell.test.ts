@@ -114,4 +114,10 @@ describe('zen shell', () => {
       expect(runCommand(`cd ${dir}`, ctx).effect).toEqual({ type: 'go', to: page.shell[0].route ?? page.path });
     }
   });
+
+  it('keeps the badminton record hidden from help but playable', () => {
+    expect(text('help')).not.toContain('badminton');
+    expect(text('badminton')).toContain('undefeated');
+    expect(text('cat ~/beyond/badminton.md')).toContain('undefeated');
+  });
 });
