@@ -113,10 +113,10 @@ export const JOBS: Job[] = [
     highlights: [
       { title: 'Distributed cron scheduler', body: '(Kafka, Redis) running 10M+ jobs a day; minimum interval cut from 1 hour to 1 minute.' },
       { title: 'Dispatch latency 50ms → 5ms', body: 'with Redis counters and sorted sets; Kafka messages per cycle down 99.5% (7,000 → 32).' },
-      { title: 'HIPAA-compliant audit log service', body: 'built in a month, unblocking the European release and contributing to a 43% revenue increase within 2 months.' },
+      { title: 'HIPAA-compliant audit log service', body: 'built in a month, unblocking the European release and increasing revenue by 17%.' },
       { title: 'Catalyst ↔ Zoho Cron adapter', body: 'for custom cron expressions, reaching 35% user adoption in 3 months.' },
       { title: 'Automated error alerting', body: 'by feature context, cutting issue resolution time by 30–40%.' },
-      { title: 'FaaS platform', body: 'cold starts 15s → 12s with the Sparkler team; environment variables for functions, resolving 60% of user tickets.' },
+      { title: 'FaaS platform', body: 'Node.js 16 support with 12% lower cold-start time; environment variables for functions, resolving 60% of user tickets.' },
     ],
     earlier: 'Project Trainee Jan–May 2022 · Summer Intern May–Jun 2021',
   },

@@ -68,7 +68,12 @@ export const MaskWords: React.FC<{ text: string }> = ({ text }) => {
     <>
       {words.map(({ w, accent }, i) => (
         <React.Fragment key={i}>
-          <span className="-mb-[0.12em] inline-block overflow-hidden pb-[0.12em] pr-[0.04em] align-bottom">
+          {/* italic accent glyphs lean past their box: give the clip room, then take the space back */}
+          <span
+            className={`-mb-[0.12em] inline-block overflow-hidden pb-[0.12em] align-bottom ${
+              accent ? '-mr-[0.14em] pr-[0.18em]' : 'pr-[0.04em]'
+            }`}
+          >
             <motion.span variants={wordRise} className={`inline-block ${accent ? 'zen-accent' : ''}`}>
               {w}
             </motion.span>
