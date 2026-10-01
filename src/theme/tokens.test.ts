@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ACTIVE_PALETTE, ACTIVE_RATIO, ACTIVE_TYPE, FONT_FACES, PALETTES, THEMES, TYPE_SCALE, TYPOGRAPHY, findPalette, findType, type Palette } from './palettes';
 import { contrastReport, deriveTheme, dotReads, themeCss } from './tokens';
-import { contrast, readableOn } from './color';
+import { asEmitted, contrast, readableOn } from './color';
 import { autoAssign } from '@/components/PalettePanel';
 import { googleFontsUrl, paletteFromParam, paletteToParam, scaleCss, typeCss } from './runtime';
 
@@ -33,8 +33,10 @@ describe('palette → tokens', () => {
   });
 
   it('readableOn lightens on dark grounds and darkens on light ones', () => {
-    expect(contrast(readableOn('#2D63A5', ['#222725']), '#222725')).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(readableOn('#E3884E', ['#FDFDFF']), '#FDFDFF')).toBeGreaterThanOrEqual(4.5);
+    // measured as painted (after HSL rounding), which is what readableOn guarantees
+    const painted = (a: string, b: string) => contrast(asEmitted(a), asEmitted(b));
+    expect(painted(readableOn('#2D63A5', ['#222725']), '#222725')).toBeGreaterThanOrEqual(4.5);
+    expect(painted(readableOn('#E3884E', ['#FDFDFF']), '#FDFDFF')).toBeGreaterThanOrEqual(4.5);
   });
 });
 
@@ -136,6 +138,13 @@ describe('active typography', () => {
     const voices = [set.display, set.accent, set.sans, set.mono];
     expect(voices.every(Boolean), 'display, accent, sans and mono are all set').toBe(true);
     for (const family of voices) expect(FONT_FACES.some((f) => f.family === family), `${family} has a font file`).toBe(true);
+  });
+});
+
+describe('contrast as painted', () => {
+  it('the Calm Glow pill (accent on tint, dark scope) clears 4.5 after HSL rounding', () => {
+    const d = deriveTheme(findPalette('Calm Glow')!).dark;
+    expect(contrast(asEmitted(d.primary), asEmitted(d.tint))).toBeGreaterThanOrEqual(4.5);
   });
 });
 

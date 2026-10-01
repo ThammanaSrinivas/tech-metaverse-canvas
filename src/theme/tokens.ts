@@ -1,7 +1,7 @@
 // Derives the full design-token set from a five-colour Palette. Every text pairing is
 // pushed to WCAG AA (4.5:1) by adjusting lightness only, so any palette you try stays
 // readable; raw brand colours are kept for fills (stars, tiles, highlights).
-import { bestOn, contrast, hslChannels, mix, readableOn, rgbChannels, toHsl, type Hex } from './color';
+import { asEmitted, bestOn, contrast, hslChannels, mix, readableOn, rgbChannels, toHsl, type Hex } from './color';
 import { SYSTEM, ZENMODE_COLORS, type Palette } from './palettes';
 
 const WHITE = SYSTEM.white;
@@ -156,16 +156,18 @@ export function themeCss(t: Theme): string {
 }
 
 /** Contrast report for the palette panel. */
+/** Every text pairing, measured on the colours as painted (rounded HSL), which is what users see. */
 export function contrastReport(t: Theme) {
+  const c = (a: Hex, b: Hex) => contrast(asEmitted(a), asEmitted(b));
   const rows: { label: string; ratio: number }[] = [];
   for (const [mode, s] of [['light', t.light], ['dark', t.dark]] as const) {
-    rows.push({ label: `${mode}: text on page`, ratio: contrast(s.foreground, s.background) });
-    rows.push({ label: `${mode}: accent text on page`, ratio: contrast(s.primary, s.background) });
-    rows.push({ label: `${mode}: accent text on tint`, ratio: contrast(s.primary, s.tint) });
-    rows.push({ label: `${mode}: muted text on card`, ratio: contrast(s.mutedForeground, s.card) });
-    rows.push({ label: `${mode}: button label`, ratio: contrast(s.primaryForeground, s.primary) });
+    rows.push({ label: `${mode}: text on page`, ratio: c(s.foreground, s.background) });
+    rows.push({ label: `${mode}: accent text on page`, ratio: c(s.primary, s.background) });
+    rows.push({ label: `${mode}: accent text on tint`, ratio: c(s.primary, s.tint) });
+    rows.push({ label: `${mode}: muted text on card`, ratio: c(s.mutedForeground, s.card) });
+    rows.push({ label: `${mode}: button label`, ratio: c(s.primaryForeground, s.primary) });
   }
-  rows.push({ label: 'text on highlighter', ratio: contrast(t.highlightInk, t.palette.highlight) });
+  rows.push({ label: 'text on highlighter', ratio: c(t.highlightInk, t.palette.highlight) });
   return rows;
 }
 

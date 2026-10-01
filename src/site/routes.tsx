@@ -26,15 +26,17 @@ export const CHILD_COMPONENTS: Partial<Record<PageId, LazyExoticComponent<Compon
   writing: lazy(() => import('@/pages/WritingPost')),
 };
 
-/** Heavy pieces inside pages, warmed up the same way. */
-const EXTRAS = [() => import('@/components/CommitTimeMachine/CommitTimelineScene')];
 
 /**
- * After the first page has painted, fetch every other page (and the 3D scene) in idle time, one per
- * idle slot, so clicking a link never waits on the network.
+ * After the first page has painted, fetch every other page's (small) chunk in idle time, one per
+ * idle slot, so clicking a link never waits on the network. The 3D scene (~200KB) is not preloaded:
+ * it loads when the Time Machine opens, behind that page's own entrance animation.
  */
 export function preloadPages() {
-  const queue = [...Object.values(LOADERS), ...EXTRAS];
+  // Respect data saver and slow connections; skip preloading entirely there.
+  const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+  if (conn?.saveData || /2g/.test(conn?.effectiveType ?? '')) return () => {};
+  const queue = [...Object.values(LOADERS)];
   let cancel = () => {};
   const next = () => {
     const load = queue.shift();

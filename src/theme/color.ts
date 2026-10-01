@@ -46,6 +46,16 @@ export function fromHsl(h: number, s: number, l: number): Hex {
   return toHex([f(0) * 255, f(8) * 255, f(4) * 255]);
 }
 
+/**
+ * The colour the browser will actually paint for this hex once it has been written as rounded
+ * HSL channels (see hslChannels). Rounding can shift contrast by a few hundredths, so contrast
+ * targets are checked on this, not on the unrounded value.
+ */
+export function asEmitted(hex: Hex): Hex {
+  const [h, s, l] = toHsl(hex);
+  return fromHsl(Math.round(h), Math.round(s * 100) / 100, Math.round(l * 100) / 100);
+}
+
 /** CSS custom-property form used by the shadcn/Tailwind tokens: "161 28% 32%". */
 export function hslChannels(hex: Hex): string {
   const [h, s, l] = toHsl(hex);
@@ -83,7 +93,8 @@ export const isDark = (hex: Hex) => luminance(hex) < 0.18;
  * against every background. Darkens on light grounds, lightens on dark ones.
  */
 export function readableOn(color: Hex, backgrounds: Hex[], min = 4.5): Hex {
-  const passes = (c: Hex) => backgrounds.every((bg) => contrast(c, bg) >= min);
+  // judged as painted (after HSL rounding), so an emitted 4.509 can't become a painted 4.44
+  const passes = (c: Hex) => backgrounds.every((bg) => contrast(asEmitted(c), asEmitted(bg)) >= min);
   if (passes(color)) return color;
   const [h, s, l] = toHsl(color);
   const lighten = backgrounds.every(isDark);

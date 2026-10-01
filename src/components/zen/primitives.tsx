@@ -221,7 +221,9 @@ export const CountUp: React.FC<{ value: string; className?: string; duration?: n
 
   if (!match) return <span className={className}>{value}</span>;
   return (
-    <span ref={ref} className={className} aria-label={value}>
+    <span ref={ref} className={className}>
+      {/* screen readers get the final value as real text; the counting digits are visual only */}
+      <span className="sr-only">{value}</span>
       <span aria-hidden>
         {match[1]}
         {n.toFixed(decimals)}
