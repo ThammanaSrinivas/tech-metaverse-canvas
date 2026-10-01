@@ -116,7 +116,7 @@ const DEFS = [
     path: '/writing',
     label: 'Writing',
     title: '*Writing*',
-    lead: 'Engineering write-ups: what I built, the trade-offs behind it, and what I would do differently.',
+    lead: 'Write-ups on what I build: the engineering, the trade-offs behind it, and the story of how it came to be.',
     proof: PUBLISHED.length ? `${PUBLISHED.length} write-up${PUBLISHED.length > 1 ? 's' : ''}` : 'drafts in progress',
     // the page goes live with its first published post
     draft: PUBLISHED.length === 0,
@@ -124,7 +124,13 @@ const DEFS = [
     shell: [
       {
         name: 'writing',
-        files: Object.fromEntries(POSTS.map((p) => [`${p.slug}.md`, { body: md(`# ${plain(p.title)}`, p.summary, '', p.body) }])),
+        files: Object.fromEntries(
+          POSTS.map((p) =>
+            p.kind === 'article'
+              ? [`${p.slug}.md`, { body: md(`# ${plain(p.title)}`, p.summary, '', p.body) }]
+              : [`${p.slug}.url`, { body: md(`# ${plain(p.title)}`, p.summary, '', `on ${p.site}: ${p.href}`), url: p.href }]
+          )
+        ),
       },
     ],
   },
