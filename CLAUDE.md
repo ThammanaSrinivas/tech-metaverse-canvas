@@ -111,6 +111,24 @@ another account is the default, else it fails with "Failed to get Firebase proje
   https://www.linkedin.com/post-inspector/ before posting (LinkedIn caches previews).
 - Google Search Console is set up for thammanasrinivas.com with the sitemap submitted.
 
+## Sound
+
+- **`src/theme/sound.json` is the SOURCE OF TRUTH for the sonic brand:** one key (D major pentatonic,
+  so overlapping sounds agree), three families (wood = actions, glass = things finishing, air =
+  movement), and every cue. The logo motif is D3 → A3 → F#5 (the T, the S, the orange dot).
+  `src/lib/sound/synth.ts` synthesises it with Web Audio (no audio files, so no CSP change);
+  `src/lib/sound/index.ts` is the engine.
+- **Off by default, opt-in only:** the speaker button (`SoundToggle`, in the header), the ⌘K action,
+  or `sound on` in the shell. Remembered per device (`localStorage` `zen-sound`). No AudioContext
+  exists until the visitor opts in; audio wakes on their next tap/key if it was left on; it
+  suspends while the tab is hidden.
+- `sound.play(cue, { step, pan, delay, gain })` is a no-op while off, so call it freely. Never add
+  hover, scroll or page-load sounds, and keep simulated fast-forwards silent (see the diagram's
+  `silent` flag). Tests check every cue's voice, gain, pitch range and length.
+- Video soundtracks: dev builds expose `window.__zenSound` (`sound.tap`, `renderOffline`, `toWav`),
+  so a frame-by-frame recorder can log the cues each frame asked for and render the same synth
+  offline, in sync with the picture.
+
 ## Motion, accessibility, mobile (lessons already paid for)
 
 - **Page transitions** use the View Transitions API through React Router: import `Link` / `NavLink` /

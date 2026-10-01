@@ -7,6 +7,8 @@ import { LINKS, PROFILE } from '@/data/profile';
 import { PAGES } from '@/site/pages';
 import { Monogram } from '@/components/zen/primitives';
 import CommandPalette from './CommandPalette';
+import SoundToggle from './SoundToggle';
+import { sound } from '@/lib/sound';
 import { emitZen } from '@/lib/zenEvents';
 
 /**
@@ -128,7 +130,14 @@ const Navigation: React.FC = () => {
   // that shows a new page, never a frame later.
   const [menuAt, setMenuAt] = useState<string | null>(null);
   const menuOpen = menuAt === pathname;
-  const closeMenu = useCallback(() => setMenuAt(null), []);
+  const closeMenu = useCallback(() => {
+    sound.play('menuClose');
+    setMenuAt(null);
+  }, []);
+  const toggleMenu = () => {
+    sound.play(menuOpen ? 'menuClose' : 'menuOpen');
+    setMenuAt((at) => (at === pathname ? null : pathname));
+  };
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
@@ -216,9 +225,10 @@ const Navigation: React.FC = () => {
               <span>Search</span>
               <kbd className="font-mono text-[10px] tracking-wider">⌘K</kbd>
             </button>
+            <SoundToggle className="lg:h-9 lg:w-9" />
             <button
               className="flex h-10 w-10 items-center justify-center rounded-full border bg-card lg:hidden"
-              onClick={() => setMenuAt((at) => (at === pathname ? null : pathname))}
+              onClick={toggleMenu}
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={menuOpen}
               aria-controls="mobile-menu"

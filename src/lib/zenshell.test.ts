@@ -45,6 +45,8 @@ describe('zen shell', () => {
   it('toggles stars and shows public ZenMode stats', () => {
     expect(runCommand('stars off', ctx).effect).toEqual({ type: 'stars', value: false });
     expect(runCommand('stars', ctx).effect).toEqual({ type: 'stars', value: 'toggle' });
+    expect(runCommand('sound on', ctx).effect).toEqual({ type: 'sound', value: true });
+    expect(runCommand('sound', ctx).effect).toEqual({ type: 'sound', value: 'toggle' });
     expect(text('stats')).toContain('of 711 on Product Hunt');
   });
 

@@ -12,7 +12,8 @@ import { useGo } from '@/components/zen/Link';
 import { LAB, LINKS } from '@/data/profile';
 import { PAGES } from '@/site/pages';
 import { emitZen } from '@/lib/zenEvents';
-import { Github, Hash, FileText, ExternalLink, Terminal, Swords } from 'lucide-react';
+import { sound, useSound } from '@/lib/sound';
+import { Github, Hash, FileText, ExternalLink, Terminal, Swords, Volume2, VolumeX } from 'lucide-react';
 
 interface CommandPaletteProps {
   open?: boolean;
@@ -27,6 +28,11 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, o
 
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
+  const [soundOn, toggleSound] = useSound();
+
+  useEffect(() => {
+    if (open) sound.play('palette');
+  }, [open]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -89,6 +95,10 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, o
         <CommandSeparator />
 
         <CommandGroup heading="Actions">
+          <CommandItem onSelect={() => run(toggleSound)}>
+            {soundOn ? <VolumeX className="mr-2 h-4 w-4" /> : <Volume2 className="mr-2 h-4 w-4 text-primary" />}
+            <span>{soundOn ? 'Turn sound off' : 'Turn sound on'}</span>
+          </CommandItem>
           <CommandItem onSelect={() => openUrl(LINKS.resume)}>
             <FileText className="mr-2 h-4 w-4" />
             <span>View resume</span>

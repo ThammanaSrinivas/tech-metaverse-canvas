@@ -5,6 +5,7 @@ import { useBrandTheme } from '@/theme/runtime';
 import { SYSTEM, ZENMODE_COLORS } from '@/theme/palettes';
 import { MONOGRAM_DOT, MONOGRAM_PATH } from './monogramPath';
 import { parseRich } from '@/lib/rich';
+import { sound } from '@/lib/sound';
 
 // ZenMode mark on a 1024 grid, traced from the app icon. Rounded via stroke-linejoin.
 const MARK_POLYS = [
@@ -207,6 +208,9 @@ export const CountUp: React.FC<{ value: string; className?: string; duration?: n
 
   useEffect(() => {
     if (!inView || reduce || !match) return;
+    // ticks that slow as the digits settle (the cue is timed to the default 1.2 s; several numbers
+    // counting at once share one)
+    sound.play('count');
     let raf = 0;
     const start = performance.now();
     const tick = (t: number) => {

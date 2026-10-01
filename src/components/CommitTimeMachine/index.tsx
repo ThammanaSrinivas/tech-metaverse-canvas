@@ -6,6 +6,7 @@ import { fetchCommitDetail } from '@/lib/github';
 import { useBrandTheme } from '@/theme/runtime';
 import { Reveal, Section } from '@/components/zen/primitives';
 import { useSettled } from '@/lib/idle';
+import { sound } from '@/lib/sound';
 import RepoSelector from './RepoSelector';
 import TimelineScrubber from './TimelineScrubber';
 import CommitDetailPanel from './CommitDetailPanel';
@@ -88,6 +89,8 @@ const CommitTimeMachine: React.FC = () => {
 
   const openDetail = useCallback(
     (index: number) => {
+      // each commit has its own note along the timeline
+      sound.play('select', { step: index % 10 });
       setSelectedCommitIndex(index);
       setDetailOpen(true);
       const sha = commits?.[index]?.sha;
@@ -135,6 +138,7 @@ const CommitTimeMachine: React.FC = () => {
       e.preventDefault();
       const cur = selectedCommitIndex < 0 ? 0 : selectedCommitIndex;
       const next = Math.min(last, Math.max(0, cur + (e.key === 'ArrowRight' ? 1 : -1)));
+      if (next !== cur) sound.play('select', { step: next % 10, gain: 0.6 });
       setSelectedCommitIndex(next);
       setDetailOpen(false);
       setAutoplay(false);

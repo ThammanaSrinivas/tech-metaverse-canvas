@@ -3,6 +3,7 @@ import { useReducedMotion } from 'framer-motion';
 import { Pause, Play } from 'lucide-react';
 import { useBrandTheme } from '@/theme/runtime';
 import { mix } from '@/theme/color';
+import { sound, type CueName, type PlayOpts } from '@/lib/sound';
 
 /**
  * A live model of the scheduler's admission control (article: "Scheduling 10M cron jobs a day").
@@ -68,8 +69,11 @@ const AdmissionControl: React.FC = () => {
     ctl.current?.sync();
   }, [playing]);
 
+  const modeSeen = useRef(false);
   useEffect(() => {
     modeRef.current = mode;
+    if (modeSeen.current) sound.play('switch');
+    modeSeen.current = true;
     if (!playingRef.current) ctl.current?.settle();
   }, [mode]);
 
@@ -136,6 +140,10 @@ const AdmissionControl: React.FC = () => {
     let shownMessages = 0;
     let lastMode: Mode = modeRef.current;
     const workerBusy: (Job | null)[] = Array(WORKERS).fill(null);
+    // Sound follows the picture: scheduler on the left, workers on the right. Silent while
+    // fast-forwarding to a still frame.
+    let silent = false;
+    const cue = (name: CueName, opts?: PlayOpts) => !silent && sound.play(name, opts);
 
     const queueSlot = (i: number) => {
       const { qx0, qx1, cy, qh } = L();
@@ -163,10 +171,14 @@ const AdmissionControl: React.FC = () => {
         const inQueue = queued().length;
         if (inQueue >= QUEUE_DRAW_MAX) {
           backlog += 1;
+          cue('spill', { delay: k * 0.035, pan: -0.1 });
           continue;
         }
         const slot = queueSlot(inQueue);
         jobs.push({ state: 'flying', x: sx + 18, y: cy + (Math.random() - 0.5) * 10, tx: slot.x, ty: slot.y, t: -k * 0.035, worker: -1, hue: Math.random() });
+        // a clean note while the batch fits (climbing as the queue fills), a dull thud once it spills
+        if (slot.spill) cue('spill', { delay: k * 0.035, pan: -0.15 });
+        else cue('publish', { delay: k * 0.035, step: (k % 5) + Math.min(5, Math.floor(inQueue / 15)), pan: -0.45 });
       }
     };
 
@@ -196,6 +208,7 @@ const AdmissionControl: React.FC = () => {
       if (cycleT >= CYCLE) {
         cycleT = 0;
         pulse = 1;
+        cue('cycle', { pan: -0.55 });
         const len = queued().length + backlog;
         if (m === 'before') {
           publish(BEFORE_BURST);
@@ -207,6 +220,7 @@ const AdmissionControl: React.FC = () => {
             publish(Math.min(room, 6));
             decision = 'submit';
           } else decision = 'skip';
+          cue(decision, { pan: -0.4 });
           decisionT = 1.1;
           messages = REAL.after;
         }
@@ -257,10 +271,13 @@ const AdmissionControl: React.FC = () => {
           j.state = 'acking';
           j.t = 0;
           workerBusy[j.worker] = null;
+          cue('ack', { step: j.worker, pan: 0.5 });
         }
       }
       jobs = jobs.filter((j) => !(j.state === 'acking' && j.t > 0.7));
       shownMessages = lerp(shownMessages, messages, 0.08);
+      // the flood has a sound too: a drone that builds with the backlog (nothing once the if holds)
+      if (!silent) sound.level(m === 'before' ? (queued().length + backlog - CAP * 2) / 50 : 0);
     };
 
     // Hand-built rounded rect: ctx.roundRect only exists from Safari 16 / iOS 16.
@@ -463,13 +480,16 @@ const AdmissionControl: React.FC = () => {
       } else if (raf) {
         cancelAnimationFrame(raf);
         raf = 0;
+        sound.level(0);
       }
     };
     const settle = () => {
       // fast-forward a few cycles so a still frame tells the story of the current mode
+      silent = true;
       safe(() => {
         for (let i = 0; i < 400; i++) step(0.03);
       });
+      silent = false;
       drawNow();
       if (!dead) report();
     };
@@ -484,6 +504,7 @@ const AdmissionControl: React.FC = () => {
     return () => {
       ctl.current = null;
       cancelAnimationFrame(raf);
+      sound.level(0);
       io.disconnect();
       ro.disconnect();
     };

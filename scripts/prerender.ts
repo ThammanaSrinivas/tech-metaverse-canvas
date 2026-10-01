@@ -28,6 +28,10 @@ export function prerender(): Plugin {
         logLevel: 'error',
         appType: 'custom',
         server: { middlewareMode: true, hmr: false, watch: { ignored: ['**/*'] } },
+        // its own cache: sharing node_modules/.vite would re-optimise deps under a running dev
+        // server, which then fails every request with "504 Outdated Optimize Dep"
+        cacheDir: 'node_modules/.vite-prerender',
+        optimizeDeps: { noDiscovery: true, include: [] },
       });
       try {
         const { ROUTE_META, applyMetaToHtml } = (await server.ssrLoadModule('/src/site/meta.ts')) as typeof import('../src/site/meta');

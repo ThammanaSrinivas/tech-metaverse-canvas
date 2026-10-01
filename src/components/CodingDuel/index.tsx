@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Swords } from 'lucide-react';
 import { useCodeExecution } from '@/hooks/useCodeExecution';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
+import { sound } from '@/lib/sound';
 import type { Challenge } from '@/data/challenges';
 import ChallengeSelector from './ChallengeSelector';
 import DuelArena from './DuelArena';
@@ -58,9 +59,10 @@ const CodingDuel: React.FC<CodingDuelProps> = ({ isOpen, onClose }) => {
     }
   }, [isOpen, clearResults]);
 
-  // Countdown
+  // Countdown: 3, 2, 1 on wood, then a bright "go"
   useEffect(() => {
     if (state !== 'COUNTDOWN') return;
+    sound.play(countdown > 0 ? 'countdown' : 'go');
     if (countdown <= 0) {
       setState('PLAYING');
       setStartTime(Date.now());
@@ -69,6 +71,18 @@ const CodingDuel: React.FC<CodingDuelProps> = ({ isOpen, onClose }) => {
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [state, countdown]);
+
+  // The verdict, once per finished round: all tests green or not
+  const scored = useRef(false);
+  useEffect(() => {
+    if (state !== 'FINISHED') {
+      scored.current = false;
+      return;
+    }
+    if (scored.current || !results.length) return;
+    scored.current = true;
+    sound.play(testsPassed === results.length ? 'win' : 'lose');
+  }, [state, results, testsPassed]);
 
   // Game timer
   useEffect(() => {

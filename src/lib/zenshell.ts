@@ -14,6 +14,7 @@ export type Effect =
   | { type: 'open'; url: string }
   | { type: 'go'; to: string }
   | { type: 'stars'; value: boolean | 'toggle' }
+  | { type: 'sound'; value: boolean | 'toggle' }
   | { type: 'duel' }
   | { type: 'clear' }
   | { type: 'exit' };
@@ -289,6 +290,14 @@ const COMMANDS: Record<string, Command> = {
     run: ([v]) => {
       const value = v === 'on' ? true : v === 'off' ? false : 'toggle';
       return { lines: [t('muted', `stars → ${value === 'toggle' ? 'toggled' : v}`)], effect: { type: 'stars', value } };
+    },
+  },
+  sound: {
+    help: 'site sound, off until you turn it on  [on|off]',
+    args: () => ['on', 'off'],
+    run: ([v]) => {
+      const value = v === 'on' ? true : v === 'off' ? false : 'toggle';
+      return { lines: [t('muted', `sound → ${value === 'toggle' ? 'toggled' : v}`)], effect: { type: 'sound', value } };
     },
   },
   duel: { help: 'challenge me to a coding duel', run: () => ({ lines: [t('reward', '⚔ entering the arena…')], effect: { type: 'duel' } }) },

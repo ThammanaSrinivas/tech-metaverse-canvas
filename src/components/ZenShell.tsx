@@ -7,6 +7,7 @@ import { complete, runCommand, SUGGESTIONS, type Line } from '@/lib/zenshell';
 import { PAGES } from '@/site/pages';
 import { emitZen, onZen } from '@/lib/zenEvents';
 import { setStarsEnabled, useStarsEnabled } from '@/lib/stars';
+import { sound } from '@/lib/sound';
 import { Monogram } from '@/components/zen/primitives';
 import { useBrandTheme } from '@/theme/runtime';
 import { readsDarkAt } from '@/lib/zenCursor';
@@ -261,6 +262,12 @@ const ZenShell: React.FC = () => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [lines]);
 
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (mounted.current) sound.play(open ? 'shellOpen' : 'shellClose');
+    mounted.current = true;
+  }, [open]);
+
   const exec = (raw: string) => {
     const cmd = raw.trim();
     const echo: Line = { kind: 'cmd', text: `${cwd}\t${raw}` };
@@ -273,6 +280,7 @@ const ZenShell: React.FC = () => {
     setCursor(null);
     const { lines: out, effect, cwd: nextCwd } = runCommand(cmd, { history: nextHistory, cwd });
     if (nextCwd) setCwd(nextCwd);
+    if (out.some((l) => l.kind === 'error')) sound.play('error', { delay: 0.08 });
 
     if (effect?.type === 'clear') {
       setLines([]);
@@ -289,6 +297,9 @@ const ZenShell: React.FC = () => {
         break;
       case 'stars':
         setStarsEnabled(effect.value === 'toggle' ? !starsOn : effect.value);
+        break;
+      case 'sound':
+        sound.set(effect.value === 'toggle' ? !sound.enabled : effect.value);
         break;
       case 'duel':
         setTimeout(() => {
@@ -323,6 +334,8 @@ const ZenShell: React.FC = () => {
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // typing clicks come from onChange (phone keyboards don't report keys reliably)
+    if (e.key === 'Enter') sound.play('enter');
     if (e.key === 'Enter') {
       exec(input);
       setInput('');
@@ -347,6 +360,7 @@ const ZenShell: React.FC = () => {
   const tap = (fn: () => void) => (e: React.PointerEvent | React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    sound.play('key');
     fn();
     inputRef.current?.focus();
   };
@@ -426,7 +440,10 @@ const ZenShell: React.FC = () => {
                 <input
                   ref={inputRef}
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(e) => {
+                    sound.play('key');
+                    setInput(e.target.value);
+                  }}
                   onKeyDown={onKeyDown}
                   className="min-w-0 flex-1 bg-transparent text-[16px] outline-none sm:text-[13px]"
                   style={{ color: windowSk.text, caretColor: windowSk.accent }}

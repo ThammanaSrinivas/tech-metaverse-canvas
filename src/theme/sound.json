@@ -1,0 +1,119 @@
+{
+  "why": "Calm Glow, in sound. Warm wood (marimba-like) for actions, soft glass (bell) for things finishing, air for movement. Everything sits in one key, D major pentatonic, so any sounds that overlap still agree. Short, quiet, a little room around them. Off until the visitor turns it on; synthesised live, no audio files.",
+  "key": { "root": 293.66, "scale": [0, 2, 4, 7, 9] },
+  "master": { "gain": 0.55, "reverbSeconds": 1.8, "reverbWet": 0.22 },
+  "voices": {
+    "wood": { "decay": 0.32, "partial": 3.93, "partialGain": 0.22, "mallet": 0.25 },
+    "glass": { "decay": 1.2, "ratio": 3.5, "index": 1.8 },
+    "tick": { "decay": 0.012, "freq": 3200, "q": 1.4 },
+    "air": { "decay": 0.34, "from": 600, "to": 2600, "q": 0.9 },
+    "thump": { "decay": 0.16, "from": 140, "to": 48 }
+  },
+  "pressure": { "gain": 0.07, "hiss": 0.03, "cutoff": [160, 1500], "wobbleHz": 1.43, "wobble": 0.35 },
+  "cues": {
+    "logo": {
+      "why": "The monogram as three notes: the T's platform (D3), the S (A3), the orange dot (a bright F#5 ping).",
+      "minGap": 0.6,
+      "notes": [
+        { "voice": "wood", "deg": 0, "oct": -1, "at": 0, "gain": 0.55 },
+        { "voice": "wood", "deg": 3, "oct": -1, "at": 0.12, "gain": 0.5 },
+        { "voice": "glass", "deg": 2, "oct": 1, "at": 0.26, "gain": 0.32 }
+      ]
+    },
+    "off": {
+      "why": "Sound turned off: the first two notes of the logo, falling.",
+      "notes": [
+        { "voice": "wood", "deg": 3, "oct": -1, "at": 0, "gain": 0.4 },
+        { "voice": "wood", "deg": 0, "oct": -1, "at": 0.1, "gain": 0.4 }
+      ]
+    },
+    "page": { "why": "Moving to another page.", "minGap": 0.25, "notes": [{ "voice": "air", "gain": 0.4, "from": 500, "to": 1800, "decay": 0.42 }] },
+    "menuOpen": {
+      "minGap": 0.1,
+      "notes": [
+        { "voice": "air", "gain": 0.3, "from": 900, "to": 3000, "decay": 0.2 },
+        { "voice": "tick", "gain": 0.12 }
+      ]
+    },
+    "menuClose": { "minGap": 0.1, "notes": [{ "voice": "air", "gain": 0.26, "from": 2600, "to": 800, "decay": 0.18 }] },
+    "shellOpen": {
+      "minGap": 0.2,
+      "notes": [
+        { "voice": "glass", "deg": 4, "oct": 0, "gain": 0.18 },
+        { "voice": "air", "gain": 0.22, "from": 700, "to": 2400, "decay": 0.25 }
+      ]
+    },
+    "shellClose": { "minGap": 0.2, "notes": [{ "voice": "air", "gain": 0.22, "from": 2400, "to": 700, "decay": 0.22 }] },
+    "key": { "why": "A soft key click while typing in the shell.", "minGap": 0.015, "notes": [{ "voice": "tick", "gain": 0.2, "freq": 3400 }] },
+    "enter": {
+      "notes": [
+        { "voice": "thump", "gain": 0.4 },
+        { "voice": "tick", "gain": 0.18, "freq": 2200 }
+      ]
+    },
+    "error": {
+      "why": "Gentle, not a buzzer: one step down.",
+      "notes": [
+        { "voice": "wood", "deg": 1, "oct": -1, "at": 0, "gain": 0.28 },
+        { "voice": "wood", "deg": 0, "oct": -1, "at": 0.12, "gain": 0.28 }
+      ]
+    },
+    "palette": { "minGap": 0.2, "notes": [{ "voice": "glass", "deg": 3, "oct": 1, "gain": 0.16 }] },
+    "count": {
+      "why": "A number counting up: ticks that slow down exactly as the digits settle (ease-out), then a small ding.",
+      "minGap": 0.8,
+      "notes": [
+        { "voice": "tick", "gain": 0.14, "freq": 4200, "repeat": 14, "span": 1.1 },
+        { "voice": "glass", "deg": 4, "oct": 1, "at": 1.15, "gain": 0.12 }
+      ]
+    },
+    "switch": { "minGap": 0.2, "notes": [{ "voice": "air", "gain": 0.36, "from": 500, "to": 2200, "decay": 0.3 }] },
+    "cycle": {
+      "why": "The scheduler's clock, once per cycle.",
+      "notes": [
+        { "voice": "wood", "deg": 0, "oct": -1, "gain": 0.3, "decay": 0.18 },
+        { "voice": "tick", "gain": 0.1, "freq": 1800 }
+      ]
+    },
+    "publish": { "why": "One batch leaving the scheduler; pitch climbs as the queue fills.", "notes": [{ "voice": "wood", "deg": 0, "oct": 1, "gain": 0.16, "decay": 0.14 }] },
+    "spill": {
+      "why": "A batch that no longer fits: dull, low, the opposite of a clean note.",
+      "minGap": 0.12,
+      "notes": [
+        { "voice": "thump", "gain": 0.22, "from": 110, "to": 55, "decay": 0.12 },
+        { "voice": "tick", "gain": 0.06, "freq": 900 }
+      ]
+    },
+    "ack": { "why": "A job done. Each worker has its own note, so steady work sounds like a chord.", "notes": [{ "voice": "glass", "deg": 0, "oct": 0, "gain": 0.12, "decay": 0.9 }] },
+    "submit": {
+      "notes": [
+        { "voice": "glass", "deg": 2, "oct": 1, "at": 0, "gain": 0.1 },
+        { "voice": "glass", "deg": 4, "oct": 1, "at": 0.07, "gain": 0.1 }
+      ]
+    },
+    "skip": { "notes": [{ "voice": "tick", "gain": 0.16, "freq": 1400 }] },
+    "select": { "minGap": 0.05, "notes": [{ "voice": "glass", "deg": 0, "oct": 1, "gain": 0.2 }] },
+    "countdown": { "notes": [{ "voice": "wood", "deg": 0, "oct": 0, "gain": 0.45 }] },
+    "go": {
+      "notes": [
+        { "voice": "wood", "deg": 0, "oct": 1, "gain": 0.4 },
+        { "voice": "glass", "deg": 0, "oct": 2, "at": 0.02, "gain": 0.2 }
+      ]
+    },
+    "win": {
+      "notes": [
+        { "voice": "wood", "deg": 0, "oct": 0, "at": 0, "gain": 0.4 },
+        { "voice": "wood", "deg": 2, "oct": 0, "at": 0.1, "gain": 0.4 },
+        { "voice": "wood", "deg": 4, "oct": 0, "at": 0.2, "gain": 0.4 },
+        { "voice": "glass", "deg": 0, "oct": 2, "at": 0.32, "gain": 0.3 }
+      ]
+    },
+    "lose": {
+      "notes": [
+        { "voice": "wood", "deg": 2, "oct": -1, "at": 0, "gain": 0.35 },
+        { "voice": "wood", "deg": 1, "oct": -1, "at": 0.16, "gain": 0.35 },
+        { "voice": "wood", "deg": 0, "oct": -1, "at": 0.32, "gain": 0.4 }
+      ]
+    }
+  }
+}

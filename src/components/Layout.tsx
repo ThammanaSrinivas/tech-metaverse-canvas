@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useLayoutEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -9,12 +9,26 @@ import { onZen } from '@/lib/zenEvents';
 import { labEnabled } from '@/theme/runtime';
 import { mountSpotlight } from '@/lib/spotlight';
 import { preloadPages } from '@/site/routes';
+import { sound } from '@/lib/sound';
 
 const CodingDuel = lazy(() => import('@/components/CodingDuel'));
 // Brand lab: dev builds only. `labEnabled()` is a build-time constant, so production drops the chunk.
 const PalettePanel = labEnabled() ? lazy(() => import('@/components/PalettePanel')) : null;
 
 /** New page → top of the page, or to its #anchor once the page has rendered. */
+/** A soft "air" sound on every page change (only when the visitor has turned sound on). */
+function usePageSound() {
+  const { pathname } = useLocation();
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    sound.play('page');
+  }, [pathname]);
+}
+
 function useScrollOnNavigate() {
   const { pathname, hash } = useLocation();
   // We restore position ourselves; the browser's own restoration fights it on iOS.
@@ -47,6 +61,7 @@ const Layout: React.FC = () => {
   useEffect(mountSpotlight, []);
   useEffect(preloadPages, []);
   useScrollOnNavigate();
+  usePageSound();
 
   return (
     <div className="relative flex min-h-screen flex-col text-foreground">
