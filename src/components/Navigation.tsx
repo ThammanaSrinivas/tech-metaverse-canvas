@@ -10,82 +10,93 @@ import CommandPalette from './CommandPalette';
 import { emitZen } from '@/lib/zenEvents';
 
 /**
- * Phone menu: a full-screen sheet under the bar. Big, thumb-sized page titles with their proof
- * line, the current page marked, quick actions at the bottom. Locks page scroll while open.
+ * Phone menu: a floating card that drops down under the bar, over a dimmed page. The page stays
+ * visible behind it, so it reads as a menu, not as navigating somewhere. No body scroll lock:
+ * toggling overflow on <body> makes iOS Safari resize its toolbars and re-lay out the whole page,
+ * which looks like a reload. The backdrop swallows touches instead, and the card contains its own
+ * scroll. Takes the bar's mode: ink over the hero, paper elsewhere.
  */
-const MobileMenu: React.FC<{ onClose: () => void; ink: boolean }> = ({ onClose, ink }) => {
+const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; floating: boolean }> = ({ onClose, ink, floating }) => {
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener('keydown', onKey);
-    };
+    return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
   return (
-    // A solid panel unrolling from under the bar (clip-path), never a cross-fade over the page:
-    // fading made the page and the menu show through each other, which read as a reload.
-    <motion.div
-      id="mobile-menu"
-      initial={{ clipPath: 'inset(0 0 100% 0)' }}
-      animate={{ clipPath: 'inset(0 0 0% 0)' }}
-      exit={{ clipPath: 'inset(0 0 100% 0)' }}
-      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-      className={`fixed inset-0 z-[45] flex flex-col overflow-y-auto bg-background pt-[72px] text-foreground lg:hidden ${ink ? 'dark' : ''}`}
-    >
-      <nav aria-label="Pages" className="mx-auto w-full max-w-[1120px] flex-1 px-5 py-4">
-        <ul>
-          {PAGES.map(({ id, label, path, index, proof }, i) => (
-            <motion.li
-              key={id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.08 + 0.025 * i, duration: 0.25 }}
-              className="border-b"
-            >
-              <NavLink to={path} onClick={onClose} className="flex items-center gap-4 py-4">
-                {({ isActive }) => (
-                  <>
-                    <span className="zen-label w-6 text-primary">{index}</span>
-                    <span className="flex-1">
-                      <span className={`block font-display text-h3 ${isActive ? '' : 'text-foreground/80'}`}>{label}</span>
-                      <span className="font-mono text-small text-muted-foreground">{proof}</span>
-                    </span>
-                    {isActive ? (
-                      <span className="zen-pill border-transparent bg-highlight text-[color:var(--highlight-ink)]">here</span>
-                    ) : (
-                      <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
-                    )}
-                  </>
-                )}
-              </NavLink>
-            </motion.li>
-          ))}
-        </ul>
-      </nav>
-      <div className="mx-auto grid w-full max-w-[1120px] grid-cols-2 gap-2 px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2">
-        <button
-          onClick={() => {
-            onClose();
-            emitZen('shell');
-          }}
-          className="flex h-12 items-center justify-center gap-2 rounded-full border font-mono text-xs uppercase tracking-[0.08em]"
-        >
-          <Terminal className="h-4 w-4 text-primary" /> zen shell
-        </button>
-        <a
-          href={LINKS.resume}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex h-12 items-center justify-center gap-2 rounded-full bg-primary font-semibold text-primary-foreground"
-        >
-          <FileText className="h-4 w-4" /> Resume
-        </a>
-      </div>
-    </motion.div>
+    <>
+      <motion.div
+        aria-hidden
+        onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 z-[44] bg-foreground/25 lg:hidden"
+        style={{ touchAction: 'none' }}
+      />
+      <motion.div
+        id="mobile-menu"
+        initial={{ opacity: 0, y: -10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -8, scale: 0.98 }}
+        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+        style={{ transformOrigin: 'top right' }}
+        className={`fixed inset-x-2 z-[45] max-h-[calc(100svh-5.5rem)] overflow-y-auto overscroll-contain rounded-2xl border bg-background text-foreground shadow-2xl lg:hidden ${
+          floating ? 'top-[4.5rem]' : 'top-[3.75rem]'
+        } ${ink ? 'dark' : ''}`}
+      >
+        <nav aria-label="Pages" className="px-2 py-2">
+          <ul>
+            {PAGES.map(({ id, label, path, index, proof }) => (
+              <li key={id}>
+                <NavLink
+                  to={path}
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${isActive ? 'bg-secondary' : 'active:bg-secondary'}`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <span className="zen-label w-6 text-primary">{index}</span>
+                      <span className="flex-1">
+                        <span className={`block font-display text-lead ${isActive ? '' : 'text-foreground/85'}`}>{label}</span>
+                        <span className="font-mono text-label text-muted-foreground">{proof}</span>
+                      </span>
+                      {isActive ? (
+                        <span className="h-2 w-2 rounded-full bg-highlight" aria-label="current page" />
+                      ) : (
+                        <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="grid grid-cols-2 gap-2 border-t p-3">
+          <button
+            onClick={() => {
+              onClose();
+              emitZen('shell');
+            }}
+            className="flex h-11 items-center justify-center gap-2 rounded-full border font-mono text-xs uppercase tracking-[0.08em]"
+          >
+            <Terminal className="h-4 w-4 text-primary" /> zen shell
+          </button>
+          <a
+            href={LINKS.resume}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-11 items-center justify-center gap-2 rounded-full bg-primary font-semibold text-primary-foreground"
+          >
+            <FileText className="h-4 w-4" /> Resume
+          </a>
+        </div>
+      </motion.div>
+    </>
   );
 };
 
@@ -199,7 +210,7 @@ const Navigation: React.FC = () => {
         </nav>
         </div>
       </header>
-      <AnimatePresence>{menuOpen && <MobileMenu onClose={closeMenu} ink={!solid} />}</AnimatePresence>
+      <AnimatePresence>{menuOpen && <MobileMenu onClose={closeMenu} ink={!solid} floating={solid} />}</AnimatePresence>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </>
   );

@@ -49,6 +49,7 @@ const AdmissionControl: React.FC = () => {
   const modeRef = useRef<Mode>('before');
   const [readout, setReadout] = useState({ messages: 0, backlog: 0, busy: 0, decision: '' as '' | 'submit' | 'skip' });
   const touched = useRef(false); // auto-toggle until the reader takes control
+  const [failed, setFailed] = useState(false);
   // under reduced motion there is no loop, so a mode change must redraw the still frame
   const stillFrameMode = reduce ? mode : null;
 
@@ -89,7 +90,11 @@ const AdmissionControl: React.FC = () => {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
-    const ro = new ResizeObserver(resize);
+    let drawNow: () => void = () => {};
+    const ro = new ResizeObserver(() => {
+      resize();
+      drawNow();
+    });
     ro.observe(wrap);
 
     // ---- layout (recomputed each frame from W/H so it follows resizes)
@@ -242,9 +247,16 @@ const AdmissionControl: React.FC = () => {
       shownMessages = lerp(shownMessages, messages, 0.08);
     };
 
+    // Hand-built rounded rect: ctx.roundRect only exists from Safari 16 / iOS 16.
     const roundRect = (x: number, y: number, w: number, h: number, r: number) => {
+      const rr = Math.max(0, Math.min(r, w / 2, h / 2));
       ctx.beginPath();
-      ctx.roundRect(x, y, w, h, r);
+      ctx.moveTo(x + rr, y);
+      ctx.arcTo(x + w, y, x + w, y + h, rr);
+      ctx.arcTo(x + w, y + h, x, y + h, rr);
+      ctx.arcTo(x, y + h, x, y, rr);
+      ctx.arcTo(x, y, x + w, y, rr);
+      ctx.closePath();
     };
     const label = (text: string, x: number, y: number, color: string, align: CanvasTextAlign = 'center', size = 10) => {
       ctx.font = `${size}px ${mono}`;
@@ -391,11 +403,32 @@ const AdmissionControl: React.FC = () => {
     let raf = 0;
     let last = 0;
     let visible = true;
+    let dead = false;
+    const safe = (fn: () => void) => {
+      if (dead) return;
+      try {
+        fn();
+      } catch (err) {
+        dead = true;
+        cancelAnimationFrame(raf);
+        setFailed(true);
+        console.error('AdmissionControl diagram stopped:', err);
+      }
+    };
+    drawNow = () => safe(() => W > 0 && draw());
     const loop = (t: number) => {
       const dt = Math.min(0.05, last ? (t - last) / 1000 : 0.016);
       last = t;
-      step(dt);
-      draw();
+      if (W === 0) {
+        // not laid out yet (e.g. mounted inside a collapsed parent): wait for a size
+        if (visible) raf = requestAnimationFrame(loop);
+        return;
+      }
+      safe(() => {
+        step(dt);
+        draw();
+      });
+      if (dead) return;
       setReadout((r) => {
         const busy = workerBusy.filter(Boolean).length;
         const next = { messages: Math.round(shownMessages), backlog: queued().length + backlog, busy, decision };
@@ -414,8 +447,10 @@ const AdmissionControl: React.FC = () => {
 
     if (reduce) {
       // fast-forward a few cycles so the still frame tells the story
-      for (let i = 0; i < 400; i++) step(0.03);
-      draw();
+      safe(() => {
+        for (let i = 0; i < 400; i++) step(0.03);
+      });
+      drawNow();
       setReadout({ messages: REAL[modeRef.current], backlog: queued().length + backlog, busy: workerBusy.filter(Boolean).length, decision: '' });
     } else io.observe(wrap);
 
@@ -467,9 +502,16 @@ const AdmissionControl: React.FC = () => {
         </div>
       </div>
       <div ref={wrapRef} className="relative">
+        {failed && (
+          <p className="px-5 py-10 text-center text-muted-foreground">
+            {mode === 'before'
+              ? 'Before: every cycle the scheduler published every due job into the pending queue, so the queue flooded: about 7,000 Kafka messages per cycle.'
+              : 'After: the scheduler publishes only while the pending queue holds less than ~10× what the workers can process. The queue stays short and the workers stay busy: 32 messages per cycle.'}
+          </p>
+        )}
         <canvas
           ref={canvasRef}
-          className="block w-full"
+          className={failed ? 'hidden' : 'block w-full'}
           role="img"
           aria-label={
             mode === 'before'
