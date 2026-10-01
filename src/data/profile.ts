@@ -10,7 +10,7 @@ export const SITE_URL = 'https://thammanasrinivas.com';
 export const LINKS = {
   github: 'https://github.com/ThammanaSrinivas',
   linkedin: 'https://www.linkedin.com/in/thammanasrinivas/',
-  email: 'mailto:srinivasthammana.eng@gmail.com',
+  email: 'mailto:srinivas@thammanasrinivas.com',
   zenmode: 'https://github.com/ThammanaSrinivas/zenmode',
   zenmodeSite: 'https://zenmodeos.com/',
   playstore: 'https://play.google.com/store/apps/details?id=com.zenlauncher.zenmode',
@@ -26,7 +26,7 @@ export const PROFILE = {
   idea: { before: 'I build ', mark: 'innovative systems at scale', after: '. Platforms at PayPal by day, ZenMode OS on my own time.' },
   intro:
     'I build cloud platforms by day and a calmer phone by night. At PayPal I work on multi-tenant platforms and cloud migration. On my own time I build ZenMode OS, an open-source Android launcher that helps people scroll less, together.',
-  email: 'srinivasthammana.eng@gmail.com',
+  email: 'srinivas@thammanasrinivas.com',
   location: 'Chennai, India',
 };
 
