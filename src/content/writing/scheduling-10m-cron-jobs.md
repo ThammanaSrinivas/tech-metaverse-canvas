@@ -5,7 +5,7 @@ When we picked it up, it had two limits users kept running into:
 - **The smallest interval was one hour.** Anything that had to run more often simply couldn't.
 - **Each project had a cap on how many crons it could create.**
 
-The goal was to remove both: run jobs **down to every minute, for everyone**, with **no per-project limit**, at platform scale. I led a team of three, and it took about six months.
+The goal was to remove both: run jobs **down to every minute, for everyone**, with **no per-project limit**, at platform scale. A small team of us built it over about six months; I designed the scheduler and drove it through to production.
 
 ## Why per-minute is not "just run it more often"
 

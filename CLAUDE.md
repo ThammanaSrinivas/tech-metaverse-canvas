@@ -51,6 +51,9 @@ another account is the default, else it fails with "Failed to get Firebase proje
   never hardcode copy in a component.
 - **Never invent numbers, labels or claims.** Only use figures the owner gave (resume / LinkedIn /
   answers). If a visual needs a unit you don't have, say less rather than make one up.
+- **Claim only roles actually held.** On the Zoho scheduler, Srinivas designed it and *informally*
+  led a small team: never write "led a team of three" or imply a formal lead title ("designed the
+  scheduler and drove it through to production" and "mentored" are accurate).
 - **Zoho internals:** publish only what is public (the Catalyst job-scheduling docs) or what the owner
   wrote for the article. The owner said Redis sorted sets must not be mentioned publicly.
 - Use they/them for anyone whose pronouns aren't stated.
