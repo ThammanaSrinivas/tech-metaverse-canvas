@@ -40,7 +40,7 @@ export type Post = Article | ExternalPost;
  * `import.meta.env.DEV || !DRAFT_X` folds to `false` for a draft: its whole entry (title, summary,
  * and the Markdown import) is dropped from the bundle, not just hidden. Keep each flag a literal.
  */
-const DRAFT_SCHEDULING = true;
+const DRAFT_SCHEDULING = false;
 
 const ALL: Post[] = [
   ...(import.meta.env.DEV || !DRAFT_SCHEDULING
@@ -51,8 +51,8 @@ const ALL: Post[] = [
           title: 'Scheduling *10M* cron jobs a day',
           date: '2026-10-01',
           summary:
-            'Taking a serverless platform’s scheduler from hourly to per-minute: Redis sorted sets to find due jobs, batching to cut Kafka messages by 99.5%, and dispatch from 50ms to 5ms.',
-          tags: ['Distributed systems', 'Kafka', 'Redis'],
+            'Taking a serverless platform’s scheduler from hourly to per-minute for every user: one if-condition that cut Kafka messages by 99.5%, persistent queues so no job is lost, and code clean enough that a race-condition fix took two lines.',
+          tags: ['Distributed systems', 'Kafka', 'Leadership'],
           draft: DRAFT_SCHEDULING,
           body: scheduling10m,
         },
