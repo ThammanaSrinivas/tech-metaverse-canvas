@@ -1,6 +1,6 @@
-# srinivas-t.web.app
+# thammanasrinivas.com
 
-Personal site of Thammana Srinivas, live at **https://srinivas-t.web.app**.
+Personal site of Thammana Srinivas, live at **https://thammanasrinivas.com** (also served at https://srinivas-t.web.app).
 Styled with the ZenMode OS v3 design system (paper / ink, zen green, Clash Display · Geist · Departure Mono).
 
 ## What's on the page

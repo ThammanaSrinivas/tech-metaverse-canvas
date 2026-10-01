@@ -1,7 +1,7 @@
 // Derives the full design-token set from a five-colour Palette. Every text pairing is
 // pushed to WCAG AA (4.5:1) by adjusting lightness only, so any palette you try stays
 // readable; raw brand colours are kept for fills (stars, tiles, highlights).
-import { bestOn, contrast, hslChannels, mix, readableOn, rgbChannels, type Hex } from './color';
+import { bestOn, contrast, hslChannels, mix, readableOn, rgbChannels, toHsl, type Hex } from './color';
 import { SYSTEM, ZENMODE_COLORS, type Palette } from './palettes';
 
 const WHITE = SYSTEM.white;
@@ -82,6 +82,19 @@ function scope(p: Palette, mode: 'light' | 'dark'): Scope {
   };
 }
 
+/**
+ * Does the highlighter dot stand out on the logo tile? A dot isn't text: enough brightness
+ * contrast works, and so does a clearly different, saturated hue (orange on jade is ~1.4:1 by
+ * luminance yet unmistakable).
+ */
+export function dotReads(dot: Hex, tile: Hex): boolean {
+  if (contrast(dot, tile) >= 1.6) return true;
+  const [h1, s1] = toHsl(dot);
+  const [h2, s2] = toHsl(tile);
+  const hueGap = Math.min(Math.abs(h1 - h2), 360 - Math.abs(h1 - h2));
+  return contrast(dot, tile) >= 1.2 && hueGap >= 60 && s1 >= 0.35 && s2 >= 0.25;
+}
+
 export function deriveTheme(p: Palette): Theme {
   return {
     palette: p,
@@ -91,7 +104,7 @@ export function deriveTheme(p: Palette): Theme {
     monoTile: p.primary,
     monoInk: bestOn(p.primary, [p.dark, p.light]),
     highlightInk: bestOn(p.highlight, [p.dark, p.light, SYSTEM.black, SYSTEM.white]),
-    monoDot: contrast(p.highlight, p.primary) >= 1.6 ? p.highlight : bestOn(p.primary, [p.dark, p.light]),
+    monoDot: dotReads(p.highlight, p.primary) ? p.highlight : bestOn(p.primary, [p.dark, p.light]),
   };
 }
 

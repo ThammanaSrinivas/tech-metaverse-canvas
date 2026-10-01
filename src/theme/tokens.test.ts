@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ACTIVE_PALETTE, ACTIVE_RATIO, ACTIVE_TYPE, PALETTES, THEMES, TYPE_SCALE, TYPOGRAPHY, findPalette, findType, type Palette } from './palettes';
-import { contrastReport, deriveTheme, themeCss } from './tokens';
+import { contrastReport, deriveTheme, dotReads, themeCss } from './tokens';
 import { contrast, readableOn } from './color';
 import { autoAssign } from '@/components/PalettePanel';
 import { googleFontsUrl, paletteFromParam, paletteToParam, scaleCss, typeCss } from './runtime';
@@ -120,3 +120,13 @@ describe('type scale', () => {
     for (const r of TYPE_SCALE.ratios) expect(sizes(r.ratio).label).toBeGreaterThanOrEqual(11);
   });
 });
+
+describe('logo dot', () => {
+  it('keeps the highlighter dot when brightness or hue sets it apart, and falls back otherwise', () => {
+    expect(deriveTheme(findPalette('Calm Glow')!).monoDot).toBe('#FE5D26'); // orange on jade: 1.4:1, 150° apart
+    expect(deriveTheme(findPalette('Calm')!).monoDot).toBe('#FE5D26');
+    expect(dotReads('#5DBF9F', '#5BBF9E')).toBe(false); // same colour: no dot
+    expect(dotReads('#9A9A9A', '#8C8C8C')).toBe(false); // greys: no hue to lean on
+  });
+});
+

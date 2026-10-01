@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Personal site (https://srinivas-t.web.app) built with React 18, TypeScript, Vite and Tailwind, styled with the ZenMode OS v3 design system. Deployed to Firebase Hosting (project `srinivas-portfolio-1481f`, site `srinivas-t`).
+Personal site (https://thammanasrinivas.com; Firebase site `srinivas-t`, custom domain via Cloudflare DNS, records DNS-only) built with React 18, TypeScript, Vite and Tailwind, styled with the ZenMode OS v3 design system. Deployed to Firebase Hosting (project `srinivas-portfolio-1481f`, site `srinivas-t`).
 
 ## Commands
 

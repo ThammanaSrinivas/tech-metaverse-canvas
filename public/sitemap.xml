@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- One <url> per page in src/site/pages.ts (src/site/sitemap.test.ts keeps them in sync). -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://thammanasrinivas.com/</loc></url>
+  <url><loc>https://thammanasrinivas.com/zenmode</loc></url>
+  <url><loc>https://thammanasrinivas.com/work</loc></url>
+  <url><loc>https://thammanasrinivas.com/beyond</loc></url>
+  <url><loc>https://thammanasrinivas.com/lab</loc></url>
+  <url><loc>https://thammanasrinivas.com/time-machine</loc></url>
+  <url><loc>https://thammanasrinivas.com/explore</loc></url>
+  <url><loc>https://thammanasrinivas.com/contact</loc></url>
+</urlset>

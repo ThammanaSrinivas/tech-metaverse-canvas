@@ -16,7 +16,7 @@
     "stone": { "50": "#FAF9F5", "100": "#F2F1ED", "200": "#DBD9D2", "300": "#C9C8C1", "400": "#9E9E98", "500": "#70726A", "600": "#5E6058", "700": "#2B2B2B", "800": "#222222", "900": "#1A1A1A", "950": "#111111" },
     "tokens": { "background": "#F2F1ED", "foreground": "#111111", "card": "#FAF9F5", "card-foreground": "#111111", "popover": "#FFFFFF", "popover-foreground": "#111111", "primary": "#0F7A18", "primary-foreground": "#F0FFF0", "secondary": "#EAE8E1", "secondary-foreground": "#111111", "muted": "#EAE8E1", "muted-foreground": "#65675F", "accent": "#E5F6E6", "accent-foreground": "#0F7A18", "border": "#DBD9D2", "input": "#DBD9D2", "ring": "#0F7A18", "tint": "#E5F6E6", "tint-line": "#CBE7CD", "reward": "#7A5A00", "reward-surface": "#FFF8E0", "node": "#0F7A18" }
   },
-  "active": { "palette": "Calm", "type": "Builder", "ratio": 1.25 },
+  "active": { "palette": "Calm Glow", "type": "Builder", "ratio": 1.25 },
   "typeScale": {
     "base": 16,
     "ratios": [

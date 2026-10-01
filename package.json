@@ -11,7 +11,7 @@
     "lint:colors": "node scripts/check-colors.mjs",
     "preview": "vite preview",
     "test": "vitest",
-    "test:unit": "vitest run --passWithNoTests --reporter=verbose src/components/__tests__/*.test.tsx src/contexts/__tests__/*.test.tsx src/lib/*.test.ts src/theme/*.test.ts",
+    "test:unit": "vitest run --passWithNoTests --reporter=verbose src/components/__tests__/*.test.tsx src/contexts/__tests__/*.test.tsx src/lib/*.test.ts src/theme/*.test.ts src/site/*.test.ts",
     "test:functional": "vitest run --passWithNoTests --reporter=verbose src/components/__tests__/*.functional.test.tsx",
     "test:performance": "vitest run --passWithNoTests --reporter=verbose src/components/__tests__/*.performance.test.tsx",
     "test:all": "npm run test:unit && npm run test:functional && npm run test:performance",

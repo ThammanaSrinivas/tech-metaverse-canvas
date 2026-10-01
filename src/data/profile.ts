@@ -4,6 +4,9 @@
 export const RESUME_URL =
   'https://drive.google.com/file/d/1dl6EqMYEaTCljbrqoKPbaH48pccvPxcX/view?usp=sharing';
 
+/** The site's own address (custom domain on Firebase Hosting; srinivas-t.web.app still serves). */
+export const SITE_URL = 'https://thammanasrinivas.com';
+
 export const LINKS = {
   github: 'https://github.com/ThammanaSrinivas',
   linkedin: 'https://www.linkedin.com/in/thammanasrinivas/',
