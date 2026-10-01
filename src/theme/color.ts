@@ -1,6 +1,8 @@
 // Small colour toolkit for the palette generator: hex ↔ rgb/hsl, mixing, WCAG contrast,
 // and "shade until readable" searches that keep a colour's hue and saturation.
 
+import { SYSTEM } from './palettes';
+
 export type Hex = string;
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -89,7 +91,7 @@ export function readableOn(color: Hex, backgrounds: Hex[], min = 4.5): Hex {
     const c = fromHsl(h, s, clamp01(l + (lighten ? 1 : -1) * step * 0.01));
     if (passes(c)) return c;
   }
-  return lighten ? '#FFFFFF' : '#000000';
+  return lighten ? SYSTEM.white : SYSTEM.black;
 }
 
 /** Whichever of the candidates reads best on the background. */

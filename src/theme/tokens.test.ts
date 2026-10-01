@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { PALETTES, type Palette } from './palettes';
+import { ACTIVE_PALETTE, ACTIVE_RATIO, ACTIVE_TYPE, PALETTES, THEMES, TYPE_SCALE, TYPOGRAPHY, findPalette, findType, type Palette } from './palettes';
 import { contrastReport, deriveTheme, themeCss } from './tokens';
 import { contrast, readableOn } from './color';
 import { autoAssign } from '@/components/PalettePanel';
-import { paletteFromParam, paletteToParam } from './runtime';
+import { googleFontsUrl, paletteFromParam, paletteToParam, scaleCss, typeCss } from './runtime';
 
 // Deliberately awkward inputs: pale accents, a near-black primary, a mid-grey light neutral.
 const AWKWARD: Palette[] = [
@@ -51,7 +51,7 @@ describe('palette panel auto-assign', () => {
 
 describe('share links', () => {
   it('round-trips a palette through the ?p= param', () => {
-    const calm = PALETTES[0];
+    const { why: _, ...calm } = findPalette('Calm')!;
     expect(paletteToParam(calm)).toBe('EDEBE6-403B33-94C7B6-D6E1C7-FE5D26');
     expect(paletteFromParam(paletteToParam(calm))).toEqual({ ...calm, name: 'Shared' });
   });
@@ -60,5 +60,63 @@ describe('share links', () => {
     expect(paletteFromParam('EDEBE6-403B33')).toBeUndefined();
     expect(paletteFromParam('zzzzzz-403B33-94C7B6-D6E1C7-FE5D26')).toBeUndefined();
     expect(paletteFromParam(null)).toBeUndefined();
+  });
+});
+
+describe('brand.json', () => {
+  it('names are unique and every combo points at a real palette and typography', () => {
+    for (const list of [PALETTES, TYPOGRAPHY, THEMES]) expect(new Set(list.map((x) => x.name)).size).toBe(list.length);
+    for (const c of THEMES) {
+      expect(findPalette(c.palette), c.name).toBeDefined();
+      expect(findType(c.type), c.name).toBeDefined();
+    }
+    expect(findPalette(ACTIVE_PALETTE)).toBeDefined();
+    expect(findType(ACTIVE_TYPE)).toBeDefined();
+  });
+
+  it('every palette colour is a hex', () => {
+    for (const p of PALETTES) for (const k of ['light', 'dark', 'primary', 'secondary', 'highlight'] as const) expect(p[k], `${p.name}.${k}`).toMatch(/^#[0-9A-F]{6}$/);
+  });
+
+  it('typography emits font vars and a Google Fonts URL only when needed', () => {
+    const zen = findType('Zen')!;
+    expect(typeCss(zen)).toContain('--font-display: "Clash Display"');
+    expect(googleFontsUrl(zen)).toBeNull();
+    expect(googleFontsUrl(findType('Editorial')!)).toBe(
+      'https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap'
+    );
+  });
+});
+
+describe('type scale', () => {
+  const sizes = (ratio: number, type = findType('Zen')!) => {
+    const css = scaleCss(TYPE_SCALE, ratio, type);
+    // desktop size = the clamp max (or the fixed value)
+    return Object.fromEntries(
+      [...css.matchAll(/--fs-(\w+): (?:clamp\([^,]+,[^,]+, )?([\d.]+)rem/g)].map((m) => [m[1], parseFloat(m[2]) * 16])
+    );
+  };
+
+  it('the active ratio is one of the offered ratios', () => {
+    expect(TYPE_SCALE.ratios.map((r) => r.ratio)).toContain(ACTIVE_RATIO);
+  });
+
+  it.each(TYPE_SCALE.ratios.map((r) => [r.name, r.ratio] as const))('%s keeps a strict hierarchy display > title > h1 > h2 > h3 ≥ lead > body > small > label', (_, ratio) => {
+    for (const t of TYPOGRAPHY) {
+      const s = sizes(ratio, t);
+      expect(s.display).toBeGreaterThan(s.title);
+      expect(s.title).toBeGreaterThan(s.h1);
+      expect(s.h1).toBeGreaterThan(s.h2);
+      expect(s.h2).toBeGreaterThan(s.h3);
+      expect(s.h3).toBeGreaterThanOrEqual(s.lead);
+      expect(s.lead).toBeGreaterThan(s.body);
+      expect(s.body).toBeGreaterThan(s.small);
+      expect(s.small).toBeGreaterThan(s.label);
+      expect(s.body).toBe(16);
+    }
+  });
+
+  it('labels stay legible (≥ 11px) at every ratio', () => {
+    for (const r of TYPE_SCALE.ratios) expect(sizes(r.ratio).label).toBeGreaterThanOrEqual(11);
   });
 });

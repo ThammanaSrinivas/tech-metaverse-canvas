@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { complete, resolvePath, runCommand } from './zenshell';
 import { LINKS } from '@/data/profile';
+import { PAGES } from '@/site/pages';
 
 const ctx = { history: [] as string[] };
 const text = (cmd: string) =>
@@ -19,7 +20,7 @@ describe('zen shell', () => {
     expect(text('ls')).toContain('about.md');
     const cd = runCommand('cd work', ctx);
     expect(cd.cwd).toBe('~/work');
-    expect(cd.effect).toEqual({ type: 'scroll', id: 'work' });
+    expect(cd.effect).toEqual({ type: 'go', to: '/work' });
     const inWork = { history: [], cwd: '~/work' };
     expect(runCommand('ls', inWork).lines.map((l) => ('text' in l ? l.text : ''))).toEqual(['paypal.md', 'zoho.md']);
     expect(runCommand('cat paypal.md', inWork).lines[0]).toEqual({ kind: 'accent', text: expect.stringContaining('PayPal') });
@@ -38,7 +39,7 @@ describe('zen shell', () => {
   it('greps across files and prints the tree', () => {
     expect(text('grep kafka')).toMatch(/work\/zoho\.md: .*Kafka/);
     expect(text('grep zzzz')).toContain('no matches');
-    expect(text('tree')).toMatch(/4 directories, \d+ files/);
+    expect(text('tree')).toMatch(new RegExp(`${PAGES.reduce((n, p) => n + p.shell.length, 0)} directories, \\d+ files`));
   });
 
   it('toggles stars and shows public ZenMode stats', () => {
@@ -57,10 +58,12 @@ describe('zen shell', () => {
     expect(runCommand('open nope', ctx).effect).toBeUndefined();
   });
 
-  it('scrolls to sections, including via aliases', () => {
-    expect(runCommand('cd lab', ctx).effect).toEqual({ type: 'scroll', id: 'lab' });
-    expect(runCommand('goto contact', ctx).effect).toEqual({ type: 'scroll', id: 'contact' });
-    expect(runCommand('cd', { history: [], cwd: '~/lab' })).toMatchObject({ cwd: '~', effect: { type: 'scroll', id: 'home' } });
+  it('opens pages, including via aliases', () => {
+    expect(runCommand('cd lab', ctx).effect).toEqual({ type: 'go', to: '/lab' });
+    expect(runCommand('goto contact', ctx).effect).toEqual({ type: 'go', to: '/contact' });
+    expect(runCommand('cd toolbox', ctx).effect).toEqual({ type: 'go', to: '/work#toolbox' });
+    expect(runCommand('cd explore', { history: [], cwd: '~/work' })).toMatchObject({ cwd: '~/explore', effect: { type: 'go', to: '/explore' } });
+    expect(runCommand('cd', { history: [], cwd: '~/lab' })).toMatchObject({ cwd: '~', effect: { type: 'go', to: '/' } });
     expect(text('cd nowhere')).toContain('no such directory');
   });
 
@@ -97,5 +100,18 @@ describe('zen shell', () => {
     expect(complete('cat ab')).toBe('cat about.md');
     expect(complete('cat pay', { history: [], cwd: '~/work' })).toBe('cat paypal.md');
     expect(complete('t')).toBe('t'); // ambiguous: timemachine, top, tree
+  });
+
+  it('every page implements the shell: its directory is listed, readable and opens the page', () => {
+    const home = text('ls');
+    for (const page of PAGES) {
+      const dir = page.shell[0].name;
+      expect(home, page.id).toContain(`${dir}/`);
+      const inside = { history: [], cwd: `~/${dir}` };
+      const files = runCommand('ls', inside).lines.map((l) => ('text' in l ? l.text : ''));
+      expect(files.length, `${page.id} publishes no files`).toBeGreaterThan(0);
+      expect(runCommand(`cat ${files[0]}`, inside).lines[0]?.kind, `${page.id}/${files[0]}`).not.toBe('error');
+      expect(runCommand(`cd ${dir}`, ctx).effect).toEqual({ type: 'go', to: page.shell[0].route ?? page.path });
+    }
   });
 });

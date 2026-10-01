@@ -18,7 +18,7 @@ const JobCard: React.FC<{ job: Job }> = ({ job }) => {
             {now && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />}
             {now ? 'Now' : 'Previously'}
           </span>
-          <h3 className="mt-5 text-4xl">{job.company}</h3>
+          <h3 className="mt-5 text-h2">{job.company}</h3>
           <p className="mt-1 text-muted-foreground">{job.role}</p>
           <p className={`zen-label mt-3 ${now ? 'text-primary' : 'text-muted-foreground'}`}>{job.period}</p>
           {job.earlier && <p className="mt-2 text-xs text-muted-foreground">{job.earlier}</p>}
@@ -27,7 +27,7 @@ const JobCard: React.FC<{ job: Job }> = ({ job }) => {
         <div className="grid gap-3 sm:grid-cols-3">
           {job.stats.map((s) => (
             <div key={s.label} className={`rounded-[20px] border p-5 transition-transform duration-300 hover:-translate-y-1 ${now ? 'border-tint-line bg-card' : 'bg-secondary/60'}`}>
-              <CountUp value={s.value} className={`block font-mono text-4xl md:text-[2.75rem] ${now ? 'text-primary' : 'text-foreground'}`} />
+              <CountUp value={s.value} className={`block font-mono text-h2 ${now ? 'text-primary' : 'text-foreground'}`} />
               <p className="mt-4 font-medium">{s.label}</p>
               <p className="text-sm text-muted-foreground">{s.sub}</p>
             </div>
@@ -62,8 +62,8 @@ const JobCard: React.FC<{ job: Job }> = ({ job }) => {
 };
 
 const WorkExperience: React.FC = () => (
-  <Section id="work">
-    <SectionHeader index="02" title="Day job" kicker="Platforms that quietly run at scale." />
+  <Section id="work" className="pt-8 md:pt-10">
+    <SectionHeader title="Day job" />
     <div className="grid gap-4">
       {JOBS.map((job, i) => (
         <Reveal key={job.id} delay={0.08 * i}>

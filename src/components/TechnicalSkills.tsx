@@ -4,7 +4,7 @@ import { Reveal, Section, SectionHeader } from '@/components/zen/primitives';
 
 const TechnicalSkills: React.FC = () => (
   <Section id="toolbox">
-    <SectionHeader index="03" title="Toolbox" />
+    <SectionHeader title="Toolbox" kicker="What I reach for, grouped by the job it does." />
     <Reveal>
       <div className="zen-card divide-y px-5 md:px-7">
         {TOOLBOX.map(({ group, items }) => (

@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Terminal, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { JOBS, LAB, PROFILE } from '@/data/profile';
 import { complete, runCommand, SUGGESTIONS, type Line } from '@/lib/zenshell';
+import { PAGES } from '@/site/pages';
 import { emitZen, onZen } from '@/lib/zenEvents';
 import { setStarsEnabled, useStarsEnabled } from '@/lib/stars';
 import { Monogram } from '@/components/zen/primitives';
@@ -154,7 +156,33 @@ const renderLine = (line: Line, i: number, sk: Skin) => {
   );
 };
 
+/**
+ * Phones: a bottom sheet that sits above the on-screen keyboard. The visual viewport shrinks
+ * when the keyboard opens, so size and place the sheet from it. Desktop uses the CSS size.
+ */
+function useKeyboardAwareHeight(open: boolean): React.CSSProperties {
+  const [box, setBox] = useState<{ top: number; height: number } | null>(null);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!open || !vv || window.matchMedia('(min-width: 640px)').matches) return;
+    const update = () => {
+      const height = Math.min(vv.height - 16, Math.round(window.innerHeight * 0.78));
+      setBox({ top: vv.offsetTop + vv.height - height - 8, height });
+    };
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, [open]);
+  if (typeof window !== 'undefined' && window.matchMedia('(min-width: 640px)').matches) return {};
+  return box ? { top: box.top, height: box.height } : { bottom: 8, height: '78svh' };
+}
+
 const ZenShell: React.FC = () => {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [lines, setLines] = useState<Line[]>([]);
   const [booted, setBooted] = useState(false);
@@ -233,8 +261,8 @@ const ZenShell: React.FC = () => {
       case 'open':
         window.open(effect.url, '_blank', 'noopener,noreferrer');
         break;
-      case 'scroll':
-        document.getElementById(effect.id)?.scrollIntoView({ behavior: 'smooth' });
+      case 'go':
+        navigate(effect.to);
         break;
       case 'stars':
         setStarsEnabled(effect.value === 'toggle' ? !starsOn : effect.value);
@@ -251,28 +279,39 @@ const ZenShell: React.FC = () => {
     }
   };
 
+  // Editing actions, shared by the keyboard and the touch key row.
+  const completeInput = () => setInput((v) => complete(v, { history, cwd }));
+  const historyUp = () => {
+    if (!history.length) return;
+    const next = cursor === null ? history.length - 1 : Math.max(0, cursor - 1);
+    setCursor(next);
+    setInput(history[next]);
+  };
+  const historyDown = () => {
+    if (cursor === null) return;
+    const next = cursor + 1;
+    if (next >= history.length) {
+      setCursor(null);
+      setInput('');
+    } else {
+      setCursor(next);
+      setInput(history[next]);
+    }
+  };
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       exec(input);
       setInput('');
     } else if (e.key === 'Tab') {
       e.preventDefault();
-      setInput((v) => complete(v, { history, cwd }));
-    } else if (e.key === 'ArrowUp' && history.length) {
+      completeInput();
+    } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      const next = cursor === null ? history.length - 1 : Math.max(0, cursor - 1);
-      setCursor(next);
-      setInput(history[next]);
-    } else if (e.key === 'ArrowDown' && cursor !== null) {
+      historyUp();
+    } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      const next = cursor + 1;
-      if (next >= history.length) {
-        setCursor(null);
-        setInput('');
-      } else {
-        setCursor(next);
-        setInput(history[next]);
-      }
+      historyDown();
     } else if (e.key === 'l' && e.ctrlKey) {
       e.preventDefault();
       setLines([]);
@@ -280,6 +319,15 @@ const ZenShell: React.FC = () => {
       setOpen(false);
     }
   };
+
+  /** Runs a tap action without stealing focus from the input (keeps the keyboard up). */
+  const tap = (fn: () => void) => (e: React.PointerEvent | React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    fn();
+    inputRef.current?.focus();
+  };
+  const viewport = useKeyboardAwareHeight(open);
 
   return (
     <>
@@ -317,8 +365,8 @@ const ZenShell: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-x-3 bottom-3 z-50 flex h-[72vh] flex-col overflow-hidden rounded-[22px] border font-mono text-[13px] leading-relaxed shadow-2xl shadow-black/40 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:h-[460px] sm:w-[600px]"
-            style={{ background: windowSk.bg, borderColor: windowSk.line, color: windowSk.text }}
+            className="fixed inset-x-2 z-50 flex flex-col overflow-hidden rounded-[22px] border font-mono text-[14px] leading-relaxed shadow-2xl shadow-black/40 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:top-auto sm:h-[460px] sm:w-[600px] sm:text-[13px]"
+            style={{ background: windowSk.bg, borderColor: windowSk.line, color: windowSk.text, ...viewport }}
             onClick={() => inputRef.current?.focus()}
           >
             <div className="flex items-center gap-2 border-b px-4 py-3" style={{ borderColor: windowSk.line, background: windowSk.raised }}>
@@ -352,31 +400,55 @@ const ZenShell: React.FC = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={onKeyDown}
-                  className="flex-1 bg-transparent outline-none"
+                  className="min-w-0 flex-1 bg-transparent text-[16px] outline-none sm:text-[13px]"
                   style={{ color: windowSk.text, caretColor: windowSk.accent }}
                   spellCheck={false}
                   autoCapitalize="off"
                   autoComplete="off"
+                  autoCorrect="off"
+                  enterKeyHint="go"
                   aria-label="Shell command"
                 />
               </div>
             </div>
 
-            <div className="flex gap-2 overflow-x-auto border-t px-4 py-3" style={{ borderColor: windowSk.line }}>
-              {SUGGESTIONS.map((s) => (
-                <button
-                  key={s}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    exec(s);
-                    inputRef.current?.focus();
-                  }}
-                  className="shrink-0 rounded-lg border px-2.5 py-1 text-xs transition-colors hover:opacity-80"
-                  style={{ borderColor: windowSk.line, color: windowSk.muted }}
-                >
-                  {s}
-                </button>
-              ))}
+            <div className="border-t pb-[env(safe-area-inset-bottom)]" style={{ borderColor: windowSk.line }}>
+              {/* Touch keys: phones have no Tab or arrow keys. */}
+              <div className="flex gap-1.5 px-3 pt-3 sm:hidden">
+                {[
+                  { label: 'tab', run: completeInput },
+                  { label: '↑', run: historyUp },
+                  { label: '↓', run: historyDown },
+                  { label: 'clear', run: () => setLines([]) },
+                ].map((k) => (
+                  <button
+                    key={k.label}
+                    onPointerDown={tap(k.run)}
+                    className="h-10 flex-1 rounded-lg border text-xs"
+                    style={{ borderColor: windowSk.line, color: windowSk.text, background: windowSk.raised }}
+                    aria-label={k.label === '↑' ? 'previous command' : k.label === '↓' ? 'next command' : k.label}
+                  >
+                    {k.label}
+                  </button>
+                ))}
+              </div>
+              {/* One-tap commands, then every page from the site map. */}
+              <div className="flex gap-2 overflow-x-auto px-3 py-3 [scrollbar-width:none] sm:px-4">
+                {[...SUGGESTIONS, ...PAGES.map((p) => `cd ${p.shell[0].name}`)].map((cmd) => (
+                  <button
+                    key={cmd}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      exec(cmd);
+                      inputRef.current?.focus();
+                    }}
+                    className="h-9 shrink-0 rounded-lg border px-3 text-xs transition-colors hover:opacity-80 sm:h-auto sm:px-2.5 sm:py-1"
+                    style={{ borderColor: windowSk.line, color: cmd.startsWith('cd ') ? windowSk.accent : windowSk.muted }}
+                  >
+                    {cmd}
+                  </button>
+                ))}
+              </div>
             </div>
           </motion.div>
         )}

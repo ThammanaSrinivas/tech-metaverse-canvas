@@ -8,7 +8,9 @@ import {
   CommandItem,
   CommandSeparator,
 } from '@/components/ui/command';
-import { LAB, LINKS, SECTIONS } from '@/data/profile';
+import { useNavigate } from 'react-router-dom';
+import { LAB, LINKS } from '@/data/profile';
+import { PAGES } from '@/site/pages';
 import { emitZen } from '@/lib/zenEvents';
 import { Github, Hash, FileText, ExternalLink, Terminal, Swords } from 'lucide-react';
 
@@ -20,6 +22,7 @@ interface CommandPaletteProps {
 const projects = [{ name: 'zenmode', url: LINKS.zenmode }, ...LAB.map(({ name, url }) => ({ name, url }))];
 
 const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, onOpenChange }) => {
+  const navigate = useNavigate();
   const [internalOpen, setInternalOpen] = useState(false);
 
   const open = controlledOpen ?? internalOpen;
@@ -44,16 +47,13 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, o
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Jump to a section, project or action…" />
+      <CommandInput placeholder="Jump to a page, project or action…" />
       <CommandList>
         <CommandEmpty>Nothing here. Try “work” or “shell”.</CommandEmpty>
 
-        <CommandGroup heading="Sections">
-          {SECTIONS.map(({ id, label }) => (
-            <CommandItem
-              key={id}
-              onSelect={() => run(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }))}
-            >
+        <CommandGroup heading="Pages">
+          {PAGES.map(({ id, label, path }) => (
+            <CommandItem key={id} onSelect={() => run(() => navigate(path))}>
               <Hash className="mr-2 h-4 w-4 text-primary" />
               <span>{label}</span>
             </CommandItem>

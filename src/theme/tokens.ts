@@ -1,11 +1,11 @@
 // Derives the full design-token set from a five-colour Palette. Every text pairing is
 // pushed to WCAG AA (4.5:1) by adjusting lightness only, so any palette you try stays
 // readable; raw brand colours are kept for fills (stars, tiles, highlights).
-import { bestOn, contrast, hslChannels, mix, readableOn, type Hex } from './color';
-import type { Palette } from './palettes';
+import { bestOn, contrast, hslChannels, mix, readableOn, rgbChannels, type Hex } from './color';
+import { SYSTEM, ZENMODE_COLORS, type Palette } from './palettes';
 
-const WHITE = '#FFFFFF';
-const RED = '#C0392B';
+const WHITE = SYSTEM.white;
+const RED = SYSTEM.danger;
 
 /** One scope of tokens (light page or dark sections), as hex values. */
 export interface Scope {
@@ -38,6 +38,8 @@ export interface Theme {
   sky: [Hex, Hex, Hex, Hex]; // bright, primary, secondary, highlight
   monoTile: Hex;
   monoInk: Hex;
+  highlightInk: Hex; // text on a highlighter mark
+  monoDot: Hex; // the logo's dot: the highlighter, unless it vanishes on the tile
 }
 
 function scope(p: Palette, mode: 'light' | 'dark'): Scope {
@@ -88,6 +90,8 @@ export function deriveTheme(p: Palette): Theme {
     sky: [p.light, p.primary, p.secondary, p.highlight],
     monoTile: p.primary,
     monoInk: bestOn(p.primary, [p.dark, p.light]),
+    highlightInk: bestOn(p.highlight, [p.dark, p.light, SYSTEM.black, SYSTEM.white]),
+    monoDot: contrast(p.highlight, p.primary) >= 1.6 ? p.highlight : bestOn(p.primary, [p.dark, p.light]),
   };
 }
 
@@ -127,10 +131,15 @@ export function themeCss(t: Theme): string {
     ...shellVars('light', t.light),
     ['--ink-hex', t.palette.dark],
     ['--paper-hex', t.palette.light],
+    ['--highlight-ink', t.highlightInk],
+    // pure light and shadow for the surface finish, the cursor's resting ink
+    ['--white-rgb', rgbChannels(SYSTEM.white)],
+    ['--black-rgb', rgbChannels(SYSTEM.black)],
+    ['--cursor-hex', SYSTEM.cursor],
   ]
     .map(([k, v]) => `  ${k}: ${v};`)
     .join('\n');
-  return `:root {\n${decl(t.light)}\n${shared}\n}\n.dark {\n${decl(t.dark)}\n}\n`;
+  return `:root {\n${decl(t.light)}\n${shared}\n}\n.dark {\n${decl(t.dark)}\n}\n${zenCss()}`;
 }
 
 /** Contrast report for the palette panel. */
@@ -143,5 +152,12 @@ export function contrastReport(t: Theme) {
     rows.push({ label: `${mode}: muted text on card`, ratio: contrast(s.mutedForeground, s.card) });
     rows.push({ label: `${mode}: button label`, ratio: contrast(s.primaryForeground, s.primary) });
   }
+  rows.push({ label: 'text on highlighter', ratio: contrast(t.highlightInk, t.palette.highlight) });
   return rows;
+}
+
+/** The ZenMode OS scope (.zen): fixed product brand, independent of the personal palette. */
+export function zenCss(): string {
+  const vars = Object.entries(ZENMODE_COLORS.tokens).map(([k, v]) => `  --${k}: ${hslChannels(v)};`);
+  return `.zen {\n${vars.join('\n')}\n}\n`;
 }

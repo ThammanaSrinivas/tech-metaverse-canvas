@@ -4,7 +4,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useGitHubRepos, useRepoCommits, useRepoBranches, useCommitDetail } from '@/hooks/useCommitHistory';
 import { fetchCommitDetail } from '@/lib/github';
 import { useBrandTheme } from '@/theme/runtime';
-import { Reveal, Section, SectionHeader } from '@/components/zen/primitives';
+import { Reveal, Section } from '@/components/zen/primitives';
+import { useSettled } from '@/lib/idle';
 import RepoSelector from './RepoSelector';
 import TimelineScrubber from './TimelineScrubber';
 import CommitDetailPanel from './CommitDetailPanel';
@@ -36,6 +37,8 @@ const CommitTimeMachine: React.FC = () => {
   const nodeColor = dark.primary;
   const pickColor = dark.highlight;
 
+  // WebGL setup is a ~200ms main-thread task: start it after the page's entrance animation.
+  const sceneReady = useSettled(1000);
   const { data: repos, isLoading: reposLoading, error: reposError } = useGitHubRepos();
   const { data: branches, isLoading: branchesLoading } = useRepoBranches(selectedRepo);
   const { data: newestFirst, isLoading: commitsLoading, error: commitsError } = useRepoCommits(selectedRepo, 30, selectedBranch);
@@ -167,11 +170,6 @@ const CommitTimeMachine: React.FC = () => {
 
   return (
     <Section id="time-machine" ink>
-      <SectionHeader
-        index="05"
-        title="Time Machine"
-        kicker="Fly through the last 30 commits of my public repos. Drag to orbit, click a node for the diff."
-      />
 
       {error ? (
         <div className="zen-card flex flex-col items-center gap-3 px-6 py-16 text-center">
@@ -271,7 +269,11 @@ const CommitTimeMachine: React.FC = () => {
                     ))}
                   </ol>
                 ) : (
+                  !sceneReady ? (
+                    <div className="h-[320px] w-full animate-pulse rounded-[20px] border bg-secondary/50 md:h-[420px]" />
+                  ) : (
                   <Suspense fallback={<div className="h-[320px] w-full animate-pulse rounded-[20px] border bg-secondary/50 md:h-[420px]" />}>
+                  <div className="animate-fade-in">
                   <CommitTimelineScene
                     commits={commits}
                     color={nodeColor}
@@ -282,7 +284,9 @@ const CommitTimeMachine: React.FC = () => {
                     onCommitHover={setHoveredCommitIndex}
                     onCommitClick={openDetail}
                   />
+                  </div>
                   </Suspense>
+                  )
                 )
               ) : (
                 <div className="flex h-[320px] w-full items-center justify-center rounded-[20px] border">

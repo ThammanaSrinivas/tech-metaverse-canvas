@@ -1,6 +1,7 @@
 // Command interpreter for the zen shell. Pure: takes a command line and the current
 // directory, returns lines to print, an optional side effect, and the new directory.
-import { JOBS, LAB, LINKS, PROFILE, SECTIONS, TOOLBOX, ZENMODE } from '@/data/profile';
+import { JOBS, LAB, LINKS, PROFILE, TOOLBOX, ZENMODE } from '@/data/profile';
+import { PAGES, SHELL_HOME, pathFor, type ShellFile } from '@/site/pages';
 
 export type LineKind = 'out' | 'accent' | 'muted' | 'reward' | 'error' | 'cmd';
 
@@ -11,7 +12,7 @@ export type Line =
 
 export type Effect =
   | { type: 'open'; url: string }
-  | { type: 'scroll'; id: string }
+  | { type: 'go'; to: string }
   | { type: 'stars'; value: boolean | 'toggle' }
   | { type: 'duel' }
   | { type: 'clear' }
@@ -31,72 +32,23 @@ export interface ShellContext {
 }
 
 const t = (kind: LineKind, text: string): Line => ({ kind, text });
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 // ---------------------------------------------------------------- virtual filesystem
-interface File {
-  body: string;
-  url?: string;
-}
+// Built from the site map: every page publishes its own directories (SitePage.shell), so a new
+// page shows up in ls/cd/cat/tree/grep without touching the shell.
+type File = ShellFile;
 interface Dir {
   files: Record<string, File>;
   dirs: string[];
-  section?: string;
+  /** Route `cd` opens. */
+  route: string;
 }
 
-const job = (id: string) => JOBS.find((j) => j.id === id)!;
-const jobFile = (id: string): File => {
-  const j = job(id);
-  return {
-    body: [
-      `# ${j.company}: ${j.role} (${j.period})`,
-      '',
-      ...j.stats.map((s) => `${s.value.padEnd(7)}${s.label} (${s.sub})`),
-      '',
-      ...j.highlights.map((h) => `- ${h.title} ${h.body}`),
-      ...(j.earlier ? ['', j.earlier] : []),
-    ].join('\n'),
-  };
-};
+const PAGE_DIRS = PAGES.flatMap((p) => p.shell.map((d) => ({ ...d, route: d.route ?? p.path })));
 
 const FS: Record<string, Dir> = {
-  '~': {
-    dirs: ['zenmode', 'work', 'toolbox', 'lab'],
-    files: {
-      'about.md': { body: `# ${PROFILE.name}\n\n${PROFILE.tagline}\n\n${PROFILE.intro}` },
-      'contact.txt': { body: `email     ${PROFILE.email}\nlinkedin  ${LINKS.linkedin}\ngithub    ${LINKS.github}`, url: LINKS.email },
-      'resume.pdf': { body: '', url: LINKS.resume },
-    },
-  },
-  '~/zenmode': {
-    section: 'zenmode',
-    dirs: [],
-    files: {
-      'README.md': { body: `# ZenMode OS\nQuiet the noise, together.\n\n${ZENMODE.pitch}\n\n★ ${ZENMODE.award}`, url: LINKS.zenmode },
-      'stats.txt': {
-        body: ZENMODE.stats.map((s) => `${`${s.prefix ?? ''}${s.value}${s.unit}`.padEnd(7)}${s.label} (${s.sub})`).join('\n'),
-        url: LINKS.producthunt,
-      },
-      'features.txt': { body: ZENMODE.features.map((f) => `${f.name.padEnd(11)}${f.desc}`).join('\n') },
-    },
-  },
-  '~/work': {
-    section: 'work',
-    dirs: [],
-    files: Object.fromEntries(JOBS.map((j) => [`${j.id}.md`, jobFile(j.id)])),
-  },
-  '~/toolbox': {
-    section: 'toolbox',
-    dirs: [],
-    files: Object.fromEntries(TOOLBOX.map((g) => [`${slug(g.group)}.txt`, { body: g.items.join('\n') }])),
-  },
-  '~/lab': {
-    section: 'lab',
-    dirs: [],
-    files: Object.fromEntries(
-      LAB.map((p) => [`${p.name}.md`, { body: `# ${p.name}\n\n${p.blurb}\n\n[${p.tags.join(', ')}]\n${p.url}`, url: p.url }])
-    ),
-  },
+  '~': { dirs: PAGE_DIRS.map((d) => d.name), files: SHELL_HOME, route: '/' },
+  ...Object.fromEntries(PAGE_DIRS.map((d) => [`~/${d.name}`, { dirs: [], files: d.files, route: d.route }])),
 };
 
 /** Resolve a path relative to cwd. Returns a normalised "~/…" path, or null if it escapes home. */
@@ -198,16 +150,16 @@ const COMMANDS: Record<string, Command> = {
     },
   },
   cd: {
-    help: 'change directory (scrolls to that section)',
+    help: 'change directory (opens that page)',
     args: pathArgs,
     run: ([arg], ctx) => {
       const target = resolvePath(cwdOf(ctx), arg ?? '~');
       if (target && FS[target]) {
-        return { lines: [], cwd: target, effect: { type: 'scroll', id: FS[target].section ?? 'home' } };
+        return { lines: [], cwd: target, effect: { type: 'go', to: FS[target].route } };
       }
-      // Sections without a folder (time-machine, contact) still work as jump targets.
-      const section = SECTIONS.find((s) => s.id === arg?.toLowerCase().replace(/\/$/, ''));
-      if (section) return { lines: [], effect: { type: 'scroll', id: section.id } };
+      // Page ids work as jump targets from anywhere (cd explore inside ~/work).
+      const page = PAGES.find((p) => p.id === arg?.toLowerCase().replace(/\/$/, ''));
+      if (page) return { lines: [], cwd: `~/${page.shell[0].name}`, effect: { type: 'go', to: page.path } };
       if (target === null) return { lines: [t('error', 'cd: nothing above ~. this is home.')] };
       return { lines: [t('error', `cd: no such directory: ${arg}`)] };
     },
@@ -286,7 +238,7 @@ const COMMANDS: Record<string, Command> = {
             ...(which ? j.highlights.map((h) => t('muted', `  - ${h.title} ${h.body}`)) : []),
           ])
           .concat(which ? [] : [t('muted', 'details: work paypal · cat work/zoho.md')]),
-        effect: { type: 'scroll', id: 'work' },
+        effect: { type: 'go', to: pathFor('work') },
       };
     },
   },
@@ -298,7 +250,7 @@ const COMMANDS: Record<string, Command> = {
         ...ZENMODE.stats.map((s) => t('out', `  ${`${s.prefix ?? ''}${s.value}${s.unit}`.padEnd(7)}${s.label} (${s.sub})`)),
         t('reward', `  ★ ${ZENMODE.award}`),
       ],
-      effect: { type: 'scroll', id: 'zenmode' },
+      effect: { type: 'go', to: pathFor('zenmode') },
     }),
   },
   zenmode: { help: 'the launcher I build', run: (_, ctx) => COMMANDS.cat.run(['~/zenmode/README.md'], ctx) },
@@ -342,7 +294,7 @@ const COMMANDS: Record<string, Command> = {
   duel: { help: 'challenge me to a coding duel', run: () => ({ lines: [t('reward', '⚔ entering the arena…')], effect: { type: 'duel' } }) },
   timemachine: {
     help: 'fly through my commits in 3D',
-    run: () => ({ lines: [t('muted', 'warming up the flux capacitor…')], effect: { type: 'scroll', id: 'time-machine' } }),
+    run: () => ({ lines: [t('muted', 'warming up the flux capacitor…')], effect: { type: 'go', to: pathFor('time-machine') } }),
   },
   history: {
     help: 'what you typed',

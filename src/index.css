@@ -7,6 +7,7 @@
  *  - Personal: generated from a five-colour palette (src/theme). Swap palettes there.
  *  - ZenMode OS v3 (.zen below): paper / ink / zen green / amber, from zenmode.figmatokens.json.
  *    Only the ZenMode section uses it, so the product is the one vivid green on the page.
+ * Every colour comes from src/theme/brand.json (npm run lint:colors enforces it).
  * Values are HSL channels so Tailwind opacity modifiers (bg-primary/10) keep working.
  */
 @font-face {
@@ -22,6 +23,37 @@
   font-display: swap;
 }
 @font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('/fonts/BricolageGrotesque-Variable.woff2') format('woff2');
+  font-weight: 400 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('/fonts/InstrumentSerif-Italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope';
+  src: url('/fonts/Manrope-Variable.woff2') format('woff2');
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Mono';
+  src: url('/fonts/SpaceMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Mono';
+  src: url('/fonts/SpaceMono-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
   font-family: 'Departure Mono';
   src: url('/fonts/DepartureMono-Regular.otf') format('opentype');
   font-weight: 400;
@@ -30,36 +62,27 @@
 
 @layer base {
   /* Personal colour tokens (:root) and the dark-section scope (.dark) are generated at runtime
-     from src/theme/palettes.ts by src/theme/tokens.ts, into <style id="palette-tokens">. */
+     from src/theme/brand.json by src/theme/tokens.ts, into <style id="palette-tokens">. */
   :root {
     --radius: 0.75rem;              /* shadcn primitives; cards use rounded-[20px] */
+    /* Typography defaults; the brand lab overrides these from brand.json (runtime.ts typeCss). */
+    --display-weight: 700;
+    --font-display: "Bricolage Grotesque", "Manrope", system-ui, sans-serif;
+    --font-accent: "Instrument Serif", Georgia, serif;
+    --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
 
   /* ZenMode OS v3, scoped to the ZenMode section. */
   .zen {
-    --background: 48 16% 94%;       /* paper.base  #F2F1ED */
-    --foreground: 0 0% 7%;          /* ink         #111111 */
-    --card: 48 33% 97%;             /* paper.raised #FAF9F5 */
-    --card-foreground: 0 0% 7%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 7%;
-    --primary: 125 78% 27%;         /* zen.700     #0F7A18 */
-    --primary-foreground: 120 100% 97%;
-    --secondary: 45 16% 90%;
-    --secondary-foreground: 0 0% 7%;
-    --muted: 45 16% 90%;
-    --muted-foreground: 77 4% 39%;  /* stone.560 */
-    --accent: 124 47% 93%;
-    --accent-foreground: 125 78% 27%;
-    --border: 47 11% 84%;
-    --input: 47 11% 84%;
-    --ring: 125 78% 27%;
-    --tint: 124 47% 93%;            /* zen.050 */
-    --tint-line: 124 36% 85%;
-    --reward: 44 100% 24%;          /* amber.800 */
-    --reward-surface: 46 100% 94%;
-    --node: 125 78% 27%;
+    /* colour tokens are generated from brand.json zenmode.tokens (tokens.ts zenCss) */
+    --font-display: "Clash Display", "Geist", system-ui, sans-serif;
+    --font-sans: "Geist", system-ui, sans-serif;
+    --font-mono: "Departure Mono", ui-monospace, monospace;
+    --display-weight: 500;
+    --font-accent: var(--font-display);
     color: hsl(var(--foreground));
+    font-family: var(--font-sans);
   }
 
   * {
@@ -73,15 +96,29 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    /* a faint wash of the palette's own tints, so the page has light rather than a flat fill */
+    background-image:
+      radial-gradient(1100px 560px at 88% -6%, hsl(var(--tint) / 0.9), transparent 70%),
+      radial-gradient(900px 520px at -12% 22%, hsl(var(--reward-surface) / 0.7), transparent 70%);
+    background-repeat: no-repeat;
     overflow-x: hidden;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
+  h1, h2, h3, .font-display {
+    font-weight: var(--display-weight);
+  }
   h1, h2, h3 {
     @apply font-display;
-    font-weight: 500;
     letter-spacing: -0.01em;
   }
+
+  /* Details: balanced headlines, no orphaned last words, brand-tinted selection and scrollbar. */
+  h1, h2, h3 { text-wrap: balance; }
+  p, li { text-wrap: pretty; }
+  ::selection { background: hsl(var(--highlight) / 0.32); }
+  html { scrollbar-width: thin; scrollbar-color: hsl(var(--border)) transparent; }
+  a[data-magnet]:active, button[data-magnet]:active { filter: brightness(0.94); }
 
   *:focus-visible {
     outline: 2px solid hsl(var(--ring));
@@ -119,12 +156,12 @@
 .zm-cur.typing { opacity: 0; }
 .zm-cur-in { position: absolute; left: 0; top: 0; will-change: transform; }
 .zm-cur svg { position: absolute; left: -24px; top: -24px; display: block; overflow: visible; transition: opacity 200ms ease; }
-.zm-cur-ring { fill: none; stroke: #12160F; stroke-width: 1.25; stroke-linecap: round; }
-.zm-cur-dot { fill: #12160F; }
+.zm-cur-ring { fill: none; stroke: var(--cursor-hex); stroke-width: 1.25; stroke-linecap: round; }
+.zm-cur-dot { fill: var(--cursor-hex); }
 .zm-cur.down svg { opacity: .55; }
 .zm-cur-lab {
   position: absolute; left: 28px; top: -7px;
-  font-family: "Departure Mono", ui-monospace, monospace; font-size: 10px; letter-spacing: .14em;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em;
   text-transform: uppercase; white-space: nowrap; opacity: 0; transition: opacity 240ms ease;
 }
 .zm-cur.say .zm-cur-lab { opacity: .72; }
@@ -163,7 +200,58 @@
   }
 
   .zen-tile {
-    @apply rounded-[22px] border bg-card transition-colors duration-200;
+    @apply relative isolate rounded-[22px] border bg-card transition-[color,background-color,border-color,transform,box-shadow] duration-300 ease-out;
+  }
+
+  /*
+   * Finish: flat colour reads matte, so light has to catch the surfaces. Every card gets a soft
+   * top-light sheen, a 1px inner highlight on its top edge and a long, faint shadow; tiles add a
+   * spotlight that follows the cursor (--mx/--my from lib/spotlight.ts). Palette-agnostic: it is
+   * all white light and the palette's own foreground/primary. The ZenMode section opts out.
+   */
+  .zen-tile, .zen-card {
+    background-image: linear-gradient(180deg, rgb(var(--white-rgb) / 0.6), rgb(var(--white-rgb) / 0) 48%);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--white-rgb) / 0.75),
+      0 1px 2px hsl(var(--foreground) / 0.04),
+      0 12px 32px -24px hsl(var(--foreground) / 0.3);
+  }
+  .dark .zen-tile, .dark .zen-card, .zen-tile.dark {
+    background-image: linear-gradient(180deg, rgb(var(--white-rgb) / 0.07), rgb(var(--white-rgb) / 0) 48%);
+    box-shadow: inset 0 1px 0 rgb(var(--white-rgb) / 0.09), 0 14px 34px -20px rgb(var(--black-rgb) / 0.65);
+  }
+  .zen-tile::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 0%), hsl(var(--primary) / 0.14), transparent 65%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .zen-tile:hover::after { opacity: 1; }
+  .zen .zen-tile, .zen .zen-card { background-image: none; box-shadow: none; }
+  .zen .zen-tile::after { display: none; }
+
+  /* Tiles lift 2px on hover; the shadow deepens under them. */
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .zen-tile:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        inset 0 1px 0 rgb(var(--white-rgb) / 0.75),
+        0 22px 44px -26px hsl(var(--foreground) / 0.4);
+    }
+    .dark .zen-tile:hover, .zen-tile.dark:hover {
+      box-shadow: inset 0 1px 0 rgb(var(--white-rgb) / 0.12), 0 22px 44px -22px rgb(var(--black-rgb) / 0.75);
+    }
+  }
+
+  /* Primary CTAs: a glassy top light and a glow in their own colour. */
+  [data-magnet].bg-primary {
+    background-image: linear-gradient(180deg, rgb(var(--white-rgb) / 0.24), rgb(var(--white-rgb) / 0) 62%);
+    box-shadow: inset 0 1px 0 rgb(var(--white-rgb) / 0.4), 0 10px 28px -12px hsl(var(--primary) / 0.85);
   }
 
   .zen-chip {
@@ -174,7 +262,39 @@
     @apply inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 font-mono text-xs uppercase tracking-[0.08em];
   }
 
+  /* Highlighter mark (Marker in primitives.tsx): full-height swipe, ink flips to stay readable. */
+  .zen-marker {
+    color: inherit;
+    padding: 0 0.12em;
+    margin: 0 -0.04em;
+    border-radius: 0.18em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    background: linear-gradient(hsl(var(--highlight)), hsl(var(--highlight))) no-repeat 0 0 / 0% 100%;
+    transition: background-size 0.7s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease;
+  }
+  .zen-marker.is-on {
+    background-size: 100% 100%;
+    color: var(--highlight-ink);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .zen-marker { transition: none; }
+  }
+
+  /*
+   * Accent voice: the *marked* word in a heading switches to the serif italic, regular weight,
+   * a touch larger (italic serifs run small next to a bold grotesk) and in the brand colour.
+   */
+  .zen-accent {
+    font-family: var(--font-accent);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.08em;
+    letter-spacing: -0.01em;
+    color: hsl(var(--primary));
+  }
+
   .zen-label {
-    @apply font-mono text-xs uppercase tracking-[0.12em];
+    @apply font-mono text-label uppercase;
   }
 }

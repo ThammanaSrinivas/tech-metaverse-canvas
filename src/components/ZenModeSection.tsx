@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Github, Play, Globe, Trophy } from 'lucide-react';
 import { LINKS, ZENMODE } from '@/data/profile';
-import { CountUp, Reveal, Section, SectionHeader } from '@/components/zen/primitives';
+import { CountUp, Reveal, Section } from '@/components/zen/primitives';
 
 type IconKind = (typeof ZENMODE.features)[number]['icon'];
 
@@ -46,18 +46,17 @@ const FeatureIcon: React.FC<{ kind: IconKind }> = ({ kind }) => {
       <defs>
         <clipPath id="coin"><circle cx="20" cy="20" r="16" /></clipPath>
       </defs>
-      <circle cx="20" cy="20" r="16" fill="#FFC800" />
-      <circle cx="20" cy="20" r="10.5" fill="none" stroke="#7A5A00" strokeOpacity=".45" strokeWidth="2" />
+      <circle cx="20" cy="20" r="16" className="fill-amber-500" />
+      <circle cx="20" cy="20" r="10.5" fill="none" className="stroke-amber-800" strokeOpacity=".45" strokeWidth="2" />
       <g clipPath="url(#coin)">
-        <rect className="zen-shine" x="-20" y="0" width="8" height="40" fill="#FFF8E1" opacity=".7" transform="skewX(-20)" />
+        <rect className="zen-shine fill-amber-50" x="-20" y="0" width="8" height="40" opacity=".7" transform="skewX(-20)" />
       </g>
     </svg>
   );
 };
 
 const ZenModeSection: React.FC = () => (
-  <Section id="zenmode">
-    <SectionHeader index="01" title="What I'm building" />
+  <Section id="zenmode" className="pt-8 md:pt-10">
     {/* Everything below the heading is the product, so it wears the ZenMode OS brand (.zen tokens). */}
     <div className="zen">
 
@@ -76,7 +75,7 @@ const ZenModeSection: React.FC = () => (
 
     <Reveal delay={0.05}>
       <div className="mx-auto mt-10 max-w-2xl text-center">
-        <p className="text-lg leading-relaxed text-muted-foreground">{ZENMODE.pitch}</p>
+        <p className="text-lead text-muted-foreground">{ZENMODE.pitch}</p>
       </div>
     </Reveal>
 
@@ -94,7 +93,7 @@ const ZenModeSection: React.FC = () => (
                 <FeatureIcon kind={f.icon} />
                 <span className={`zen-label ${reward ? 'text-reward' : 'text-primary'}`}>{f.stat}</span>
               </div>
-              <p className="mt-8 font-display text-xl md:text-2xl">{f.name}</p>
+              <p className="mt-8 font-display text-h3">{f.name}</p>
               <p className="mt-1 text-sm text-muted-foreground">{f.desc}</p>
             </div>
           </Reveal>
@@ -108,7 +107,7 @@ const ZenModeSection: React.FC = () => (
           const rating = st.unit === '★';
           return (
             <div key={st.label} className="rounded-[20px] border border-tint-line bg-tint p-5">
-              <p className={`font-mono text-3xl md:text-4xl ${rating ? 'text-reward' : 'text-primary'}`}>
+              <p className={`font-mono text-h2 ${rating ? 'text-reward' : 'text-primary'}`}>
                 {st.prefix}
                 <CountUp value={st.value} />
                 {st.unit}

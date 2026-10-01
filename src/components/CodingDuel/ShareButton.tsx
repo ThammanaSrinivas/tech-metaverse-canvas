@@ -1,3 +1,4 @@
+import { getTheme } from '@/theme/runtime';
 import { Share2, Camera, Check, Loader2 } from 'lucide-react';
 import React, { useState, useCallback, useRef } from 'react';
 import { toPng } from 'html-to-image';
@@ -25,7 +26,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ challengeTitle, score, timeMs
       const dataUrl = await toPng(captureRef.current, {
         cacheBust: true,
         pixelRatio: 2,
-        backgroundColor: getComputedStyle(captureRef.current).backgroundColor || '#111',
+        backgroundColor: getComputedStyle(captureRef.current).backgroundColor || getTheme().palette.dark,
       });
 
       // Convert data URL to blob

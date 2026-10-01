@@ -1,64 +1,160 @@
-import React, { useEffect, useState } from 'react';
-import { Menu, Search, X } from 'lucide-react';
-import { SECTIONS, PROFILE } from '@/data/profile';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowUpRight, FileText, Menu, Search, Terminal, X } from 'lucide-react';
+import { LINKS, PROFILE } from '@/data/profile';
+import { PAGES } from '@/site/pages';
 import { Monogram } from '@/components/zen/primitives';
 import CommandPalette from './CommandPalette';
+import { emitZen } from '@/lib/zenEvents';
 
+/**
+ * Phone menu: a full-screen sheet under the bar. Big, thumb-sized page titles with their proof
+ * line, the current page marked, quick actions at the bottom. Locks page scroll while open.
+ */
+const MobileMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [onClose]);
+
+  return (
+    <motion.div
+      id="mobile-menu"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-x-0 bottom-0 top-16 z-[45] flex flex-col overflow-y-auto bg-background lg:hidden"
+    >
+      <nav aria-label="Pages" className="mx-auto w-full max-w-[1120px] flex-1 px-5 py-4">
+        <ul>
+          {PAGES.map(({ id, label, path, index, proof }, i) => (
+            <motion.li
+              key={id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.03 * i, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="border-b"
+            >
+              <NavLink to={path} onClick={onClose} className="flex items-center gap-4 py-4">
+                {({ isActive }) => (
+                  <>
+                    <span className="zen-label w-6 text-primary">{index}</span>
+                    <span className="flex-1">
+                      <span className={`block font-display text-h3 ${isActive ? '' : 'text-foreground/80'}`}>{label}</span>
+                      <span className="font-mono text-small text-muted-foreground">{proof}</span>
+                    </span>
+                    {isActive ? (
+                      <span className="zen-pill border-transparent bg-highlight text-[color:var(--highlight-ink)]">here</span>
+                    ) : (
+                      <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </>
+                )}
+              </NavLink>
+            </motion.li>
+          ))}
+        </ul>
+      </nav>
+      <div className="mx-auto grid w-full max-w-[1120px] grid-cols-2 gap-2 px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2">
+        <button
+          onClick={() => {
+            onClose();
+            emitZen('shell');
+          }}
+          className="flex h-12 items-center justify-center gap-2 rounded-full border font-mono text-xs uppercase tracking-[0.08em]"
+        >
+          <Terminal className="h-4 w-4 text-primary" /> zen shell
+        </button>
+        <a
+          href={LINKS.resume}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-12 items-center justify-center gap-2 rounded-full bg-primary font-semibold text-primary-foreground"
+        >
+          <FileText className="h-4 w-4" /> Resume
+        </a>
+      </div>
+    </motion.div>
+  );
+};
+
+/**
+ * Top bar. Over an ink top (the home hero, the explore sky: anything marked data-ink-top) it stays
+ * transparent and light-on-dark; elsewhere, and once you scroll past the ink, it turns solid.
+ * The current page is marked twice: bold text, and a highlighter bar that slides between links.
+ */
 const Navigation: React.FC = () => {
-  const [scrolled, setScrolled] = useState(false);
+  const { pathname } = useLocation();
+  const [solid, setSolid] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [active, setActive] = useState<string | null>(null);
 
   useEffect(() => {
-    // "scrolled" = past the ink hero; over it the bar stays transparent and light-on-dark.
+    setMenuOpen(false);
     const onScroll = () => {
-      const hero = document.getElementById('home');
-      setScrolled(window.scrollY > (hero ? hero.offsetHeight - 64 : 24));
+      const ink = document.querySelector<HTMLElement>('[data-ink-top]');
+      setSolid(!ink || window.scrollY > ink.offsetHeight - 64);
     };
+    // Pages are lazy chunks: re-measure when the page content actually lands in <main>.
+    const main = document.getElementById('main');
+    const mo = new MutationObserver(onScroll);
+    if (main) mo.observe(main, { childList: true, subtree: true });
+    const settle = window.setTimeout(() => mo.disconnect(), 3000);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  // Highlight the section currently in view.
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.isIntersecting && setActive(e.target.id)),
-      { rootMargin: '-45% 0px -50% 0px' }
-    );
-    // 'home' has no nav link: observing it clears the highlight when you're back on the hero.
-    ['home', ...SECTIONS.map((x) => x.id)].forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, []);
+    return () => {
+      mo.disconnect();
+      window.clearTimeout(settle);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, [pathname]);
 
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-          scrolled ? 'border-b bg-background/95' : 'dark border-b border-transparent text-foreground'
+        className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
+          solid || menuOpen ? 'border-b bg-background/95 backdrop-blur-sm' : 'dark border-b border-transparent text-foreground'
         }`}
       >
         <nav className="mx-auto flex h-16 max-w-[1120px] items-center gap-6 px-5" aria-label="Main">
-          <a href="#home" className="flex items-center gap-2.5" aria-label={`${PROFILE.name}, home`}>
-            <Monogram size={28} title="" />
+          <Link to="/" className="group flex items-center gap-2.5" aria-label={`${PROFILE.name}, home`}>
+            <Monogram size={30} title="" className="transition-transform duration-300 group-hover:-rotate-6" />
             <span className="font-display text-lg">{PROFILE.shortName}</span>
-          </a>
+          </Link>
 
           <ul className="ml-auto hidden items-center gap-1 lg:flex">
-            {SECTIONS.map(({ id, label }) => (
+            {PAGES.map(({ id, label, path }) => (
               <li key={id}>
-                <a
-                  href={`#${id}`}
-                  className={`rounded-full px-3 py-1.5 text-sm transition-colors ${
-                    active === id ? 'bg-tint text-primary' : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                <NavLink
+                  to={path}
+                  className={({ isActive }) =>
+                    `relative block px-3 py-2 text-sm transition-colors ${
+                      isActive ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`
+                  }
                 >
-                  {label}
-                </a>
+                  {({ isActive }) => (
+                    <>
+                      {label}
+                      {isActive && (
+                        <motion.span
+                          layoutId="nav-mark"
+                          className="absolute inset-x-3 -bottom-0.5 h-[3px] rounded-full bg-highlight"
+                          transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                        />
+                      )}
+                    </>
+                  )}
+                </NavLink>
               </li>
             ))}
           </ul>
@@ -78,31 +174,15 @@ const Navigation: React.FC = () => {
               onClick={() => setMenuOpen((o) => !o)}
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={menuOpen}
+              aria-controls="mobile-menu"
             >
               {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>
           </div>
         </nav>
 
-        {menuOpen && (
-          <div className="border-t bg-background lg:hidden">
-            <ul className="mx-auto grid max-w-[1120px] gap-1 px-5 py-3">
-              {SECTIONS.map(({ id, label }, i) => (
-                <li key={id}>
-                  <a
-                    href={`#${id}`}
-                    onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-secondary"
-                  >
-                    <span className="zen-label text-primary">{String(i + 1).padStart(2, '0')}</span>
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </header>
+      <AnimatePresence>{menuOpen && <MobileMenu onClose={closeMenu} />}</AnimatePresence>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </>
   );

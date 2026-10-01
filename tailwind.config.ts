@@ -1,5 +1,8 @@
 
 import type { Config } from "tailwindcss";
+import brand from "./src/theme/brand.json";
+
+const { zen, amber, ember, stone } = brand.zenmode;
 
 export default {
 	darkMode: ["class"],
@@ -63,20 +66,30 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// ZenMode brand primitives (theme-independent). Semantic colours above follow light/dark.
-				zen: { 900: '#0B5C12', 700: '#0F7A18', 500: '#2AA136', 300: '#5BDF62', 100: '#BFF3C2', 50: '#E6F6E7' },
-				amber: { 800: '#7A5A00', 500: '#FFC800', 50: '#FFF8E1' },
-				ember: { 700: '#B34700', 500: '#FF6600', 300: '#FF8A3D' },
+				// ZenMode brand primitives from brand.json (theme-independent). Semantic colours above follow the palette.
+				zen,
+				amber,
+				ember,
 				tint: { DEFAULT: 'hsl(var(--tint))', line: 'hsl(var(--tint-line))' },
 				reward: { DEFAULT: 'hsl(var(--reward))', surface: 'hsl(var(--reward-surface))' },
 				highlight: 'hsl(var(--highlight) / <alpha-value>)',
 				// Warm neutrals so legacy gray-* classes (Coding Duel) stay quiet next to any palette.
-				gray: { 50: '#FAF9F5', 100: '#F2F1ED', 200: '#DBD9D2', 300: '#C9C8C1', 400: '#9E9E98', 500: '#70726A', 600: '#5E6058', 700: '#2B2B2B', 800: '#222222', 900: '#1A1A1A', 950: '#111111' }
+				gray: stone
 			},
+			// Semantic type scale (text-display … text-label), generated from brand.json typeScale
+			// into --fs-/--lh-/--tr- vars by src/theme/runtime.ts scaleCss.
+			fontSize: Object.fromEntries(
+				['display', 'title', 'h1', 'h2', 'h3', 'lead', 'body', 'small', 'label'].map((r) => [
+					r,
+					[`var(--fs-${r})`, { lineHeight: `var(--lh-${r})`, letterSpacing: `var(--tr-${r})` }],
+				])
+			),
 			fontFamily: {
-				display: ['"Clash Display"', 'Geist', 'system-ui', 'sans-serif'],
-				sans: ['Geist', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
-				mono: ['"Departure Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+				// Variables set in index.css, swapped by the brand lab (src/theme/brand.json typography).
+				display: ['var(--font-display)'],
+				accent: ['var(--font-accent)'],
+				sans: ['var(--font-sans)'],
+				mono: ['var(--font-mono)'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

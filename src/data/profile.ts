@@ -6,8 +6,8 @@ export const RESUME_URL =
 
 export const LINKS = {
   github: 'https://github.com/ThammanaSrinivas',
-  linkedin: 'https://www.linkedin.com/in/evolvedaily/',
-  email: 'mailto:sreenivast84@gmail.com',
+  linkedin: 'https://www.linkedin.com/in/thammanasrinivas/',
+  email: 'mailto:srinivasthammana.eng@gmail.com',
   zenmode: 'https://github.com/ThammanaSrinivas/zenmode',
   zenmodeSite: 'https://zenmodeos.com/',
   playstore: 'https://play.google.com/store/apps/details?id=com.zenlauncher.zenmode',
@@ -19,9 +19,11 @@ export const PROFILE = {
   name: 'Thammana Srinivas',
   shortName: 'Srinivas',
   tagline: 'Software engineer. Building a calmer phone.',
+  /** The brand line, with the phrase the highlighter marks. */
+  idea: { before: 'I build ', mark: 'innovative systems at scale', after: '. Platforms at PayPal by day, ZenMode OS on my own time.' },
   intro:
     'I build cloud platforms by day and a calmer phone by night. At PayPal I work on multi-tenant platforms and cloud migration. On my own time I build ZenMode OS, an open-source Android launcher that helps people scroll less, together.',
-  email: 'sreenivast84@gmail.com',
+  email: 'srinivasthammana.eng@gmail.com',
   location: 'Chennai, India',
 };
 
@@ -41,6 +43,36 @@ export interface Job {
   highlights: { title: string; body: string }[];
   earlier?: string;
 }
+
+/** The featured story on /beyond. Details from the LinkedIn post; photo in public/beyond. */
+export const SPEAKING = {
+  date: '2026-09-11',
+  org: 'Toastmasters',
+  mark: '1st place',
+  title: 'at the Humorous Speech Contest',
+  level: 'Club level',
+  body: 'Won at the club level. Toastmasters is where I practise the other half of engineering: explaining ideas clearly, and making a room laugh while doing it.',
+  photo: '/beyond/toastmasters-club-win.webp',
+  alt: 'Holding the 1st-place trophy at a Toastmasters club speech contest.',
+  post: 'https://www.linkedin.com/feed/update/urn:li:ugcPost:7504140202756730880/',
+} as const;
+
+/** Where building in public started. */
+export const FIRST_POST: Milestone = {
+  date: '2024-11-17',
+  kind: 'TechXConf',
+  title: 'My first LinkedIn post',
+  body: 'A post from TechXConf on networking and AI: the first time I shared what I was learning in public.',
+  points: [],
+  post: 'https://www.linkedin.com/feed/update/urn:li:share:7263876730933714944/',
+};
+
+/** Leadership and community, from LinkedIn: the signals beyond shipping code. */
+export const BEYOND = [
+  { label: 'Leads', title: 'Scrum master', body: 'Runs the agile ceremonies for my team at PayPal, on top of engineering work.' },
+  { label: 'Certified', title: 'OCI 2025 Generative AI Professional', body: 'Oracle Cloud Infrastructure certification in applied generative AI.' },
+  { label: 'Community', title: 'FOSS United', body: 'Open-source community; ZenMode OS placed in the top ~10% of ~780 at FOSS Hack 2026.' },
+] as const;
 
 export const JOBS: Job[] = [
   {
@@ -107,6 +139,26 @@ export const LAB: LabProject[] = [
   { name: 'tech-metaverse-canvas', blurb: 'This site. React, a 3D commit time machine, a coding duel and a tiny shell.', tags: ['React', 'Three.js'], url: 'https://github.com/ThammanaSrinivas/tech-metaverse-canvas' },
 ];
 
+/** A dated moment with a public post behind it. `date` is ISO (yyyy-mm-dd). */
+export interface Milestone {
+  date: string;
+  kind: string;
+  title: string;
+  body: string;
+  points: string[];
+  post: string;
+  featured?: boolean;
+  image?: string;
+  alt?: string;
+}
+
+/** "26 Sep 2026" from "2026-09-26". */
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export const formatDate = (iso: string) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  return `${d} ${MONTHS[m - 1]} ${y}`;
+};
+
 export const ZENMODE = {
   pitch: 'ZenMode OS turns your home screen into a calm space built around intent. It doesn’t lock you out. It adds a small pause at the moments you tend to lose time, and makes keeping your screen-time promise something you do together with friends.',
   award: 'Top ~10% of ~780 at FOSS Hack 2026',
@@ -123,13 +175,49 @@ export const ZENMODE = {
     { name: 'ZenCircle', stat: '2 OF 5', desc: 'Accountability with friends', icon: 'circle' },
     { name: 'Gold Pay', stat: '+ GOLD', desc: 'Time saved becomes gold', icon: 'gold' },
   ] as const,
+  /** Milestones, from the LinkedIn posts. Shown on /zenmode, in the /beyond timeline and ~/zenmode/launch.md. */
+  milestones: [
+    {
+      date: '2026-09-26',
+      kind: 'Launch day · IndiaFOSS',
+      title: 'We launched ZenMode OS',
+      body: 'Your phone isn’t the problem. The loop is. We launched on Product Hunt while spending the day at IndiaFOSS. Kamal shaped what ZenMode is; I built most of how it works.',
+      points: ['Open source, GPLv3', '1,100+ early installs', '24 comments'],
+      post: 'https://www.linkedin.com/posts/thammanasrinivas_producthunt-indiafoss-opensource-ugcPost-7509503115826528256-2ypw/',
+    },
+    {
+      date: '2026-09-26',
+      featured: true,
+      kind: 'Product Hunt launch',
+      title: '#14 of 711 on launch day',
+      body: 'Two people, one launch weekend, and a community that tried it and told us the truth. Built and launched with my co-founder, Kamalraaj Senthilkumar.',
+      points: ['#1 in the Open Source topic', '#7 of 711 by comments, top 1%', 'Top 1.97% of launches'],
+      image: '/zenmode/ph-launch-card.webp',
+      alt: 'ZenMode OS Product Hunt stat card: #14 of 711 daily rank, #1 in the Open Source topic, top 1% by comments.',
+      post: 'https://www.linkedin.com/feed/update/urn:li:activity:7510153630390595584/',
+    },
+    {
+      date: '2026-04-22',
+      kind: 'FOSS Hack 2026 · IIT Madras',
+      title: 'Top ~10% of ~780 projects',
+      body: 'FOSS Hack 2026, at IIT Madras in Chennai: ZenMode OS placed in the top ~10% of roughly 780 submissions.',
+      points: [],
+      post: 'https://www.linkedin.com/feed/update/urn:li:activity:7452726557782982656/',
+    },
+    {
+      date: '2026-09-27',
+      kind: 'IndiaFOSS',
+      title: 'Kailash Nadh offered to help',
+      body: 'At IndiaFOSS we met Kailash Nadh, CTO of Zerodha, again. He found the idea behind ZenMode interesting and offered to help us with the Kite API, which powers our Gold Invest feature.',
+      points: [],
+      post: 'https://www.linkedin.com/feed/update/urn:li:activity:7509812328322719744/',
+    },
+  ] as Milestone[],
 };
 
-export const SECTIONS = [
-  { id: 'zenmode', label: 'ZenMode' },
-  { id: 'work', label: 'Work' },
-  { id: 'toolbox', label: 'Toolbox' },
-  { id: 'lab', label: 'Lab' },
-  { id: 'time-machine', label: 'Time Machine' },
-  { id: 'contact', label: 'Contact' },
-] as const;
+/** Building in public, oldest first: every public moment with a post behind it. Shown on /beyond. */
+export const JOURNEY: Milestone[] = [
+  FIRST_POST,
+  ...ZENMODE.milestones,
+  { date: SPEAKING.date, kind: SPEAKING.org, title: `${SPEAKING.mark} ${SPEAKING.title}`, body: SPEAKING.level, points: [], post: SPEAKING.post },
+].sort((a, b) => a.date.localeCompare(b.date));
