@@ -17,20 +17,30 @@ const k = (b: number, dt: number) => 1 - Math.pow(b, dt);
 
 const BG_RE = /rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,\s/]+([\d.]+))?\s*\)/;
 
-/** Walks up to the first mostly-opaque background and reports whether it is dark. */
-export function readsDark(el: Element | null): boolean {
-  let node: Element | null = el;
-  while (node) {
-    const m = BG_RE.exec(getComputedStyle(node).backgroundColor);
-    if (m) {
-      const a = m[4] === undefined ? 1 : parseFloat(m[4]);
-      if (a > 0.4) return 0.2126 * +m[1] + 0.7152 * +m[2] + 0.0722 * +m[3] < 128;
-    }
-    node = node.parentElement;
+const isDarkRgb = (m: RegExpExecArray) => 0.2126 * +m[1] + 0.7152 * +m[2] + 0.0722 * +m[3] < 128;
+
+/** The element's own background, if it is mostly opaque: dark → true, light → false, else null. */
+function ownGround(el: Element): boolean | null {
+  const m = BG_RE.exec(getComputedStyle(el).backgroundColor);
+  if (!m) return null;
+  const a = m[4] === undefined ? 1 : parseFloat(m[4]);
+  return a > 0.4 ? isDarkRgb(m) : null;
+}
+
+/**
+ * Is the ground at (x, y) dark? Walks what is *visually stacked* at that point, top to bottom, and
+ * the first mostly-opaque background decides. (Walking DOM ancestors instead gets fixed layers
+ * wrong: a transparent top bar over the ink hero has the light <body> as its ancestor.)
+ * `skip` leaves out layers that shouldn't count, e.g. the shell measuring what is behind itself.
+ */
+export function readsDarkAt(x: number, y: number, skip?: (el: Element) => boolean): boolean {
+  for (const el of document.elementsFromPoint(x, y)) {
+    if (skip?.(el)) continue;
+    const ground = ownGround(el);
+    if (ground !== null) return ground;
   }
-  // Fell through to the page: the body background decides.
   const m = BG_RE.exec(getComputedStyle(document.body).backgroundColor);
-  return !!m && 0.2126 * +m[1] + 0.7152 * +m[2] + 0.0722 * +m[3] < 128;
+  return !!m && isDarkRgb(m);
 }
 
 type MagnetEl = HTMLElement & { zmOff?: { x: number; y: number } };
@@ -82,7 +92,7 @@ export function mountZenCursor(): (() => void) | null {
     if (t?.closest) {
       if (t !== checkedOn) {
         checkedOn = t;
-        onDark = readsDark(t);
+        onDark = readsDarkAt(e.clientX, e.clientY);
         root.classList.toggle('typing', !!t.closest(TEXT_ENTRY));
       }
       const hit = t.closest(HITS);
@@ -168,9 +178,16 @@ export function mountZenCursor(): (() => void) | null {
   const onVisible = () => {
     last = performance.now();
   };
-  // Scrolling moves content under a still pointer: re-read the ground.
+  // Scrolling moves content under a still pointer (and flips the top bar between transparent and
+  // solid): re-read the ground at the pointer, at most once a frame.
+  let groundFrame = 0;
   const onScroll = () => {
     checkedOn = null;
+    if (!moved || groundFrame) return;
+    groundFrame = requestAnimationFrame(() => {
+      groundFrame = 0;
+      onDark = readsDarkAt(p.x, p.y);
+    });
   };
 
   addEventListener('pointermove', onMove, { passive: true });
@@ -188,6 +205,7 @@ export function mountZenCursor(): (() => void) | null {
 
   return () => {
     cancelAnimationFrame(raf);
+    cancelAnimationFrame(groundFrame);
     offPalette();
     mo.disconnect();
     removeEventListener('pointermove', onMove);

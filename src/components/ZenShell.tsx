@@ -9,7 +9,7 @@ import { emitZen, onZen } from '@/lib/zenEvents';
 import { setStarsEnabled, useStarsEnabled } from '@/lib/stars';
 import { Monogram } from '@/components/zen/primitives';
 import { useBrandTheme } from '@/theme/runtime';
-import { readsDark } from '@/lib/zenCursor';
+import { readsDarkAt } from '@/lib/zenCursor';
 
 // Two skins, always the opposite of the ground behind the shell: an ink terminal over
 // paper, a paper terminal over the ink sections, so it never melts into the page.
@@ -38,10 +38,7 @@ function useDarkGround(el: React.RefObject<HTMLElement>, deps: unknown[]) {
       const node = el.current;
       if (!node) return;
       const r = node.getBoundingClientRect();
-      const under = document
-        .elementsFromPoint(r.left + r.width / 2, r.top + r.height / 2)
-        .find((e) => !e.closest('[data-zen-shell]'));
-      setDark(readsDark(under ?? null));
+      setDark(readsDarkAt(r.left + r.width / 2, r.top + r.height / 2, (e) => !!e.closest('[data-zen-shell]')));
     };
     const schedule = () => {
       if (!raf) raf = requestAnimationFrame(check);
