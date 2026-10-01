@@ -30,6 +30,8 @@ The scheduler is built on **Kafka** and **Redis**, and supports full **cron expr
 
 > ✏️ One general sentence: what jobs are grouped by (e.g. per worker or per partition). No internal topic or service names.
 
+**It is built to change.** The scheduler sits behind a small core interface, with generic building blocks underneath. When a major change came later, it took 2–3 lines in that interface plus an overloaded implementation, instead of edits across every caller.
+
 **It has to survive failures.** The scheduler is distributed and fault tolerant: a node going down must not drop or double-run a job.
 
 > ✏️ Name the general technique only (e.g. idempotent execution, acknowledgements, retries). A production incident is great if you can describe it without company specifics; otherwise skip it.

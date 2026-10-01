@@ -53,6 +53,7 @@ export const PRINCIPLES = [
     title: 'Change the contract, not the callers',
     claim: 'A major change should be 2–3 lines in a core interface plus a new implementation, not a rewrite.',
     seen: [
+      'Zoho job scheduling: built around a small core interface, so a major change took 2–3 lines there plus an overloaded implementation, not edits across every caller.',
       'ZenMode OS: the app only knows core-api interfaces; the open-source build plugs in mocks, production plugs in Firebase, discovered at startup.',
       'Zoho: a log export service built on interceptors, so new export features took 2-line changes.',
     ],
