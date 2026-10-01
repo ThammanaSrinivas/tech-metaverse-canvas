@@ -5,7 +5,7 @@ import { LINKS, PROFILE, ZENMODE, JOBS } from '@/data/profile';
 import { emitZen } from '@/lib/zenEvents';
 import { useBrandTheme } from '@/theme/runtime';
 import { MONOGRAM_DOT, MONOGRAM_PATH } from '@/components/zen/monogramPath';
-import { Link } from 'react-router-dom';
+import { Link } from '@/components/zen/Link';
 import { Marker, MaskWords, maskStagger } from '@/components/zen/primitives';
 
 // The logo assembles: tile springs up, the letters settle, then the dot lands (the full stop).

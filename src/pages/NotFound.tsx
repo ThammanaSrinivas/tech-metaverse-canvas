@@ -1,4 +1,5 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { Link } from '@/components/zen/Link';
 import { ArrowRight } from 'lucide-react';
 import { PAGES } from '@/site/pages';
 import { usePageMeta } from '@/lib/usePageMeta';

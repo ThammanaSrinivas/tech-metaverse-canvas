@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/components/zen/Link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, MousePointer2 } from 'lucide-react';
 import HeroSky from '@/components/HeroSky';

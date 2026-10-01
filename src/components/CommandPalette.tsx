@@ -8,7 +8,7 @@ import {
   CommandItem,
   CommandSeparator,
 } from '@/components/ui/command';
-import { useNavigate } from 'react-router-dom';
+import { useGo } from '@/components/zen/Link';
 import { LAB, LINKS } from '@/data/profile';
 import { PAGES } from '@/site/pages';
 import { emitZen } from '@/lib/zenEvents';
@@ -22,7 +22,7 @@ interface CommandPaletteProps {
 const projects = [{ name: 'zenmode', url: LINKS.zenmode }, ...LAB.map(({ name, url }) => ({ name, url }))];
 
 const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, onOpenChange }) => {
-  const navigate = useNavigate();
+  const go = useGo();
   const [internalOpen, setInternalOpen] = useState(false);
 
   const open = controlledOpen ?? internalOpen;
@@ -53,7 +53,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, o
 
         <CommandGroup heading="Pages">
           {PAGES.map(({ id, label, path }) => (
-            <CommandItem key={id} onSelect={() => run(() => navigate(path))}>
+            <CommandItem key={id} onSelect={() => run(() => go(path))}>
               <Hash className="mr-2 h-4 w-4 text-primary" />
               <span>{label}</span>
             </CommandItem>

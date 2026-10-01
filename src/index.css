@@ -238,3 +238,40 @@
     @apply font-mono text-label uppercase;
   }
 }
+
+/*
+ * Page transitions (View Transitions API, triggered by zen/Link): the old page lifts and fades,
+ * the new one settles in. The top bar, cursor, shell and progress bar have their own names, so
+ * they stay put instead of crossfading with the page. Off under reduced motion.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: 160ms cubic-bezier(0.4, 0, 1, 1) both vt-out;
+  }
+  ::view-transition-new(root) {
+    animation: 380ms cubic-bezier(0.22, 1, 0.36, 1) 60ms both vt-in;
+  }
+  /* each name must be unique on the page, so target exactly one element per name */
+  [data-site-header] { view-transition-name: site-header; }
+  .zm-cur { view-transition-name: site-cursor; }
+  button[data-zen-shell] { view-transition-name: site-shell-launcher; }
+  [role='dialog'][data-zen-shell] { view-transition-name: site-shell-window; }
+  ::view-transition-group(site-header),
+  ::view-transition-group(site-cursor),
+  ::view-transition-group(site-shell-launcher),
+  ::view-transition-group(site-shell-window) {
+    animation-duration: 0s;
+  }
+}
+@keyframes vt-out {
+  to { opacity: 0; transform: translateY(-8px) scale(0.995); }
+}
+@keyframes vt-in {
+  from { opacity: 0; transform: translateY(14px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation: none !important; }
+}
+

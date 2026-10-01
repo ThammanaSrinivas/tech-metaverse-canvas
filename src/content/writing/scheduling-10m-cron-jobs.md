@@ -22,6 +22,12 @@ The scheduler is built on **Kafka** and **Redis**, and supports full **cron expr
 
 **Only queue what the workers can take.** The biggest win was also the smallest change. Instead of pushing every due job into the pending queue, the scheduler stops submitting once the queue holds about **ten times what the workers can process**, and tops it up as they drain it. One `if` condition, and messages per cycle dropped from **about 7,000 to 32**, a **99.5% reduction**.
 
+Toggle between the two below. Same workers, same jobs; the only difference is what the scheduler lets into the queue.
+
+```diagram
+admission-control
+```
+
 **Nothing is lost.** Kafka is persistent, so a scheduled job survives any node going down. A job is only done when it **acknowledges completion**; until then it can be picked up again. Developers choose **how many times to retry**, whether the cause is a node failure or a bug in their own function.
 
 **It is built to change.** The scheduler sits behind a small core interface, with generic building blocks underneath. When we found a race condition that looked like it needed a partial re-architecture, the fix turned out to be **one `if` condition and an overloaded implementation of an existing method**: 2–3 lines in the core interface, instead of edits across every caller.

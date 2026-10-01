@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { Link, NavLink } from '@/components/zen/Link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowUpRight, FileText, Menu, Search, Terminal, X } from 'lucide-react';
 import { LINKS, PROFILE } from '@/data/profile';
@@ -129,6 +130,7 @@ const Navigation: React.FC = () => {
         takes the bar's mode instead: ink under a transparent bar, paper under a floating one.
       */}
       <header
+        data-site-header
         className={`fixed inset-x-0 top-0 z-50 transition-[padding] duration-300 ease-out ${
           solid ? 'px-2 pt-2 md:px-4 md:pt-3' : 'px-0 pt-0'
         }`}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/components/zen/Link';
 import { LINKS, PROFILE } from '@/data/profile';
 import { PAGES } from '@/site/pages';
 import { Monogram } from '@/components/zen/primitives';

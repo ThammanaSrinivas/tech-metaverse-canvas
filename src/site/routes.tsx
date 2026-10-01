@@ -1,12 +1,14 @@
-import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
+import type { ComponentType } from 'react';
 import type { PageId } from './pages';
 import { whenIdle } from '@/lib/idle';
 
 /**
  * Page id → chunk loader. Typed as a full Record, so a page added to pages.ts without a component
- * here fails to compile. Each page is its own chunk.
+ * here fails to compile. Each page is its own chunk, loaded by the router (route `lazy`).
  */
-const LOADERS: Record<PageId, () => Promise<{ default: ComponentType }>> = {
+type Loader = () => Promise<{ default: ComponentType }>;
+
+export const LOADERS: Record<PageId, Loader> = {
   zenmode: () => import('@/pages/ZenModePage'),
   work: () => import('@/pages/WorkPage'),
   writing: () => import('@/pages/WritingPage'),
@@ -17,15 +19,16 @@ const LOADERS: Record<PageId, () => Promise<{ default: ComponentType }>> = {
   contact: () => import('@/pages/ContactPage'),
 };
 
-export const PAGE_COMPONENTS = Object.fromEntries(
-  Object.entries(LOADERS).map(([id, load]) => [id, lazy(load)])
-) as Record<PageId, LazyExoticComponent<ComponentType>>;
-
 /** Child routes of `nested` pages (`<path>/:slug`). */
-export const CHILD_COMPONENTS: Partial<Record<PageId, LazyExoticComponent<ComponentType>>> = {
-  writing: lazy(() => import('@/pages/WritingPost')),
+export const CHILD_LOADERS: Partial<Record<PageId, Loader>> = {
+  writing: () => import('@/pages/WritingPost'),
 };
 
+/**
+ * A route's `lazy` for React Router's data router: the router fetches the chunk *before* it
+ * switches pages, so a view transition never captures a half-loaded page.
+ */
+export const lazyRoute = (load: Loader) => async () => ({ Component: (await load()).default });
 
 /**
  * After the first page has painted, fetch every other page's (small) chunk in idle time, one per

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Terminal, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useGo } from '@/components/zen/Link';
 import { JOBS, LAB, PROFILE } from '@/data/profile';
 import { complete, runCommand, SUGGESTIONS, type Line } from '@/lib/zenshell';
 import { PAGES } from '@/site/pages';
@@ -205,7 +205,7 @@ function useShellFit(open: boolean): ShellFit {
 }
 
 const ZenShell: React.FC = () => {
-  const navigate = useNavigate();
+  const go = useGo();
   const [open, setOpen] = useState(false);
   const [lines, setLines] = useState<Line[]>([]);
   const [booted, setBooted] = useState(false);
@@ -285,7 +285,7 @@ const ZenShell: React.FC = () => {
         window.open(effect.url, '_blank', 'noopener,noreferrer');
         break;
       case 'go':
-        navigate(effect.to);
+        go(effect.to);
         break;
       case 'stars':
         setStarsEnabled(effect.value === 'toggle' ? !starsOn : effect.value);

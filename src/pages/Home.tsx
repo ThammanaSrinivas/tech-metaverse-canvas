@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/components/zen/Link';
 import { ArrowRight, ArrowUpRight, Mail } from 'lucide-react';
 import Hero from '@/components/Hero';
 import { Reveal, Rich, SectionHeader } from '@/components/zen/primitives';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from './Link';
 import { ArrowRight } from 'lucide-react';
 import { PAGES, type PageId } from '@/site/pages';
 import { Rich } from './primitives';

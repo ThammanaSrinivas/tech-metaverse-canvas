@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { Suspense } from 'react';
+import { DIAGRAMS } from '@/components/diagrams';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -24,7 +25,21 @@ const components: Components = {
     </a>
   ),
   code: ({ children }) => <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[0.88em]">{children}</code>,
-  pre: ({ children }) => <pre className="zen-card mt-6 overflow-x-auto p-5 font-mono text-small">{children}</pre>,
+  pre: ({ children }) => {
+    // ```diagram blocks embed a live component (src/components/diagrams) instead of code
+    const child = React.Children.toArray(children)[0];
+    const props = React.isValidElement(child) ? (child.props as { className?: string; children?: React.ReactNode }) : null;
+    if (props?.className?.includes('language-diagram')) {
+      const Diagram = DIAGRAMS[text(props.children).trim()];
+      if (Diagram)
+        return (
+          <Suspense fallback={<div className="zen-card mt-8 h-[420px] animate-pulse" />}>
+            <Diagram />
+          </Suspense>
+        );
+    }
+    return <pre className="zen-card mt-6 overflow-x-auto p-5 font-mono text-small">{children}</pre>;
+  },
   blockquote: ({ children }) => {
     const note = text(children).trim().startsWith('✏️');
     return note ? (

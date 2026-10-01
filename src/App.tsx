@@ -2,37 +2,40 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, type RouteObject } from "react-router-dom";
 import Layout from "@/components/Layout";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import { PAGES } from "@/site/pages";
-import { CHILD_COMPONENTS, PAGE_COMPONENTS } from "@/site/routes";
+import { CHILD_LOADERS, LOADERS, lazyRoute } from "@/site/routes";
 
 const queryClient = new QueryClient();
+
+// Data router (rather than <BrowserRouter>): it supports view transitions between pages, and its
+// route `lazy` loads a page's chunk before switching, so the old page stays until the new one is ready.
+const routes: RouteObject[] = [
+  {
+    element: <Layout />,
+    children: [
+      { path: "/", element: <Home /> },
+      ...PAGES.map(({ id, path }) => ({ path, lazy: lazyRoute(LOADERS[id]) })),
+      ...PAGES.filter((p) => p.nested && CHILD_LOADERS[p.id]).map(({ id, path }) => ({
+        path: `${path}/:slug`,
+        lazy: lazyRoute(CHILD_LOADERS[id]!),
+      })),
+      { path: "*", element: <NotFound /> },
+    ],
+  },
+];
+
+const router = createBrowserRouter(routes, { future: { v7_relativeSplatPath: true } });
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      {/* startTransition: keep the current page on screen while the next one's chunk loads */}
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
-            {PAGES.map(({ id, path }) => {
-              const Component = PAGE_COMPONENTS[id];
-              return <Route key={id} path={path} element={<Component />} />;
-            })}
-            {PAGES.filter((p) => p.nested && CHILD_COMPONENTS[p.id]).map(({ id, path }) => {
-              const Child = CHILD_COMPONENTS[id]!;
-              return <Route key={`${id}-child`} path={`${path}/:slug`} element={<Child />} />;
-            })}
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <RouterProvider router={router} future={{ v7_startTransition: true }} />
     </TooltipProvider>
   </QueryClientProvider>
 );
