@@ -15,8 +15,20 @@ import { emitZen } from '@/lib/zenEvents';
  * toggling overflow on <body> makes iOS Safari resize its toolbars and re-lay out the whole page,
  * which looks like a reload. The backdrop swallows touches instead, and the card contains its own
  * scroll. Takes the bar's mode: ink over the hero, paper elsewhere.
+ *
+ * The card is opaque from its first frame and unrolls from under the bar (a clip, not a fade:
+ * fading it in showed the page through it). Picking a page does not close it: it stays until the
+ * new page is ready, then leaves together with the old page (see the AnimatePresence below).
  */
-const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; floating: boolean }> = ({ onClose, ink, floating }) => {
+const CLIP_OPEN = 'inset(0% 0% 0% 0% round 16px)';
+const CLIP_SHUT = 'inset(0% 0% 100% 0% round 16px)';
+
+const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; floating: boolean; pathname: string }> = ({
+  onClose,
+  ink,
+  floating,
+  pathname,
+}) => {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -37,11 +49,11 @@ const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; floating: boolea
       />
       <motion.div
         id="mobile-menu"
-        initial={{ opacity: 0, y: -10, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -8, scale: 0.98 }}
-        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-        style={{ transformOrigin: 'top right' }}
+        initial={{ clipPath: CLIP_SHUT, y: -6 }}
+        // the clip also cuts off the card's shadow, so drop it once the card is fully open
+        animate={{ clipPath: CLIP_OPEN, y: 0, transitionEnd: { clipPath: 'none' } }}
+        exit={{ clipPath: [CLIP_OPEN, CLIP_SHUT], y: -6, transition: { duration: 0.16, ease: [0.4, 0, 1, 1] } }}
+        transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
         className={`fixed inset-x-2 z-[45] max-h-[calc(100svh-5.5rem)] overflow-y-auto overscroll-contain rounded-2xl border bg-background text-foreground shadow-2xl lg:hidden ${
           floating ? 'top-[4.5rem]' : 'top-[3.75rem]'
         } ${ink ? 'dark' : ''}`}
@@ -52,9 +64,12 @@ const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; floating: boolea
               <li key={id}>
                 <NavLink
                   to={path}
-                  onClick={onClose}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${isActive ? 'bg-secondary' : 'active:bg-secondary'}`
+                  // tapping the page you are on just closes the menu; any other page closes it on arrival
+                  onClick={() => path === pathname && onClose()}
+                  className={({ isActive, isPending }) =>
+                    `flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${
+                      isActive || isPending ? 'bg-secondary' : 'active:bg-secondary'
+                    }`
                   }
                 >
                   {({ isActive }) => (
@@ -90,6 +105,7 @@ const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; floating: boolea
             href={LINKS.resume}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={onClose}
             className="flex h-11 items-center justify-center gap-2 rounded-full bg-primary font-semibold text-primary-foreground"
           >
             <FileText className="h-4 w-4" /> Resume
@@ -108,12 +124,15 @@ const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; floating: boolea
 const Navigation: React.FC = () => {
   const { pathname } = useLocation();
   const [solid, setSolid] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  // The page the menu was opened on. Deriving "open" from it closes the menu in the same render
+  // that shows a new page, never a frame later.
+  const [menuAt, setMenuAt] = useState<string | null>(null);
+  const menuOpen = menuAt === pathname;
+  const closeMenu = useCallback(() => setMenuAt(null), []);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
-    setMenuOpen(false);
+    setMenuAt(null);
     const onScroll = () => {
       const ink = document.querySelector<HTMLElement>('[data-ink-top]');
       setSolid(!ink || window.scrollY > ink.offsetHeight - 64);
@@ -199,7 +218,7 @@ const Navigation: React.FC = () => {
             </button>
             <button
               className="flex h-10 w-10 items-center justify-center rounded-full border bg-card lg:hidden"
-              onClick={() => setMenuOpen((o) => !o)}
+              onClick={() => setMenuAt((at) => (at === pathname ? null : pathname))}
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={menuOpen}
               aria-controls="mobile-menu"
@@ -210,7 +229,14 @@ const Navigation: React.FC = () => {
         </nav>
         </div>
       </header>
-      <AnimatePresence>{menuOpen && <MobileMenu onClose={closeMenu} ink={!solid} floating={solid} />}</AnimatePresence>
+      {/*
+        Keyed by page: on navigation the menu goes in the same frame as the old page, so the view
+        transition fades the two out together. Without the key, AnimatePresence replayed the menu's
+        exit on top of the new page, and it flashed back for a moment.
+      */}
+      <AnimatePresence key={pathname}>
+        {menuOpen && <MobileMenu onClose={closeMenu} ink={!solid} floating={solid} pathname={pathname} />}
+      </AnimatePresence>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </>
   );

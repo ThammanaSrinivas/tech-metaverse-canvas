@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
+import { Pause, Play } from 'lucide-react';
 import { useBrandTheme } from '@/theme/runtime';
 import { mix } from '@/theme/color';
 
@@ -12,7 +13,9 @@ import { mix } from '@/theme/color';
  * length. The queue floods. After: one `if`: publish only while the queue holds less than ~10×
  * what the workers can process. The counters show the real numbers from production (7,000 → 32
  * messages per cycle); each dot stands for a batch of jobs. Canvas, brand colours, pauses when
- * off screen, and renders a still frame under reduced motion.
+ * off screen. It plays on its own, with a Pause button (moving content needs one). Under reduced
+ * motion it starts paused on a still frame that already tells the story, and plays only when the
+ * reader asks it to.
  */
 
 type Mode = 'before' | 'after';
@@ -50,11 +53,24 @@ const AdmissionControl: React.FC = () => {
   const [readout, setReadout] = useState({ messages: 0, backlog: 0, busy: 0, decision: '' as '' | 'submit' | 'skip' });
   const touched = useRef(false); // auto-toggle until the reader takes control
   const [failed, setFailed] = useState(false);
-  // under reduced motion there is no loop, so a mode change must redraw the still frame
-  const stillFrameMode = reduce ? mode : null;
+  const [playing, setPlaying] = useState(() => !reduce);
+  const playingRef = useRef(playing);
+  // set up by the drawing effect: start or stop the loop to match `playing` and visibility, and
+  // fast-forward to a still frame that shows the current mode
+  const ctl = useRef<{ sync: () => void; settle: () => void } | null>(null);
+
+  useEffect(() => {
+    if (reduce) setPlaying(false);
+  }, [reduce]);
+
+  useEffect(() => {
+    playingRef.current = playing;
+    ctl.current?.sync();
+  }, [playing]);
 
   useEffect(() => {
     modeRef.current = mode;
+    if (!playingRef.current) ctl.current?.settle();
   }, [mode]);
 
   useEffect(() => {
@@ -399,10 +415,10 @@ const AdmissionControl: React.FC = () => {
       if (backlog > 0) label(`+${backlog} more batches waiting`, (qx0 + qx1) / 2, H - 14, C.hot, 'center', 10);
     };
 
-    // ---- loop: run only while visible; one still frame under reduced motion
+    // ---- loop: runs only while playing and on screen; paused, it holds a still frame
     let raf = 0;
     let last = 0;
-    let visible = true;
+    let visible = false;
     let dead = false;
     const safe = (fn: () => void) => {
       if (dead) return;
@@ -416,59 +432,71 @@ const AdmissionControl: React.FC = () => {
       }
     };
     drawNow = () => safe(() => W > 0 && draw());
-    const loop = (t: number) => {
-      const dt = Math.min(0.05, last ? (t - last) / 1000 : 0.016);
-      last = t;
-      if (W === 0) {
-        // not laid out yet (e.g. mounted inside a collapsed parent): wait for a size
-        if (visible) raf = requestAnimationFrame(loop);
-        return;
-      }
-      safe(() => {
-        step(dt);
-        draw();
-      });
-      if (dead) return;
+    const report = () =>
       setReadout((r) => {
         const busy = workerBusy.filter(Boolean).length;
         const next = { messages: Math.round(shownMessages), backlog: queued().length + backlog, busy, decision };
         return r.messages === next.messages && r.backlog === next.backlog && r.busy === next.busy && r.decision === next.decision ? r : next;
       });
-      if (visible) raf = requestAnimationFrame(loop);
-    };
-    const io = new IntersectionObserver(([e]) => {
-      visible = e.isIntersecting;
-      if (visible && !reduce) {
-        last = 0;
-        cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(loop);
+    const loop = (t: number) => {
+      raf = 0;
+      if (dead || !visible || !playingRef.current) return;
+      const dt = Math.min(0.05, last ? (t - last) / 1000 : 0.016);
+      last = t;
+      // W is 0 until laid out (e.g. mounted inside a collapsed parent): keep waiting for a size
+      if (W > 0) {
+        safe(() => {
+          step(dt);
+          draw();
+        });
+        if (dead) return;
+        report();
       }
-    });
-
-    if (reduce) {
-      // fast-forward a few cycles so the still frame tells the story
+      raf = requestAnimationFrame(loop);
+    };
+    const sync = () => {
+      if (!dead && visible && playingRef.current) {
+        if (!raf) {
+          last = 0;
+          raf = requestAnimationFrame(loop);
+        }
+      } else if (raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+    const settle = () => {
+      // fast-forward a few cycles so a still frame tells the story of the current mode
       safe(() => {
         for (let i = 0; i < 400; i++) step(0.03);
       });
       drawNow();
-      setReadout({ messages: REAL[modeRef.current], backlog: queued().length + backlog, busy: workerBusy.filter(Boolean).length, decision: '' });
-    } else io.observe(wrap);
+      if (!dead) report();
+    };
+    ctl.current = { sync, settle };
+    const io = new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      sync();
+    });
+    if (!playingRef.current) settle();
+    io.observe(wrap);
 
     return () => {
+      ctl.current = null;
       cancelAnimationFrame(raf);
       io.disconnect();
       ro.disconnect();
     };
-  }, [theme, reduce, stillFrameMode]);
+  }, [theme]);
 
   // gently auto-alternate so a skimming reader sees both states; stops once they click
   useEffect(() => {
-    if (reduce) return;
+    if (!playing) return;
     const id = window.setInterval(() => {
       if (!touched.current) setMode((m) => (m === 'before' ? 'after' : 'before'));
     }, 9000);
     return () => window.clearInterval(id);
-  }, [reduce]);
+  }, [playing]);
 
   const choose = (m: Mode) => {
     touched.current = true;
@@ -479,26 +507,47 @@ const AdmissionControl: React.FC = () => {
     <figure className="zen-card not-prose mt-8 overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3">
         <p className="zen-label text-muted-foreground">Live model · admission control</p>
-        <div role="radiogroup" aria-label="Scheduler behaviour" className="flex rounded-full border bg-secondary p-1 text-small">
-          {(['before', 'after'] as Mode[]).map((m) => (
+        <div className="flex items-center gap-2">
+          <div role="radiogroup" aria-label="Scheduler behaviour" className="flex rounded-full border bg-secondary p-1 text-small">
+            {(['before', 'after'] as Mode[]).map((m) => (
+              <button
+                key={m}
+                role="radio"
+                aria-checked={mode === m}
+                onClick={() => choose(m)}
+                className={`rounded-full px-3 py-1 transition-colors ${mode === m ? 'bg-card font-semibold text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                {m === 'before' ? (
+                  <>
+                    Before<span className="hidden sm:inline">: publish everything</span>
+                  </>
+                ) : (
+                  <>
+                    After<span className="hidden sm:inline">: one if</span>
+                  </>
+                )}
+              </button>
+            ))}
+          </div>
+          {!failed && (
             <button
-              key={m}
-              role="radio"
-              aria-checked={mode === m}
-              onClick={() => choose(m)}
-              className={`rounded-full px-3 py-1 transition-colors ${mode === m ? 'bg-card font-semibold text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              type="button"
+              onClick={() => setPlaying((p) => !p)}
+              aria-label={playing ? 'Pause the model' : 'Play the model'}
+              className={`flex h-9 items-center justify-center gap-1.5 rounded-full border transition-colors ${
+                playing ? 'w-9 bg-secondary text-muted-foreground hover:text-foreground' : 'bg-card px-3.5 font-semibold text-foreground shadow-sm'
+              }`}
             >
-              {m === 'before' ? (
-                <>
-                  Before<span className="hidden sm:inline">: publish everything</span>
-                </>
+              {playing ? (
+                <Pause className="h-3.5 w-3.5" />
               ) : (
                 <>
-                  After<span className="hidden sm:inline">: one if</span>
+                  <Play className="h-3.5 w-3.5 fill-primary text-primary" />
+                  <span className="text-small">Play</span>
                 </>
               )}
             </button>
-          ))}
+          )}
         </div>
       </div>
       <div ref={wrapRef} className="relative">
