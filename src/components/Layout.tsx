@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useLayoutEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -17,9 +17,16 @@ const PalettePanel = labEnabled() ? lazy(() => import('@/components/PalettePanel
 /** New page → top of the page, or to its #anchor once the page has rendered. */
 function useScrollOnNavigate() {
   const { pathname, hash } = useLocation();
+  // We restore position ourselves; the browser's own restoration fights it on iOS.
   useEffect(() => {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  }, []);
+  // Layout effect: reset before the new page is painted, so it never shows at the old offset.
+  useLayoutEffect(() => {
     if (!hash) {
-      window.scrollTo({ top: 0 });
+      // 'instant' overrides `scroll-behavior: smooth` on <html>: a new page should simply start at
+      // the top, not animate the old page scrolling up (very visible on phones).
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
       return;
     }
     const id = hash.slice(1);

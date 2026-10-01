@@ -156,29 +156,55 @@ const renderLine = (line: Line, i: number, sk: Skin) => {
   );
 };
 
+/** Desktop layout: the primary pointer isn't a finger, and there's height for the fixed window. */
+const isDesktop = () => !window.matchMedia('(pointer: coarse)').matches && window.innerHeight >= 560;
+
+interface ShellFit {
+  /** Inline position/size; empty on desktop (CSS sizes the window). */
+  style: React.CSSProperties;
+  /** Touch device: show the tab/↑/↓/clear key row. */
+  touch: boolean;
+  /** Little vertical room (landscape phone, keyboard up): drop the command chips. */
+  compact: boolean;
+  /** Very little room: drop the touch keys too, keep only output + prompt. */
+  tiny: boolean;
+}
+
 /**
- * Phones: a bottom sheet that sits above the on-screen keyboard. The visual viewport shrinks
- * when the keyboard opens, so size and place the sheet from it. Desktop uses the CSS size.
+ * Phones and short screens: size the shell from the *visual* viewport, which shrinks when the
+ * keyboard opens and changes on rotation. Portrait: a bottom sheet. Landscape: fills the screen
+ * edge to edge (an iPhone 13 in landscape is ~844×340, so the desktop window would be cut off).
  */
-function useKeyboardAwareHeight(open: boolean): React.CSSProperties {
-  const [box, setBox] = useState<{ top: number; height: number } | null>(null);
+function useShellFit(open: boolean): ShellFit {
+  const [fit, setFit] = useState<ShellFit>({ style: {}, touch: false, compact: false, tiny: false });
   useEffect(() => {
     const vv = window.visualViewport;
-    if (!open || !vv || window.matchMedia('(min-width: 640px)').matches) return;
+    if (!open) return;
     const update = () => {
-      const height = Math.min(vv.height - 16, Math.round(window.innerHeight * 0.78));
-      setBox({ top: vv.offsetTop + vv.height - height - 8, height });
+      if (isDesktop() || !vv) {
+        setFit({ style: {}, touch: false, compact: false, tiny: false });
+        return;
+      }
+      const landscape = vv.width > vv.height;
+      const height = landscape ? vv.height - 16 : Math.min(vv.height - 16, Math.round(window.innerHeight * 0.78));
+      setFit({
+        style: { top: vv.offsetTop + vv.height - height - 8, height, left: 8, right: 8, width: 'auto', bottom: 'auto' },
+        touch: true,
+        compact: height < 380,
+        tiny: height < 250,
+      });
     };
     update();
-    vv.addEventListener('resize', update);
-    vv.addEventListener('scroll', update);
+    vv?.addEventListener('resize', update);
+    vv?.addEventListener('scroll', update);
+    window.addEventListener('orientationchange', update);
     return () => {
-      vv.removeEventListener('resize', update);
-      vv.removeEventListener('scroll', update);
+      vv?.removeEventListener('resize', update);
+      vv?.removeEventListener('scroll', update);
+      window.removeEventListener('orientationchange', update);
     };
   }, [open]);
-  if (typeof window !== 'undefined' && window.matchMedia('(min-width: 640px)').matches) return {};
-  return box ? { top: box.top, height: box.height } : { bottom: 8, height: '78svh' };
+  return fit;
 }
 
 const ZenShell: React.FC = () => {
@@ -327,7 +353,12 @@ const ZenShell: React.FC = () => {
     fn();
     inputRef.current?.focus();
   };
-  const viewport = useKeyboardAwareHeight(open);
+  const fit = useShellFit(open);
+  // When the window resizes (keyboard up/down, rotation) keep the prompt line in view.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [fit.style.height]);
 
   return (
     <>
@@ -365,11 +396,11 @@ const ZenShell: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-x-2 z-50 flex flex-col overflow-hidden rounded-[22px] border font-mono text-[14px] leading-relaxed shadow-2xl shadow-black/40 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:top-auto sm:h-[460px] sm:w-[600px] sm:text-[13px]"
-            style={{ background: windowSk.bg, borderColor: windowSk.line, color: windowSk.text, ...viewport }}
+            className="fixed inset-x-2 bottom-2 z-50 flex h-[78svh] flex-col overflow-hidden rounded-[22px] border font-mono text-[14px] leading-relaxed shadow-2xl shadow-black/40 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:h-[460px] sm:w-[600px] sm:text-[13px]"
+            style={{ background: windowSk.bg, borderColor: windowSk.line, color: windowSk.text, ...fit.style }}
             onClick={() => inputRef.current?.focus()}
           >
-            <div className="flex items-center gap-2 border-b px-4 py-3" style={{ borderColor: windowSk.line, background: windowSk.raised }}>
+            <div className={`flex items-center gap-2 border-b px-4 ${fit.tiny ? 'py-1.5' : 'py-3'}`} style={{ borderColor: windowSk.line, background: windowSk.raised }}>
               <span className="flex gap-1.5" aria-hidden>
                 <span className="h-3 w-3 rounded-full" style={{ background: palette.highlight }} />
                 <span className="h-3 w-3 rounded-full" style={{ background: palette.secondary }} />
@@ -414,7 +445,8 @@ const ZenShell: React.FC = () => {
 
             <div className="border-t pb-[env(safe-area-inset-bottom)]" style={{ borderColor: windowSk.line }}>
               {/* Touch keys: phones have no Tab or arrow keys. */}
-              <div className="flex gap-1.5 px-3 pt-3 sm:hidden">
+              {fit.touch && !fit.tiny && (
+              <div className="flex gap-1.5 px-3 pt-3">
                 {[
                   { label: 'tab', run: completeInput },
                   { label: '↑', run: historyUp },
@@ -432,7 +464,9 @@ const ZenShell: React.FC = () => {
                   </button>
                 ))}
               </div>
-              {/* One-tap commands, then every page from the site map. */}
+              )}
+              {/* One-tap commands, then every page from the site map. Dropped when space is tight. */}
+              {!fit.compact && (
               <div className="flex gap-2 overflow-x-auto px-3 py-3 [scrollbar-width:none] sm:px-4">
                 {[...SUGGESTIONS, ...PAGES.map((p) => `cd ${p.shell[0].name}`)].map((cmd) => (
                   <button
@@ -449,6 +483,8 @@ const ZenShell: React.FC = () => {
                   </button>
                 ))}
               </div>
+              )}
+              {fit.compact && fit.touch && !fit.tiny && <div className="h-3" />}
             </div>
           </motion.div>
         )}

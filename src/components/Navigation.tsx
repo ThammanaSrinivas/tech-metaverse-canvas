@@ -31,7 +31,7 @@ const MobileMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-x-0 bottom-0 top-16 z-[45] flex flex-col overflow-y-auto bg-background lg:hidden"
+      className="fixed inset-0 z-[45] flex flex-col overflow-y-auto bg-background pt-[72px] lg:hidden"
     >
       <nav aria-label="Pages" className="mx-auto w-full max-w-[1120px] flex-1 px-5 py-4">
         <ul>
@@ -120,12 +120,23 @@ const Navigation: React.FC = () => {
 
   return (
     <>
+      {/*
+        Over an ink top the bar is transparent and full-width. Once solid it floats: inset from the
+        edges, rounded, with a soft shadow. No backdrop blur: it costs a lot on phones while scrolling.
+      */}
       <header
-        className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
-          solid || menuOpen ? 'border-b bg-background/95 backdrop-blur-sm' : 'dark border-b border-transparent text-foreground'
+        className={`fixed inset-x-0 top-0 z-50 transition-[padding] duration-300 ease-out ${
+          solid || menuOpen ? 'px-2 pt-2 md:px-4 md:pt-3' : 'px-0 pt-0'
         }`}
       >
-        <nav className="mx-auto flex h-16 max-w-[1120px] items-center gap-6 px-5" aria-label="Main">
+        <div
+          className={`mx-auto transition-[max-width,background-color,border-color,border-radius,box-shadow] duration-300 ease-out ${
+            solid || menuOpen
+              ? 'max-w-[1160px] rounded-2xl border bg-background/95 shadow-[0_10px_30px_-14px_hsl(var(--foreground)/0.3)]'
+              : 'dark max-w-full rounded-none border border-transparent text-foreground'
+          }`}
+        >
+        <nav className="mx-auto flex h-14 max-w-[1120px] items-center gap-6 px-4 md:h-16 md:px-5" aria-label="Main">
           <Link to="/" className="group flex items-center gap-2.5" aria-label={`${PROFILE.name}, home`}>
             <Monogram size={30} title="" className="transition-transform duration-300 group-hover:-rotate-6" />
             <span className="font-display text-lg">{PROFILE.shortName}</span>
@@ -180,7 +191,7 @@ const Navigation: React.FC = () => {
             </button>
           </div>
         </nav>
-
+        </div>
       </header>
       <AnimatePresence>{menuOpen && <MobileMenu onClose={closeMenu} />}</AnimatePresence>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
