@@ -1,8 +1,8 @@
 
 import type { Config } from "tailwindcss";
-import brand from "./src/theme/brand.json";
+import colors from "./src/theme/colors.json";
 
-const { zen, amber, ember, stone } = brand.zenmode;
+const { zen, amber, ember, stone } = colors.zenmode;
 
 export default {
 	darkMode: ["class"],
@@ -66,7 +66,7 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// ZenMode brand primitives from brand.json (theme-independent). Semantic colours above follow the palette.
+				// ZenMode brand primitives from colors.json (theme-independent). Semantic colours above follow the palette.
 				zen,
 				amber,
 				ember,
@@ -76,7 +76,7 @@ export default {
 				// Warm neutrals so legacy gray-* classes (Coding Duel) stay quiet next to any palette.
 				gray: stone
 			},
-			// Semantic type scale (text-display … text-label), generated from brand.json typeScale
+			// Semantic type scale (text-display … text-label), generated from typography.json scale
 			// into --fs-/--lh-/--tr- vars by src/theme/runtime.ts scaleCss.
 			fontSize: Object.fromEntries(
 				['display', 'title', 'h1', 'h2', 'h3', 'lead', 'body', 'small', 'label'].map((r) => [
@@ -85,7 +85,7 @@ export default {
 				])
 			),
 			fontFamily: {
-				// Variables set in index.css, swapped by the brand lab (src/theme/brand.json typography).
+				// --font-* variables generated from src/theme/typography.json (runtime.ts typeCss).
 				display: ['var(--font-display)'],
 				accent: ['var(--font-accent)'],
 				sans: ['var(--font-sans)'],

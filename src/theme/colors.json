@@ -1,0 +1,30 @@
+{
+  "_about": "SOURCE OF TRUTH for every colour on the site. Personal palettes (five roles each), fixed system colours, and the ZenMode OS brand. Tokens are derived in tokens.ts; npm run lint:brand rejects colours anywhere else.",
+  "active": "Calm Glow",
+  "system": { "white": "#FFFFFF", "black": "#000000", "danger": "#C0392B", "cursor": "#12160F" },
+  "zenmode": {
+    "_note": "ZenMode OS v3 brand (zenmode.figmatokens.json). Used only inside the .zen scope and the ZenMode mark.",
+    "zen": { "900": "#0B5C12", "700": "#0F7A18", "500": "#2AA136", "300": "#5BDF62", "100": "#BFF3C2", "50": "#E6F6E7" },
+    "amber": { "800": "#7A5A00", "500": "#FFC800", "50": "#FFF8E1" },
+    "ember": { "700": "#B34700", "500": "#FF6600", "300": "#FF8A3D" },
+    "stone": { "50": "#FAF9F5", "100": "#F2F1ED", "200": "#DBD9D2", "300": "#C9C8C1", "400": "#9E9E98", "500": "#70726A", "600": "#5E6058", "700": "#2B2B2B", "800": "#222222", "900": "#1A1A1A", "950": "#111111" },
+    "tokens": { "background": "#F2F1ED", "foreground": "#111111", "card": "#FAF9F5", "card-foreground": "#111111", "popover": "#FFFFFF", "popover-foreground": "#111111", "primary": "#0F7A18", "primary-foreground": "#F0FFF0", "secondary": "#EAE8E1", "secondary-foreground": "#111111", "muted": "#EAE8E1", "muted-foreground": "#65675F", "accent": "#E5F6E6", "accent-foreground": "#0F7A18", "border": "#DBD9D2", "input": "#DBD9D2", "ring": "#0F7A18", "tint": "#E5F6E6", "tint-line": "#CBE7CD", "reward": "#7A5A00", "reward-surface": "#FFF8E0", "node": "#0F7A18" }
+  },
+  "palettes": [
+    { "name": "Calm", "light": "#EDEBE6", "dark": "#403B33", "primary": "#94C7B6", "secondary": "#D6E1C7", "highlight": "#FE5D26", "why": "Espresso and ivory: warm, grounded. Sage = calm focus, one orange spark = the builder." },
+    { "name": "Calm Glow", "light": "#F4F2EC", "dark": "#2B2722", "primary": "#5DBF9F", "secondary": "#D4E7C8", "highlight": "#FE5D26", "why": "Calm with the light turned up: brighter ivory, deeper espresso for contrast, a jade-leaning sage with more saturation, same orange spark." },
+    { "name": "Celestial", "light": "#F5F2EA", "dark": "#0B0E1A", "primary": "#6A3DE8", "secondary": "#C9CED6", "highlight": "#EFC65A", "why": "Night sky, moonlight and a gold sun. Ink is the night (clarity), violet is the magic (curiosity), gold is the sun and the logo's dot: the proof that it shipped (ownership)." },
+    { "name": "Surya", "light": "#FFF8EE", "dark": "#1A0F08", "primary": "#E86A17", "secondary": "#F3DDB8", "highlight": "#EFC65A", "why": "The sun: saffron and gold, as in Surya and Ram's iconography. Warm, energetic, unmistakably Indian; dawn on a dark sky." },
+    { "name": "Neelakantha", "light": "#EEF0F1", "dark": "#0C1424", "primary": "#2C6E91", "secondary": "#C9CED6", "highlight": "#EFC65A", "why": "Shiva: the blue throat, vibhuti ash for the page, the crescent moon in gold, Ganga's blue-teal. Calm, deep, still. (Blue sits near PayPal; teal keeps it apart.)" },
+    { "name": "Peetambar", "light": "#FBF7EE", "dark": "#111733", "primary": "#1F7A8C", "secondary": "#F3C6D0", "highlight": "#EFC65A", "why": "Vishnu and Krishna: shyam blue-black, peacock teal, lotus pink, and the yellow-gold silk (peetambar). Rich but composed." },
+    { "name": "Nebula", "light": "#F7F3EC", "dark": "#0A0A18", "primary": "#D9822B", "secondary": "#9FC2D6", "highlight": "#5CC8C8", "why": "JWST's Carina Nebula: amber cliffs of gas, blue stellar dust, ionised teal. Science and wonder." },
+    { "name": "Moonstone", "light": "#F3F4F7", "dark": "#0B1020", "primary": "#7C8DB5", "secondary": "#E3E6EE", "highlight": "#EFC65A", "why": "Moon in the night: cool moonstone over midnight, one gold glint. The quietest of the set." },
+    { "name": "Navaratna", "light": "#F7F4F1", "dark": "#140C10", "primary": "#B3123E", "secondary": "#EADFE3", "highlight": "#EFC65A", "why": "Gems: ruby (Surya's stone in the navaratna) set in gold. Bold and premium, rare among engineers." },
+    { "name": "Amethyst", "light": "#F6F4F8", "dark": "#120E1E", "primary": "#7B4BC9", "secondary": "#DCD6E8", "highlight": "#EFC65A", "why": "Amethyst and gold: the gem version of Celestial, softer and more jewel-like." },
+    { "name": "Signal", "light": "#F7F7F5", "dark": "#0D0D10", "primary": "#6A3DE8", "secondary": "#D9DADC", "highlight": "#FFDC69", "why": "Ink black + paper white do 90% of the work (clarity). One electric violet for every action (curiosity). Highlighter yellow marks proof, like a pen on a printout (ownership)." },
+    { "name": "Ember", "light": "#FAF8F5", "dark": "#121110", "primary": "#FE5D26", "secondary": "#E9E3DC", "highlight": "#FFDC69", "why": "Your approved orange as the lead: energy and shipping. Warm off-white and near-black keep it grown-up; yellow marks the proof." },
+    { "name": "Tide", "light": "#F5F7F6", "dark": "#0B1214", "primary": "#0F8B8D", "secondary": "#D9DADC", "highlight": "#FFDC69", "why": "Deep teal: calm depth and systems that flow. Distinct from ZenMode green and PayPal blue." },
+    { "name": "Bold", "light": "#FDFDFF", "dark": "#222725", "primary": "#D44B00", "secondary": "#E3884E", "highlight": "#98C1D9", "why": "Spicy orange leads: energy, momentum, shipping. Powder blue cools it down." },
+    { "name": "Indigo Spark", "light": "#F5F5F7", "dark": "#14123A", "primary": "#8A62DD", "secondary": "#D9DADC", "highlight": "#FFDC69", "why": "Earlier pick (softer Signal). Violet = curiosity, silver = clarity (engineered, like brushed metal), a sun-yellow spark = ownership. Indigo-black base stays clear of PayPal navy." }
+  ]
+}

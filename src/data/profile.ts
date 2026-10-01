@@ -47,6 +47,34 @@ export interface Job {
   earlier?: string;
 }
 
+/** How I build: engineering principles, each with where it shows up. Shown on /work. */
+export const PRINCIPLES = [
+  {
+    title: 'Change the contract, not the callers',
+    claim: 'A major change should be 2–3 lines in a core interface plus a new implementation, not a rewrite.',
+    seen: [
+      'ZenMode OS: the app only knows core-api interfaces; the open-source build plugs in mocks, production plugs in Firebase, discovered at startup.',
+      'Zoho: a log export service built on interceptors, so new export features took 2-line changes.',
+    ],
+  },
+  {
+    title: 'Write it once, generically',
+    claim: 'Solve the general case with generic, typed building blocks and specialise by overloading, instead of copying code per case.',
+    seen: [
+      'This site: one typed page registry generates the nav, routes, sitemap and the shell; a page missing its component or shell directory fails to compile.',
+      'This site: one palette-to-tokens function themes every page, the 3D scene, the cursor and the logo.',
+    ],
+  },
+  {
+    title: 'Make the wrong thing fail the build',
+    claim: 'Rules nobody has to remember: the build rejects what a review would have to catch.',
+    seen: [
+      'This site: a brand linter fails on any colour or font defined outside its one source file.',
+      'ZenMode OS: the build fails on a hardcoded colour outside the theme.',
+    ],
+  },
+] as const;
+
 /** The featured story on /beyond. Details from the LinkedIn post; photo in public/beyond. */
 export const SPEAKING = {
   date: '2026-09-11',
@@ -177,7 +205,7 @@ export const ZENMODE = {
     { name: 'Zen Score', stat: '07/10', desc: 'Your day, out of 10', icon: 'score' },
     { name: 'Streaks', stat: '13 DAYS', desc: 'Promises kept', icon: 'streak' },
     { name: 'ZenCircle', stat: '2 OF 5', desc: 'Accountability with friends', icon: 'circle' },
-    { name: 'Gold Pay', stat: '+ GOLD', desc: 'Time saved becomes gold', icon: 'gold' },
+    { name: 'Gold Invest', stat: '+ GOLD', desc: 'Time saved becomes gold', icon: 'gold' },
   ] as const,
   /** Milestones, from the LinkedIn posts. Shown on /zenmode, in the /beyond timeline and ~/zenmode/launch.md. */
   milestones: [

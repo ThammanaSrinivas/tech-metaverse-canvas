@@ -6,7 +6,7 @@ import { contrastReport } from '@/theme/tokens';
 import { useStarsEnabled } from '@/lib/stars';
 import { isHex, luminance, normalizeHex, toHsl } from '@/theme/color';
 
-// Brand lab: try palette + typography combos on the real page. Presets come from brand.json. Dev builds only (localhost); never deployed.
+// Brand lab: try palette + typography combos on the real page. Presets come from colors.json / typography.json. Dev builds only (localhost); never deployed.
 // (for design reviews); loaded as its own chunk so regular visitors never download it.
 
 const ROLES: { key: keyof Omit<Palette, 'name'>; label: string; hint: string }[] = [
@@ -229,7 +229,7 @@ const PalettePanel: React.FC = () => {
         ))}
       </div>
 
-      <p className="mt-3 text-xs text-muted-foreground">Changes only affect your browser. Share link sends this exact palette + type. Copy gives a brand.json entry.</p>
+      <p className="mt-3 text-xs text-muted-foreground">Changes only affect your browser. Share link sends this exact palette + type. Copy gives a colors.json entry.</p>
 
       <div className="mt-4 flex gap-2">
         <input
@@ -264,10 +264,10 @@ const PalettePanel: React.FC = () => {
         <button onClick={() => copy('link')} title="Link that opens this exact palette" className="flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-3 py-2 font-semibold text-primary-foreground">
           {copied === 'link' ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />} {copied === 'link' ? 'Copied' : 'Share link'}
         </button>
-        <button onClick={() => copy('code')} title="Copy as a brand.json palette entry" className="flex items-center gap-1 rounded-full border px-3 py-2 hover:border-primary">
+        <button onClick={() => copy('code')} title="Copy as a colors.json palette entry" className="flex items-center gap-1 rounded-full border px-3 py-2 hover:border-primary">
           {copied === 'code' ? <Check className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
         </button>
-        <button onClick={resetPalette} title="Back to brand.json active" className="flex items-center gap-1 rounded-full border px-3 py-2 hover:border-primary">
+        <button onClick={resetPalette} title="Back to the active palette and type" className="flex items-center gap-1 rounded-full border px-3 py-2 hover:border-primary">
           <RotateCcw className="h-4 w-4" />
         </button>
       </div>

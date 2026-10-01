@@ -1,15 +1,16 @@
-// SOURCE OF TRUTH: every colour on the site lives in brand.json (palettes, system colours, the
-// ZenMode brand) and nowhere else; `npm run lint:colors` fails on a colour literal anywhere else.
-// Personal brand palettes and typography live there too.
+// SOURCE OF TRUTH for the brand lives in three JSON files next to this one:
+//   colors.json      every colour: personal palettes, system colours, the ZenMode OS brand
+//   typography.json  every font: font files, typography sets, ZenMode fonts, the type scale
+//   brand.json       what the brand means: the one-line idea, the values, lab combos
+// This module only types and indexes them. `npm run lint:brand` fails on a colour or font name
+// written anywhere else.
 //
-// A palette is five colours in five roles. Everything else on the site (surfaces, borders,
-// muted text, contrast-safe text shades, the dark sections, stars, shell, cursor, monogram)
-// is derived from these in tokens.ts. A typography set is three font families (display, body,
-// mono); font sizes come from one modular type scale (typeScale: base × ratio^step per role).
-// A theme is a named palette + typography combo. To try something new, add an entry to
-// brand.json (or use the lab panel on localhost and "Copy as JSON"), then set "active".
-//
-// The ZenMode section is not affected: it keeps the ZenMode OS brand (.zen in index.css).
+// A palette is five colours in five roles; everything else (surfaces, borders, contrast-safe
+// text, dark sections, stars, shell, cursor, logo) is derived in tokens.ts. A typography set is
+// display / accent / body / mono; sizes come from one modular scale (base × ratio^step per role).
+// The ZenMode section keeps the ZenMode OS brand (.zen scope), from the same two files.
+import colors from './colors.json';
+import typography from './typography.json';
 import brand from './brand.json';
 
 export interface Palette {
@@ -78,20 +79,37 @@ export interface Theme {
 export const BRAND: { idea: string; values: { name: string; means: string; rule: string }[] } = brand.brand;
 
 /** Fixed, palette-independent colours (pure white/black light, error red, the cursor ink). */
-export const SYSTEM = brand.system;
+export const SYSTEM = colors.system;
 
 /** The ZenMode OS v3 brand: primitives + the semantic tokens of the .zen scope. */
-export const ZENMODE_COLORS = brand.zenmode;
+export const ZENMODE_COLORS = colors.zenmode;
 
-export const PALETTES: Palette[] = brand.palettes;
-export const TYPOGRAPHY: Typography[] = brand.typography;
+export const PALETTES: Palette[] = colors.palettes;
+export const TYPOGRAPHY: Typography[] = typography.sets;
 export const THEMES: Theme[] = brand.themes;
-export const TYPE_SCALE: TypeScale = brand.typeScale as TypeScale;
+export const TYPE_SCALE: TypeScale = typography.scale as TypeScale;
+
+export interface FontFace {
+  family: string;
+  /** Path under public/. */
+  file: string;
+  /** A weight or a variable range, e.g. "400" or "200 800". */
+  weight: string;
+  style?: 'italic' | 'normal';
+}
+/** Every vendored font file; @font-face rules are generated from these (runtime.ts). */
+export const FONT_FACES: FontFace[] = typography.faces as FontFace[];
+
+/** Generic families appended after each brand font, per role. */
+export const FONT_FALLBACKS: { display: string; accent: string; sans: string; mono: string } = typography.fallbacks;
+
+/** The ZenMode OS fonts for the .zen scope. */
+export const ZENMODE_TYPE: { display: string; sans: string; mono: string; weight: number } = typography.zenmode;
 
 /** What production ships with. */
-export const ACTIVE_PALETTE = brand.active.palette;
-export const ACTIVE_TYPE = brand.active.type;
-export const ACTIVE_RATIO = brand.active.ratio;
+export const ACTIVE_PALETTE = colors.active;
+export const ACTIVE_TYPE = typography.active.set;
+export const ACTIVE_RATIO = typography.active.ratio;
 
 const byName = <T extends { name: string }>(list: T[], n: string | null | undefined) =>
   list.find((x) => x.name.toLowerCase() === n?.toLowerCase());

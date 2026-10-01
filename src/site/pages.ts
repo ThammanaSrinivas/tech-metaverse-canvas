@@ -6,7 +6,7 @@
 //   and the shell's ~/ filesystem (`ls`, `cd`, `cat`, `tree`, `grep`, `open`).
 // To add a page: add an entry below (shell included, or it won't type-check), map its component
 // in routes.tsx (also type-checked), done. Index numbers follow the order here.
-import { BEYOND, JOBS, JOURNEY, LAB, LINKS, PROFILE, SPEAKING, TOOLBOX, ZENMODE, formatDate } from '@/data/profile';
+import { BEYOND, JOBS, JOURNEY, LAB, LINKS, PRINCIPLES, PROFILE, SPEAKING, TOOLBOX, ZENMODE, formatDate } from '@/data/profile';
 import { BRAND } from '@/theme/palettes';
 import { POSTS, PUBLISHED } from '@/content/writing';
 import { plain } from '@/lib/rich';
@@ -95,6 +95,13 @@ const DEFS = [
               ),
             },
           ])
+        ),
+      },
+      {
+        name: 'how-i-build',
+        route: '/work#how-i-build',
+        files: Object.fromEntries(
+          PRINCIPLES.map((p) => [`${slug(p.title)}.md`, { body: md(`# ${p.title}`, p.claim, '', ...p.seen.map((x) => `- ${x}`)) }])
         ),
       },
       {

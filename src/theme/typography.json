@@ -1,0 +1,110 @@
+{
+  "_about": "SOURCE OF TRUTH for every font on the site: the font files, the typography sets (display / accent / body / mono), the ZenMode OS fonts and the modular type scale. @font-face rules and --font-* variables are generated from this (runtime.ts); npm run lint:brand rejects font names anywhere else.",
+  "active": { "set": "Builder", "ratio": 1.25 },
+  "faces": [
+    { "family": "Bricolage Grotesque", "file": "/fonts/BricolageGrotesque-Variable.woff2", "weight": "400 800" },
+    { "family": "Instrument Serif", "file": "/fonts/InstrumentSerif-Italic.woff2", "weight": "400", "style": "italic" },
+    { "family": "Manrope", "file": "/fonts/Manrope-Variable.woff2", "weight": "200 800" },
+    { "family": "Space Mono", "file": "/fonts/SpaceMono-Regular.woff2", "weight": "400" },
+    { "family": "Space Mono", "file": "/fonts/SpaceMono-Bold.woff2", "weight": "700" },
+    { "family": "Clash Display", "file": "/fonts/ClashDisplay-Medium.otf", "weight": "500" },
+    { "family": "Geist", "file": "/fonts/Geist-Variable.ttf", "weight": "100 900" },
+    { "family": "Departure Mono", "file": "/fonts/DepartureMono-Regular.otf", "weight": "400" }
+  ],
+  "fallbacks": { "display": "system-ui, sans-serif", "accent": "Georgia, serif", "sans": "system-ui, -apple-system, \"Segoe UI\", sans-serif", "mono": "ui-monospace, SFMono-Regular, Menlo, monospace" },
+  "zenmode": { "display": "Clash Display", "sans": "Geist", "mono": "Departure Mono", "weight": 500 },
+  "sets": [
+    {
+      "name": "Builder",
+      "weight": 700,
+      "display": "Bricolage Grotesque",
+      "sans": "Manrope",
+      "mono": "Space Mono",
+      "google": [],
+      "why": "Hand-made character: an engineer who builds and ships real products. Bold Bricolage headings over calm Manrope body text give the hierarchy its contrast; Instrument Serif italic is the accent voice for one word per heading; Space Mono carries the numbers. Vendored in public/fonts."
+    },
+    {
+      "name": "Zen",
+      "weight": 500,
+      "display": "Clash Display",
+      "sans": "Geist",
+      "mono": "Departure Mono",
+      "google": [],
+      "why": "Current set (shared with ZenMode). Geometric display, neutral body, pixel mono."
+    },
+    {
+      "name": "Grotesk",
+      "weight": 600,
+      "display": "Space Grotesk",
+      "sans": "IBM Plex Sans",
+      "mono": "IBM Plex Mono",
+      "google": [
+        "Space+Grotesk:wght@400..700",
+        "IBM+Plex+Sans:wght@400;500;600",
+        "IBM+Plex+Mono:wght@400;500"
+      ],
+      "why": "Engineer's voice: quirky grotesk headings, IBM's systems heritage in body + code."
+    },
+    {
+      "name": "Editorial",
+      "weight": 400,
+      "displayScale": 1.12,
+      "display": "Instrument Serif",
+      "sans": "Instrument Sans",
+      "mono": "JetBrains Mono",
+      "google": [
+        "Instrument+Serif",
+        "Instrument+Sans:wght@400..700",
+        "JetBrains+Mono:wght@400;500"
+      ],
+      "why": "Leader's voice: a serif headline reads like writing and judgement, not just code."
+    },
+    {
+      "name": "Swiss",
+      "weight": 600,
+      "display": "Inter Tight",
+      "sans": "Inter",
+      "mono": "Geist Mono",
+      "google": [
+        "Inter+Tight:wght@500;600;700",
+        "Inter:wght@400..700",
+        "Geist+Mono:wght@400;500"
+      ],
+      "why": "Precise and neutral, Big-Tech-native. Safest, least distinctive."
+    },
+    {
+      "name": "Syne",
+      "weight": 700,
+      "displayScale": 0.92,
+      "display": "Syne",
+      "sans": "DM Sans",
+      "mono": "DM Mono",
+      "google": [
+        "Syne:wght@500..700",
+        "DM+Sans:opsz,wght@9..40,400..700",
+        "DM+Mono:wght@400;500"
+      ],
+      "why": "Wide, art-directed headings: design-led engineer. Most unusual."
+    }
+  ],
+  "scale": {
+    "base": 16,
+    "ratios": [
+      { "name": "Major Second", "ratio": 1.125 },
+      { "name": "Minor Third", "ratio": 1.2 },
+      { "name": "Major Third", "ratio": 1.25 },
+      { "name": "Perfect Fourth", "ratio": 1.333 }
+    ],
+    "roles": {
+      "display": { "step": 7, "max": 96, "mobileMax": 46, "leading": 1.0, "tracking": "-0.035em" },
+      "title": { "step": 5.5, "max": 64, "mobileMax": 38, "leading": 1.05, "tracking": "-0.03em" },
+      "h1": { "step": 4, "leading": 1.1, "tracking": "-0.025em" },
+      "h2": { "step": 3, "leading": 1.15, "tracking": "-0.02em" },
+      "h3": { "step": 1.5, "leading": 1.25, "tracking": "-0.01em" },
+      "lead": { "step": 1, "leading": 1.55, "tracking": "0" },
+      "body": { "step": 0, "leading": 1.6, "tracking": "0" },
+      "small": { "step": -0.5, "min": 13, "leading": 1.5, "tracking": "0" },
+      "label": { "step": -1.5, "min": 11, "leading": 1.4, "tracking": "0.08em" }
+    }
+  }
+}

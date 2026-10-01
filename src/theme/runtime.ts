@@ -1,5 +1,5 @@
 // Applies a palette and a typography set to the live page and lets canvas/JS consumers follow
-// changes. Production always ships brand.json "active": the lab and every override below are
+// changes. Production always ships the "active" palette (colors.json) and type (typography.json): the lab and every override below are
 // dev-only (npm run dev / localhost), so the deployed site can't be re-themed from a URL.
 // URL params on localhost:
 //   ?theme=Ultraviolet · Editorial   start from a named palette + type combo
@@ -8,7 +8,7 @@
 //   ?r=1.333                     start from a type-scale ratio
 //   ?p=EDEBE6-403B33-94C7B6-D6E1C7-FE5D26   a custom palette: light-dark-primary-secondary-highlight
 import { useEffect, useState } from 'react';
-import { ACTIVE_PALETTE, ACTIVE_RATIO, ACTIVE_TYPE, PALETTES, TYPE_SCALE, TYPOGRAPHY, findPalette, findTheme, findType, type Palette, type TypeScale, type Typography } from './palettes';
+import { ACTIVE_PALETTE, ACTIVE_RATIO, ACTIVE_TYPE, FONT_FACES, FONT_FALLBACKS, PALETTES, TYPE_SCALE, TYPOGRAPHY, ZENMODE_TYPE, findPalette, findTheme, findType, type Palette, type TypeScale, type Typography } from './palettes';
 import { deriveTheme, themeCss, type Theme } from './tokens';
 import { isHex, normalizeHex } from './color';
 import { MONOGRAM_DOT, MONOGRAM_PATH } from '@/components/zen/monogramPath';
@@ -66,15 +66,27 @@ export function shareLink(p: Palette, t: Typography = currentType) {
   return url.toString();
 }
 
-const FALLBACK = {
-  display: 'system-ui, sans-serif',
-  sans: 'system-ui, -apple-system, "Segoe UI", sans-serif',
-  mono: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-};
+const FALLBACK = FONT_FALLBACKS;
 
-/** :root font variables read by tailwind's font-display / font-sans / font-mono. */
+const FORMAT: Record<string, string> = { woff2: 'woff2', woff: 'woff', ttf: 'truetype', otf: 'opentype' };
+
+/** @font-face for every vendored font in typography.json (no font file is named anywhere else). */
+export function fontFacesCss() {
+  return FONT_FACES.map((f) => {
+    const ext = f.file.split('.').pop() ?? '';
+    return `@font-face {\n  font-family: "${f.family}";\n  src: url("${f.file}") format("${FORMAT[ext] ?? ext}");\n  font-weight: ${f.weight};\n  font-style: ${f.style ?? 'normal'};\n  font-display: swap;\n}`;
+  }).join('\n');
+}
+
+/** The ZenMode OS fonts inside the .zen scope. */
+function zenTypeCss() {
+  const z = ZENMODE_TYPE;
+  return `.zen {\n  --display-weight: ${z.weight};\n  --font-display: "${z.display}", "${z.sans}", ${FALLBACK.display};\n  --font-accent: var(--font-display);\n  --font-sans: "${z.sans}", ${FALLBACK.sans};\n  --font-mono: "${z.mono}", ${FALLBACK.mono};\n}`;
+}
+
+/** :root font variables read by tailwind's font-display / font-sans / font-mono, plus .zen fonts. */
 export function typeCss(t: Typography) {
-  return `:root {\n  --display-weight: ${t.weight ?? 600};\n  --font-display: "${t.display}", "${t.sans}", ${FALLBACK.display};\n  --font-accent: "${t.accent ?? t.display}", Georgia, serif;\n  --font-sans: "${t.sans}", ${FALLBACK.sans};\n  --font-mono: "${t.mono}", ${FALLBACK.mono};\n}`;
+  return `:root {\n  --display-weight: ${t.weight ?? 600};\n  --font-display: "${t.display}", "${t.sans}", ${FALLBACK.display};\n  --font-accent: "${t.accent ?? t.display}", ${FALLBACK.accent};\n  --font-sans: "${t.sans}", ${FALLBACK.sans};\n  --font-mono: "${t.mono}", ${FALLBACK.mono};\n}\n${zenTypeCss()}`;
 }
 
 const PHONE = 375;
@@ -165,7 +177,7 @@ export function applyPalette(p: Palette, persist = false) {
   window.dispatchEvent(new Event(EVENT));
 }
 
-/** Apply a named palette + typography combo from brand.json "themes". */
+/** Apply a named palette + typography combo (brand.json "themes"). */
 export function applyCombo(name: string, persist = false) {
   const combo = findTheme(name);
   if (!combo) return;
@@ -175,9 +187,10 @@ export function applyCombo(name: string, persist = false) {
 
 /**
  * Starting brand: URL params first (?p / ?palette / ?type / ?theme), then (lab only) the last
- * one you tried, then brand.json "active".
+ * one you tried, then the "active" palette and type.
  */
 export function initPalette() {
+  head<HTMLStyleElement>('font-faces', 'style').textContent = fontFacesCss();
   if (!labEnabled()) {
     applyPalette(current.palette);
     applyType(currentType);

@@ -7,80 +7,20 @@
  *  - Personal: generated from a five-colour palette (src/theme). Swap palettes there.
  *  - ZenMode OS v3 (.zen below): paper / ink / zen green / amber, from zenmode.figmatokens.json.
  *    Only the ZenMode section uses it, so the product is the one vivid green on the page.
- * Every colour comes from src/theme/brand.json (npm run lint:colors enforces it).
+ * Every colour comes from src/theme/colors.json, every font from src/theme/typography.json
+ * (generated into <style> tags by src/theme/runtime.ts; npm run lint:brand enforces it).
  * Values are HSL channels so Tailwind opacity modifiers (bg-primary/10) keep working.
  */
-@font-face {
-  font-family: 'Clash Display';
-  src: url('/fonts/ClashDisplay-Medium.otf') format('opentype');
-  font-weight: 500;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Geist';
-  src: url('/fonts/Geist-Variable.ttf') format('truetype');
-  font-weight: 100 900;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Bricolage Grotesque';
-  src: url('/fonts/BricolageGrotesque-Variable.woff2') format('woff2');
-  font-weight: 400 800;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Instrument Serif';
-  src: url('/fonts/InstrumentSerif-Italic.woff2') format('woff2');
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Manrope';
-  src: url('/fonts/Manrope-Variable.woff2') format('woff2');
-  font-weight: 200 800;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Space Mono';
-  src: url('/fonts/SpaceMono-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Space Mono';
-  src: url('/fonts/SpaceMono-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Departure Mono';
-  src: url('/fonts/DepartureMono-Regular.otf') format('opentype');
-  font-weight: 400;
-  font-display: swap;
-}
-
 @layer base {
-  /* Personal colour tokens (:root) and the dark-section scope (.dark) are generated at runtime
-     from src/theme/brand.json by src/theme/tokens.ts, into <style id="palette-tokens">. */
+  /* Colour tokens (:root, .dark, .zen) come from colors.json via tokens.ts; font-face rules and
+     --font-* / --fs-* variables come from typography.json via runtime.ts. Nothing is named here. */
   :root {
     --radius: 0.75rem;              /* shadcn primitives; cards use rounded-[20px] */
-    /* Typography defaults; the brand lab overrides these from brand.json (runtime.ts typeCss). */
-    --display-weight: 700;
-    --font-display: "Bricolage Grotesque", "Manrope", system-ui, sans-serif;
-    --font-accent: "Instrument Serif", Georgia, serif;
-    --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
-    --font-mono: "Space Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
 
   /* ZenMode OS v3, scoped to the ZenMode section. */
   .zen {
-    /* colour tokens are generated from brand.json zenmode.tokens (tokens.ts zenCss) */
-    --font-display: "Clash Display", "Geist", system-ui, sans-serif;
-    --font-sans: "Geist", system-ui, sans-serif;
-    --font-mono: "Departure Mono", ui-monospace, monospace;
-    --display-weight: 500;
-    --font-accent: var(--font-display);
+    /* colour tokens are generated from colors.json zenmode.tokens (tokens.ts zenCss) */
     color: hsl(var(--foreground));
     font-family: var(--font-sans);
   }

@@ -63,7 +63,7 @@ describe('share links', () => {
   });
 });
 
-describe('brand.json', () => {
+describe('brand files (colors / typography / brand)', () => {
   it('names are unique and every combo points at a real palette and typography', () => {
     for (const list of [PALETTES, TYPOGRAPHY, THEMES]) expect(new Set(list.map((x) => x.name)).size).toBe(list.length);
     for (const c of THEMES) {
