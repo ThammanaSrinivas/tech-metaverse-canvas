@@ -9,14 +9,11 @@ import { whenIdle } from '@/lib/idle';
 type Loader = () => Promise<{ default: ComponentType }>;
 
 export const LOADERS: Record<PageId, Loader> = {
-  zenmode: () => import('@/pages/ZenModePage'),
   work: () => import('@/pages/WorkPage'),
   writing: () => import('@/pages/WritingPage'),
-  beyond: () => import('@/pages/BeyondPage'),
-  lab: () => import('@/pages/LabPage'),
+  zenmode: () => import('@/pages/ZenModePage'),
+  about: () => import('@/pages/AboutPage'),
   'time-machine': () => import('@/pages/TimeMachinePage'),
-  explore: () => import('@/pages/ExplorePage'),
-  contact: () => import('@/pages/ContactPage'),
 };
 
 /** Child routes of `nested` pages (`<path>/:slug`). */

@@ -9,6 +9,6 @@ import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
  *
  * Each is its own chunk, loaded only by the article that uses it.
  */
-export const DIAGRAMS: Record<string, LazyExoticComponent<ComponentType>> = {
+export const DIAGRAMS: Record<string, LazyExoticComponent<ComponentType<{ className?: string }>>> = {
   'admission-control': lazy(() => import('./AdmissionControl')),
 };

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Terminal, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useGo } from '@/components/zen/Link';
 import { JOBS, LAB, PROFILE } from '@/data/profile';
 import { complete, runCommand, SUGGESTIONS, type Line } from '@/lib/zenshell';
@@ -218,9 +218,9 @@ const ZenShell: React.FC = () => {
   const { palette } = useBrandTheme();
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const launcherRef = useRef<HTMLButtonElement>(null);
+  // where focus was when the shell opened, to hand it back on close
+  const returnFocus = useRef<HTMLElement | null>(null);
   const windowRef = useRef<HTMLDivElement>(null);
-  const launcherSk = useDarkGround(launcherRef, [open]) ? PAPER_SKIN : INK_SKIN;
   const windowSk = useDarkGround(windowRef, [open]) ? PAPER_SKIN : INK_SKIN;
 
   const toggle = useCallback(() => setOpen((o) => !o), []);
@@ -243,14 +243,16 @@ const ZenShell: React.FC = () => {
     };
   }, [toggle]);
 
-  // Boot once, line by line. On close, hand focus back to the launcher (but not on first mount).
+  // Boot once, line by line. On close, hand focus back to wherever it was (not on first mount).
   const wasOpen = useRef(false);
   useEffect(() => {
     if (!open) {
-      if (wasOpen.current) launcherRef.current?.focus({ preventScroll: true });
+      if (wasOpen.current) returnFocus.current?.focus({ preventScroll: true });
       return;
     }
     wasOpen.current = true;
+    const active = document.activeElement;
+    returnFocus.current = active instanceof HTMLElement && active !== document.body ? active : null;
     inputRef.current?.focus();
     if (booted) return;
     setBooted(true);
@@ -373,28 +375,6 @@ const ZenShell: React.FC = () => {
 
   return (
     <>
-      <AnimatePresence>
-        {!open && (
-          <motion.button
-            ref={launcherRef}
-            data-zen-shell
-            key="launcher"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 12 }}
-            onClick={() => setOpen(true)}
-            className="group fixed bottom-5 right-5 z-40 flex h-12 items-center gap-2.5 rounded-full border px-4 font-mono text-xs uppercase tracking-[0.1em] shadow-lg shadow-black/25 transition-transform hover:-translate-y-0.5"
-            style={{ background: launcherSk.bg, borderColor: launcherSk.line, color: launcherSk.text }}
-            aria-label="Open zen shell (backtick key)"
-          >
-            <Terminal className="h-4 w-4" style={{ color: launcherSk.accent }} />
-            <span className="hidden sm:inline">zen shell</span>
-            <kbd className="hidden rounded border px-1.5 py-0.5 sm:inline" style={{ borderColor: launcherSk.line, color: launcherSk.muted }}>`</kbd>
-            <span className="absolute right-2 top-2 h-2 w-2 animate-pulse rounded-full" style={{ background: launcherSk.accent }} />
-          </motion.button>
-        )}
-      </AnimatePresence>
-
       <AnimatePresence>
         {open && (
           <motion.div

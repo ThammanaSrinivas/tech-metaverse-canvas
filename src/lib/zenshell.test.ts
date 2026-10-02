@@ -61,10 +61,10 @@ describe('zen shell', () => {
   });
 
   it('opens pages, including via aliases', () => {
-    expect(runCommand('cd lab', ctx).effect).toEqual({ type: 'go', to: '/lab' });
-    expect(runCommand('goto contact', ctx).effect).toEqual({ type: 'go', to: '/contact' });
+    expect(runCommand('cd lab', ctx).effect).toEqual({ type: 'go', to: '/work#side-projects' });
+    expect(runCommand('goto about', ctx).effect).toEqual({ type: 'go', to: '/about' });
     expect(runCommand('cd toolbox', ctx).effect).toEqual({ type: 'go', to: '/work#toolbox' });
-    expect(runCommand('cd explore', { history: [], cwd: '~/work' })).toMatchObject({ cwd: '~/explore', effect: { type: 'go', to: '/explore' } });
+    expect(runCommand('cd about', { history: [], cwd: '~/work' })).toMatchObject({ cwd: '~/about', effect: { type: 'go', to: '/about' } });
     expect(runCommand('cd', { history: [], cwd: '~/lab' })).toMatchObject({ cwd: '~', effect: { type: 'go', to: '/' } });
     expect(text('cd nowhere')).toContain('no such directory');
   });
@@ -99,7 +99,9 @@ describe('zen shell', () => {
     expect(complete('neo')).toBe('neofetch ');
     expect(complete('open lin')).toBe('open linkedin');
     expect(complete('work z')).toBe('work zoho');
-    expect(complete('cat ab')).toBe('cat about.md');
+    // ~/about.md and ~/about/ share "about": complete that far, like bash, then finish on the next tab
+    expect(complete('cat ab')).toBe('cat about');
+    expect(complete('cat about.')).toBe('cat about.md');
     expect(complete('cat pay', { history: [], cwd: '~/work' })).toBe('cat paypal.md');
     expect(complete('t')).toBe('t'); // ambiguous: timemachine, top, tree
   });
@@ -120,6 +122,6 @@ describe('zen shell', () => {
   it('keeps the badminton record hidden from help but playable', () => {
     expect(text('help')).not.toContain('badminton');
     expect(text('badminton')).toContain('undefeated');
-    expect(text('cat ~/beyond/badminton.md')).toContain('undefeated');
+    expect(text('cat ~/about/badminton.md')).toContain('undefeated');
   });
 });

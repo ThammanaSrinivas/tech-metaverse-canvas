@@ -4,7 +4,7 @@ import { Link, NavLink } from '@/components/zen/Link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowUpRight, FileText, Menu, Search, Terminal, X } from 'lucide-react';
 import { LINKS, PROFILE } from '@/data/profile';
-import { PAGES } from '@/site/pages';
+import { NAV_PAGES } from '@/site/pages';
 import { Monogram } from '@/components/zen/primitives';
 import CommandPalette from './CommandPalette';
 import SoundToggle from './SoundToggle';
@@ -25,12 +25,7 @@ import { emitZen } from '@/lib/zenEvents';
 const CLIP_OPEN = 'inset(0% 0% 0% 0% round 16px)';
 const CLIP_SHUT = 'inset(0% 0% 100% 0% round 16px)';
 
-const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; floating: boolean; pathname: string }> = ({
-  onClose,
-  ink,
-  floating,
-  pathname,
-}) => {
+const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; pathname: string }> = ({ onClose, ink, pathname }) => {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -56,13 +51,13 @@ const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; floating: boolea
         animate={{ clipPath: CLIP_OPEN, y: 0, transitionEnd: { clipPath: 'none' } }}
         exit={{ clipPath: [CLIP_OPEN, CLIP_SHUT], y: -6, transition: { duration: 0.16, ease: [0.4, 0, 1, 1] } }}
         transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-        className={`fixed inset-x-2 z-[45] max-h-[calc(100svh-5.5rem)] overflow-y-auto overscroll-contain rounded-2xl border bg-background text-foreground shadow-2xl lg:hidden ${
-          floating ? 'top-[4.5rem]' : 'top-[3.75rem]'
-        } ${ink ? 'dark' : ''}`}
+        className={`fixed inset-x-2 top-[3.75rem] z-[45] max-h-[calc(100svh-5.5rem)] overflow-y-auto overscroll-contain rounded-2xl border bg-background text-foreground shadow-2xl md:top-[4.25rem] lg:hidden ${
+          ink ? 'dark' : ''
+        }`}
       >
         <nav aria-label="Pages" className="px-2 py-2">
           <ul>
-            {PAGES.map(({ id, label, path, index, proof }) => (
+            {NAV_PAGES.map(({ id, label, path }) => (
               <li key={id}>
                 <NavLink
                   to={path}
@@ -76,11 +71,7 @@ const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; floating: boolea
                 >
                   {({ isActive }) => (
                     <>
-                      <span className="zen-label w-6 text-primary">{index}</span>
-                      <span className="flex-1">
-                        <span className={`block font-display text-lead ${isActive ? '' : 'text-foreground/85'}`}>{label}</span>
-                        <span className="font-mono text-label text-muted-foreground">{proof}</span>
-                      </span>
+                      <span className={`flex-1 font-display text-lead ${isActive ? '' : 'text-foreground/85'}`}>{label}</span>
                       {isActive ? (
                         <span className="h-2 w-2 rounded-full bg-highlight" aria-label="current page" />
                       ) : (
@@ -119,8 +110,8 @@ const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; floating: boolea
 };
 
 /**
- * Top bar. Over an ink top (the home hero, the explore sky: anything marked data-ink-top) it stays
- * transparent and light-on-dark; elsewhere, and once you scroll past the ink, it turns solid.
+ * Top bar. Over an ink top (anything marked data-ink-top) it stays transparent and light-on-dark;
+ * elsewhere, and once you scroll past the ink, it is solid.
  * The current page is marked twice: bold text, and a highlighter bar that slides between links.
  */
 const Navigation: React.FC = () => {
@@ -163,32 +154,24 @@ const Navigation: React.FC = () => {
   return (
     <>
       {/*
-        Over an ink top the bar is transparent and full-width. Once solid it floats: inset from the
-        edges, rounded, with a soft shadow. No backdrop blur: it costs a lot on phones while scrolling.
-        Opening the phone menu never changes the bar (that morph read as a glitch); the menu sheet
-        takes the bar's mode instead: ink under a transparent bar, paper under a floating one.
+        A plain full-width bar with a hairline under it: no floating pill, no shadow, no blur (blur
+        costs a lot on phones while scrolling). Over an ink top it goes transparent. Opening the
+        phone menu never changes the bar (that morph read as a glitch).
       */}
-      <header
-        data-site-header
-        className={`fixed inset-x-0 top-0 z-50 transition-[padding] duration-300 ease-out ${
-          solid ? 'px-2 pt-2 md:px-4 md:pt-3' : 'px-0 pt-0'
-        }`}
-      >
+      <header data-site-header className="fixed inset-x-0 top-0 z-50">
         <div
-          className={`mx-auto transition-[max-width,background-color,border-color,border-radius,box-shadow] duration-300 ease-out ${
-            solid
-              ? 'max-w-[1160px] rounded-2xl border bg-background/95 shadow-[0_10px_30px_-14px_hsl(var(--foreground)/0.3)]'
-              : 'dark max-w-full rounded-none border border-transparent text-foreground'
+          className={`border-b transition-[background-color,border-color] duration-300 ease-out ${
+            solid ? 'bg-background/95' : 'dark border-transparent text-foreground'
           }`}
         >
-        <nav className="mx-auto flex h-14 max-w-[1120px] items-center gap-6 px-4 md:h-16 md:px-5" aria-label="Main">
+        <nav className="mx-auto flex h-14 max-w-[1120px] items-center gap-6 px-5 md:h-16" aria-label="Main">
           <Link to="/" className="group flex items-center gap-2.5" aria-label={`${PROFILE.name}, home`}>
             <Monogram size={30} title="" className="transition-transform duration-300 group-hover:-rotate-6" />
             <span className="font-display text-lg">{PROFILE.shortName}</span>
           </Link>
 
           <ul className="ml-auto hidden items-center gap-1 lg:flex">
-            {PAGES.map(({ id, label, path }) => (
+            {NAV_PAGES.map(({ id, label, path }) => (
               <li key={id}>
                 <NavLink
                   to={path}
@@ -245,7 +228,7 @@ const Navigation: React.FC = () => {
         exit on top of the new page, and it flashed back for a moment.
       */}
       <AnimatePresence key={pathname}>
-        {menuOpen && <MobileMenu onClose={closeMenu} ink={!solid} floating={solid} pathname={pathname} />}
+        {menuOpen && <MobileMenu onClose={closeMenu} ink={!solid} pathname={pathname} />}
       </AnimatePresence>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </>

@@ -37,11 +37,15 @@ another account is the default, else it fails with "Failed to get Firebase proje
   `#FE5D26`. One accent per screen; orange is the single "I built this" highlighter and the logo dot.
   Never PayPal/Google blue.
 - **Type: Builder set** (`src/theme/typography.json`, modular scale ratio 1.25): Bricolage Grotesque
-  700 for display, Instrument Serif italic as the accent voice for ONE word per heading (write
-  `*word*` in titles; `src/lib/rich.ts`), Manrope for body, Space Mono for every number. All
-  vendored in `public/fonts` (no Google Fonts at runtime).
+  700 for display, Instrument Serif italic as the accent voice (write `*word*`; `src/lib/rich.ts`),
+  Manrope for body, Space Mono for numbers in data. All vendored in `public/fonts`.
 - **Logo:** the "platform T" monogram (T carrying an S, orange dot), `src/components/zen/monogramPath.ts`.
-- **Layout feel:** paper page with ink bands (hero, Time Machine), like zenmodeos.com. No theme toggle.
+- **Layout feel: editorial, not a template.** The owner found the earlier site "vibe coded"; the
+  fix was subtraction. Paper, type and hairlines; roles in prose with numbers inline; lists, not
+  card grids. Do NOT bring back: numbered kickers ("01 · WORK"), a rule after every heading,
+  cards inside cards, stat tiles or count-ups, pill badges, glassy sheens or glows, a floating
+  shell button, or the italic accent word on every heading (article titles only). One
+  highlighter per page. Each fact or number appears once on the site, in its best place.
 - **Name and links:** always "Thammana Srinivas" (short: "Srinivas"). LinkedIn `/in/thammanasrinivas`,
   GitHub `ThammanaSrinivas`. All links and facts come from `src/data/profile.ts`.
 
@@ -64,10 +68,15 @@ another account is the default, else it fails with "Failed to get Firebase proje
 `src/App.tsx`), routes generated from the page registry, each page a lazy chunk.
 
 - **Pages:** registered once in `src/site/pages.ts` (SOURCE OF TRUTH; each page also implements its
-  zen-shell directory; `draft` = dev-only; `nested` = `/:slug` children) and mapped to components in
-  `src/site/routes.tsx`. Nav, mobile menu, footer, ⌘K palette, routes, "Next" links, sitemap test,
-  page meta and the shell's filesystem all derive from it. Live pages: zenmode, work, writing,
-  beyond, lab, time-machine, explore, contact (+ home, 404).
+  zen-shell directory; `draft` = dev-only; `nested` = `/:slug` children; `nav: false` = routed but
+  not in the menu) and mapped to components in `src/site/routes.tsx`. Nav, mobile menu, footer,
+  ⌘K palette, routes, "Next" links, sitemap test, page meta and the shell's filesystem all derive
+  from it. Menu: Work · Writing · ZenMode · About; Time Machine is `nav: false` (linked from
+  Work's side projects); plus home and 404. Home = name, one line, a three-paragraph bio with
+  inline links (`LinkedText`, `[label](/path)` in `PROFILE.bio`) and the live scheduler model.
+- **Retired addresses** (`/beyond`, `/contact`, `/lab`, `/explore`): `REDIRECTS` in `pages.ts`
+  (the router follows them) and the same list as 301s in `firebase.json` `redirects` (a test
+  checks they match whenever `firebase.json` is present).
 - **Writing:** `src/content/writing/index.ts` (SOURCE OF TRUTH) lists articles (Markdown next to it,
   at `/writing/<slug>`) and external posts (open in a new tab). Drafts are dropped from production
   builds entirely (`import.meta.env.DEV || !DRAFT_X`, keep each flag a literal).
@@ -80,8 +89,8 @@ another account is the default, else it fails with "Failed to get Firebase proje
   `useBrandTheme()`, CSS vars or Tailwind token classes; `npm run lint:brand` (also a unit test) fails
   on any colour literal or font name elsewhere (`brand-lint-ignore` on a line opts out). The brand lab
   (`PalettePanel.tsx`, `?theme=`/`?palette=`/`?type=`) exists in dev builds only.
-- **Zen shell** (`ZenShell.tsx` + pure interpreter `src/lib/zenshell.ts`): backtick key or
-  `emitZen('shell')`. **Event bus** `src/lib/zenEvents.ts`. **Cursor** `src/lib/zenCursor.ts`
+- **Zen shell** (`ZenShell.tsx` + pure interpreter `src/lib/zenshell.ts`): backtick key, ⌘K, the
+  phone menu, or `emitZen('shell')`; no floating launcher. The coding duel is only in the shell. **Event bus** `src/lib/zenEvents.ts`. **Cursor** `src/lib/zenCursor.ts`
   (port of zenmodeos.com's; `data-cursor`, `data-magnet`).
 - **Commit Time Machine** (`src/components/CommitTimeMachine/`): lazy three.js. GitHub calls via
   `getJson` in `src/lib/github.ts` (sessionStorage cache, fallback `public/gh-snapshot.json`); commit
@@ -97,7 +106,8 @@ another account is the default, else it fails with "Failed to get Firebase proje
   is still client-rendered. `applyMetaToHtml` throws if `index.html` loses one of its tags: keep the
   tag shapes in `index.html` as they are.
 - **Firebase must serve those files:** `firebase.json` is gitignored (local only) and needs
-  `"cleanUrls": true`, `"trailingSlash": false`, the `** → /index.html` rewrite, immutable caching on
+  `"cleanUrls": true`, `"trailingSlash": false`, the `redirects` above, the `** → /index.html`
+  rewrite, immutable caching on
   `/assets/**`, and the security headers (CSP `default-src 'self'`, `script-src 'self'`,
   `connect-src 'self' https://api.github.com`, `frame-ancestors 'none'`; HSTS, nosniff, DENY,
   Referrer-Policy, Permissions-Policy, COOP). Any new third-party origin needs a CSP change.
@@ -133,7 +143,7 @@ another account is the default, else it fails with "Failed to get Firebase proje
 
 - **Page transitions** use the View Transitions API through React Router: import `Link` / `NavLink` /
   `useGo` from `@/components/zen/Link`, never straight from react-router-dom. Persistent chrome has
-  unique `view-transition-name`s in `index.css` (`[data-site-header]`, cursor, shell launcher/window);
+  unique `view-transition-name`s in `index.css` (`[data-site-header]`, cursor, shell window);
   a duplicate name aborts every transition silently.
 - **Reduced motion is respected everywhere:** transitions off, scroll storytelling static. Moving
   content that plays on its own needs a Pause control (WCAG 2.2.2); under reduced motion it starts

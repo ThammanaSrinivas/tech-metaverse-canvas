@@ -24,19 +24,26 @@ export const PROFILE = {
   tagline: 'Software engineer. Building a calmer phone.',
   /** Who and where, for the home page's <title> and link previews. */
   headline: 'Software Engineer at PayPal, building ZenMode OS',
-  /** The brand line, with the phrase the highlighter marks. */
-  idea: { before: 'I build ', mark: 'innovative systems at scale', after: '. Platforms at PayPal by day, ZenMode OS on my own time.' },
+  /** The one line under my name on the home page. */
+  line: 'I build systems that stay simple at scale.',
+  /**
+   * The home page in three plain paragraphs, newest first, with inline [links](/path). `zoho`
+   * carries the one highlighter on the page: the phrase that proves the line above.
+   */
+  bio: {
+    now: 'I’m a software engineer at [PayPal](/work), working on multi-tenancy and cloud migration for its case management platform.',
+    zoho: {
+      before: 'Before that, at Zoho, I designed [the job scheduler behind Catalyst](/writing/scheduling-10m-cron-jobs), Zoho’s serverless platform. It took cron jobs from once an hour to every minute, for every user, and ',
+      mark: 'one if-condition cut its Kafka traffic from 7,000 messages a cycle to 32',
+      after: '.',
+    },
+    own: 'On my own time I build [ZenMode OS](/zenmode), an open-source Android launcher that helps people scroll less, together.',
+  },
   intro:
     'I build cloud platforms by day and a calmer phone by night. At PayPal I work on multi-tenant platforms and cloud migration. On my own time I build ZenMode OS, an open-source Android launcher that helps people scroll less, together.',
   email: 'srinivas@thammanasrinivas.com',
   location: 'Chennai, India',
 };
-
-export interface Stat {
-  value: string;
-  label: string;
-  sub: string;
-}
 
 export interface Job {
   id: string;
@@ -44,8 +51,10 @@ export interface Job {
   role: string;
   period: string;
   current: boolean;
-  stats: Stat[];
-  highlights: { title: string; body: string }[];
+  /** The role in plain prose, numbers inline. Each number appears once on the site. */
+  story: string[];
+  /** Slug of a write-up about this work, linked under the story. */
+  writeup?: string;
   earlier?: string;
 }
 
@@ -105,7 +114,7 @@ export const FIRST_POST: Milestone = {
 export const BEYOND = [
   { label: 'Leads', title: 'Scrum master', body: 'Runs the agile ceremonies for my team at PayPal, on top of engineering work.' },
   { label: 'Certified', title: 'OCI 2025 Generative AI Professional', body: 'Oracle Cloud Infrastructure certification in applied generative AI.' },
-  { label: 'Community', title: 'FOSS United', body: 'Open-source community; ZenMode OS placed in the top ~10% of ~780 at FOSS Hack 2026.' },
+  { label: 'Community', title: 'FOSS United', body: 'The open-source community where ZenMode OS was built in the open and shown at IndiaFOSS 2026.' },
   { label: 'Plays', title: 'Badminton', body: 'Record against my sister: undefeated. Rematches welcome. 🏸' },
 ] as const;
 
@@ -116,18 +125,9 @@ export const JOBS: Job[] = [
     role: 'Software Engineer 2',
     period: 'May 2025 — Present',
     current: true,
-    stats: [
-      { value: '40%', label: 'faster tenant onboarding', sub: 'SCM multi-tenancy' },
-      { value: '+3', label: 'API maturity levels', sub: 'zero breaking changes' },
-      { value: '500K+', label: 'records benchmarked', sub: 'Bigtable POC' },
-    ],
-    highlights: [
-      { title: 'Multi-tenancy', body: 'across the Simplified Case Management (SCM) platform, plus SCM-Commons onboarding that cut new-tenant onboarding time by 40%.' },
-      { title: 'Notification API', body: 'raised 3 levels on the Richardson Maturity Model with zero breaking changes.' },
-      { title: 'LLM-powered automation', body: 'replacing manual SOPs: an end-to-end code review agent, a parallel git-worktree feature processor and an integration-test agent.' },
-      { title: 'On-prem → GCP', body: 'data migration, automated cloud migration and cloud bug fixes.' },
-      { title: 'RAMP onboarding', body: 'of a SaaS-native solution to GCP, enabling cloud deployment for SCM workloads.' },
-      { title: 'Bigtable POC', body: 'benchmarking 500K+ records with secondary indexes; showed it did not fit the relational model, avoiding a costly redesign.' },
+    story: [
+      'I work on the Simplified Case Management (SCM) platform. I implemented multi-tenancy across it and built the SCM-Commons onboarding that cut new-tenant onboarding time by 40%. I took a mission-critical notification API up three levels on the Richardson Maturity Model without a single breaking change for its consumers, and moved data and workloads from on-prem to GCP, including onboarding a SaaS-native solution through RAMP.',
+      'I also ran a Bigtable proof of concept, benchmarking 500K+ records with secondary indexes. It showed Bigtable didn’t fit our relational model, which saved a costly redesign. And I build LLM-powered tools that replace manual SOPs: a code-review agent, a parallel git-worktree feature processor and an integration-test agent.',
     ],
   },
   {
@@ -136,19 +136,11 @@ export const JOBS: Job[] = [
     role: 'Member of Technical Staff',
     period: 'Jan 2022 — Apr 2025',
     current: false,
-    stats: [
-      { value: '10M+', label: 'cron jobs a day', sub: 'Kafka + Redis scheduler' },
-      { value: '1h→1m', label: 'min schedule interval', sub: 'fault-tolerant, distributed' },
-      { value: '10x', label: 'faster job dispatch', sub: '50ms → 5ms latency' },
+    story: [
+      'I worked on Catalyst, Zoho’s serverless platform. I designed its distributed job scheduler on Kafka and Redis: it took the shortest cron interval from an hour to a minute for every user, handled 10M+ jobs a day, and brought job dispatch latency from 50 ms to 5 ms.',
+      'I also built a HIPAA-compliant audit-log service in a month, which unblocked the European release and grew revenue by 17%; an adapter between Catalyst and Zoho Cron for custom cron expressions that reached 35% adoption in three months; and error alerting by feature context that cut issue resolution time by 30–40%. As a project trainee I added environment variables for functions, which addressed 60% of user tickets, and Node.js 16 support with 12% faster cold starts.',
     ],
-    highlights: [
-      { title: 'Distributed cron scheduler', body: '(Kafka, Redis) running 10M+ jobs a day; minimum interval cut from 1 hour to 1 minute.' },
-      { title: 'Dispatch latency 50ms → 5ms', body: 'with Redis counters and sorted sets; Kafka messages per cycle down 99.5% (7,000 → 32).' },
-      { title: 'HIPAA-compliant audit log service', body: 'built in a month, unblocking the European release and increasing revenue by 17%.' },
-      { title: 'Catalyst ↔ Zoho Cron adapter', body: 'for custom cron expressions, reaching 35% user adoption in 3 months.' },
-      { title: 'Automated error alerting', body: 'by feature context, cutting issue resolution time by 30–40%.' },
-      { title: 'FaaS platform', body: 'Node.js 16 support with 12% lower cold-start time; environment variables for functions, resolving 60% of user tickets.' },
-    ],
+    writeup: 'scheduling-10m-cron-jobs',
     earlier: 'Project Trainee Jan–May 2022 · Summer Intern May–Jun 2021',
   },
 ];

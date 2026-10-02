@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Github, Play, Globe, Trophy } from 'lucide-react';
 import { LINKS, ZENMODE } from '@/data/profile';
-import { CountUp, Reveal, Section } from '@/components/zen/primitives';
+import { Reveal, Section } from '@/components/zen/primitives';
 
 type IconKind = (typeof ZENMODE.features)[number]['icon'];
 
@@ -109,7 +109,7 @@ const ZenModeSection: React.FC = () => (
             <div key={st.label} className="rounded-[20px] border border-tint-line bg-tint p-5">
               <p className={`font-mono text-h2 ${rating ? 'text-reward' : 'text-primary'}`}>
                 {st.prefix}
-                <CountUp value={st.value} />
+                {st.value}
                 {st.unit}
               </p>
               <p className="mt-3 font-medium">{st.label}</p>

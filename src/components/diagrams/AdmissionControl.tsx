@@ -44,7 +44,7 @@ const REAL = { before: 7000, after: 32 } as const;
 const ease = (p: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, p)), 3);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-const AdmissionControl: React.FC = () => {
+const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8' }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
@@ -525,7 +525,7 @@ const AdmissionControl: React.FC = () => {
   };
 
   return (
-    <figure className="zen-card not-prose mt-8 overflow-hidden">
+    <figure className={`zen-card not-prose overflow-hidden ${className}`}>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3">
         <p className="zen-label text-muted-foreground">Live model · admission control</p>
         <div className="flex items-center gap-2">

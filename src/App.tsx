@@ -2,11 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createBrowserRouter, RouterProvider, type RouteObject } from "react-router-dom";
+import { createBrowserRouter, Navigate, RouterProvider, type RouteObject } from "react-router-dom";
 import Layout from "@/components/Layout";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
-import { PAGES } from "@/site/pages";
+import { PAGES, REDIRECTS } from "@/site/pages";
 import { CHILD_LOADERS, LOADERS, lazyRoute } from "@/site/routes";
 
 const queryClient = new QueryClient();
@@ -23,6 +23,8 @@ const routes: RouteObject[] = [
         path: `${path}/:slug`,
         lazy: lazyRoute(CHILD_LOADERS[id]!),
       })),
+      // retired addresses (firebase.json answers these with 301s too)
+      ...Object.entries(REDIRECTS).map(([from, to]) => ({ path: from, element: <Navigate to={to} replace /> })),
       { path: "*", element: <NotFound /> },
     ],
   },

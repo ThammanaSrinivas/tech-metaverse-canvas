@@ -59,14 +59,6 @@
       ]
     },
     "palette": { "minGap": 0.2, "notes": [{ "voice": "glass", "deg": 3, "oct": 1, "gain": 0.16 }] },
-    "count": {
-      "why": "A number counting up: ticks that slow down exactly as the digits settle (ease-out), then a small ding.",
-      "minGap": 0.8,
-      "notes": [
-        { "voice": "tick", "gain": 0.14, "freq": 4200, "repeat": 14, "span": 1.1 },
-        { "voice": "glass", "deg": 4, "oct": 1, "at": 1.15, "gain": 0.12 }
-      ]
-    },
     "switch": { "minGap": 0.2, "notes": [{ "voice": "air", "gain": 0.36, "from": 500, "to": 2200, "decay": 0.3 }] },
     "cycle": {
       "why": "The scheduler's clock, once per cycle.",

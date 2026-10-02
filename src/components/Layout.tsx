@@ -7,7 +7,6 @@ import ZenCursor from '@/components/ZenCursor';
 import { ScrollProgress } from '@/components/zen/primitives';
 import { onZen } from '@/lib/zenEvents';
 import { labEnabled } from '@/theme/runtime';
-import { mountSpotlight } from '@/lib/spotlight';
 import { preloadPages } from '@/site/routes';
 import { sound } from '@/lib/sound';
 
@@ -58,7 +57,6 @@ function useScrollOnNavigate() {
 const Layout: React.FC = () => {
   const [duelOpen, setDuelOpen] = useState(false);
   useEffect(() => onZen('duel', () => setDuelOpen(true)), []);
-  useEffect(mountSpotlight, []);
   useEffect(preloadPages, []);
   useScrollOnNavigate();
   usePageSound();

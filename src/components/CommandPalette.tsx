@@ -13,7 +13,7 @@ import { LAB, LINKS } from '@/data/profile';
 import { PAGES } from '@/site/pages';
 import { emitZen } from '@/lib/zenEvents';
 import { sound, useSound } from '@/lib/sound';
-import { Github, Hash, FileText, ExternalLink, Terminal, Swords, Volume2, VolumeX } from 'lucide-react';
+import { Github, Hash, FileText, ExternalLink, Terminal, Volume2, VolumeX } from 'lucide-react';
 
 interface CommandPaletteProps {
   open?: boolean;
@@ -73,10 +73,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, o
             <Terminal className="mr-2 h-4 w-4 text-primary" />
             <span>Open zen shell</span>
             <kbd className="ml-auto font-mono text-[10px] text-muted-foreground">`</kbd>
-          </CommandItem>
-          <CommandItem onSelect={() => run(() => emitZen('duel'))}>
-            <Swords className="mr-2 h-4 w-4 text-primary" />
-            <span>Start a coding duel</span>
           </CommandItem>
         </CommandGroup>
 

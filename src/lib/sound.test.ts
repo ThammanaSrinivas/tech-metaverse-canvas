@@ -95,7 +95,7 @@ describe('sound engine', () => {
     expect(heard).toContain('logo');
     expect(localStorage.getItem('zen-sound')).toBe('on');
     expect(() => {
-      sound.play('count');
+      sound.play('switch');
       sound.play('ack', { step: 3, pan: 0.5, delay: 0.1 });
       sound.level(1);
     }).not.toThrow();

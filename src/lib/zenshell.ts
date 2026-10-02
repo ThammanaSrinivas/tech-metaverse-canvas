@@ -226,7 +226,7 @@ const COMMANDS: Record<string, Command> = {
   },
   neofetch: { help: 'system info, zen edition', run: () => ({ lines: [{ kind: 'neofetch' }] }) },
   work: {
-    help: 'career stats  [paypal|zoho]',
+    help: 'where I have worked  [paypal|zoho]',
     args: () => JOBS.map((j) => j.id),
     run: ([which]) => {
       const jobs = which ? JOBS.filter((j) => j.id === which.toLowerCase()) : JOBS;
@@ -235,8 +235,8 @@ const COMMANDS: Record<string, Command> = {
         lines: jobs
           .flatMap((j) => [
             t('accent', `${j.company} · ${j.role} · ${j.period}`),
-            ...j.stats.map((s) => t('out', `  ${s.value.padEnd(7)}${s.label} (${s.sub})`)),
-            ...(which ? j.highlights.map((h) => t('muted', `  - ${h.title} ${h.body}`)) : []),
+            // the whole story for one company; the opening sentence of each for the overview
+            ...(which ? j.story.map((para) => t('out', `  ${para}`)) : [t('out', `  ${j.story[0].split(/(?<=\.) /)[0]}`)]),
           ])
           .concat(which ? [] : [t('muted', 'details: work paypal · cat work/zoho.md')]),
         effect: { type: 'go', to: pathFor('work') },
@@ -391,14 +391,25 @@ export function runCommand(input: string, ctx: ShellContext): ShellResult {
 }
 
 /** Tab completion: completes the command name, then its argument (paths are cwd-relative). */
+/** The longest start every candidate shares, e.g. about.md + about/ → "about". */
+const commonPrefix = (words: string[]) =>
+  words.reduce((pre, w) => {
+    let i = 0;
+    while (i < pre.length && i < w.length && pre[i].toLowerCase() === w[i].toLowerCase()) i++;
+    return pre.slice(0, i);
+  });
+
+/** Tab completion like a real shell: a unique match completes; several complete as far as they agree. */
 export function complete(input: string, ctx: ShellContext = { history: [] }): string {
   const parts = input.split(/\s+/);
   if (parts.length === 1) {
     const hits = COMMAND_NAMES.filter((c) => c.startsWith(parts[0].toLowerCase()));
-    return hits.length === 1 ? `${hits[0]} ` : input;
+    if (hits.length === 1) return `${hits[0]} `;
+    return hits.length && commonPrefix(hits).length > parts[0].length ? commonPrefix(hits) : input;
   }
   const cmd = COMMANDS[parts[0].toLowerCase()];
   const partial = parts[parts.length - 1].toLowerCase();
   const hits = (cmd?.args?.(ctx) ?? []).filter((a) => a.toLowerCase().startsWith(partial));
-  return hits.length === 1 ? [...parts.slice(0, -1), hits[0]].join(' ') : input;
+  const done = hits.length === 1 ? hits[0] : hits.length && commonPrefix(hits).length > partial.length ? commonPrefix(hits) : null;
+  return done === null ? input : [...parts.slice(0, -1), done].join(' ');
 }

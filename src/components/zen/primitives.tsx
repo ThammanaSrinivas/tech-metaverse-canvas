@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { motion, useInView, useReducedMotion, useScroll, useSpring } from 'framer-motion';
 import Starfield from '@/components/Starfield';
 import { useBrandTheme } from '@/theme/runtime';
 import { SYSTEM, ZENMODE_COLORS } from '@/theme/palettes';
 import { MONOGRAM_DOT, MONOGRAM_PATH } from './monogramPath';
-import { parseRich } from '@/lib/rich';
-import { sound } from '@/lib/sound';
+import { parseLinks, parseRich } from '@/lib/rich';
+import { Link } from './Link';
 
 // ZenMode mark on a 1024 grid, traced from the app icon. Rounded via stroke-linejoin.
 const MARK_POLYS = [
@@ -102,6 +102,28 @@ export const Rich: React.FC<{ text: string }> = ({ text }) => (
 );
 
 /**
+ * Copy with inline links: `[label](/path)` for pages on this site, `[label](https://…)` for the
+ * rest (opens in a new tab). Links read as part of the sentence, underlined, not as buttons.
+ */
+export const LinkedText: React.FC<{ text: string }> = ({ text }) => (
+  <>
+    {parseLinks(text).map((seg, i) =>
+      !seg.href ? (
+        <React.Fragment key={i}>{seg.text}</React.Fragment>
+      ) : seg.href.startsWith('/') ? (
+        <Link key={i} to={seg.href} className="zen-link">
+          {seg.text}
+        </Link>
+      ) : (
+        <a key={i} href={seg.href} target="_blank" rel="noopener noreferrer" className="zen-link">
+          {seg.text}
+        </a>
+      )
+    )}
+  </>
+);
+
+/**
  * The highlighter: a marker swipe behind the phrase that carries the proof. Sweeps in once when it
  * scrolls into view; the text switches to the ink that reads on the highlighter as it passes.
  * Use it once per screen, or it stops meaning anything.
@@ -116,126 +138,26 @@ export const Marker: React.FC<{ children: React.ReactNode; delay?: number }> = (
   );
 };
 
-/** Top of every inner page: where you are, what this page is, why it matters. */
-export const PageHeader: React.FC<{ index: string; label: string; title: string; lead: string; children?: React.ReactNode }> = ({
-  index,
-  label,
-  title,
-  lead,
-  children,
-}) => {
-  const reduce = useReducedMotion();
-  return (
-    <header className="mx-auto w-full max-w-[1120px] px-5 pb-4 pt-32 md:pt-40">
-      <p className="zen-label flex items-center gap-2 text-muted-foreground">
-        <span className="text-primary">{index}</span>
-        <span aria-hidden className="h-px w-6 bg-border" />
-        {label}
-      </p>
-      <motion.h1
-        className="mt-5 max-w-4xl text-title"
-        variants={maskStagger}
-        initial={reduce ? false : 'hidden'}
-        animate="show"
-      >
-        <MaskWords text={title} />
-      </motion.h1>
-      <motion.p
-        className="mt-5 max-w-2xl text-lead text-muted-foreground"
-        initial={reduce ? false : { opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.35, ease: EASE }}
-      >
-        {lead}
-      </motion.p>
-      {children}
-    </header>
-  );
-};
+/** Top of every inner page: the title, and one line on what the page is for. */
+export const PageHeader: React.FC<{ title: string; lead: string; children?: React.ReactNode }> = ({ title, lead, children }) => (
+  <header className="mx-auto w-full max-w-[1120px] px-5 pb-4 pt-32 md:pt-40">
+    <h1 className="max-w-4xl text-title">
+      <Rich text={title} />
+    </h1>
+    <p className="mt-5 max-w-2xl text-lead text-muted-foreground">{lead}</p>
+    {children}
+  </header>
+);
 
-/** Numbered section heading shared by every section: mono index chip, Clash title, hairline that draws in. */
-export const SectionHeader: React.FC<{ index?: string; title: string; kicker?: string }> = ({ index, title, kicker }) => {
-  const reduce = useReducedMotion();
-  return (
-    <div className="mb-8 md:mb-10">
-      <div className="flex items-center gap-4">
-        {index && <span className="zen-label rounded-lg border border-tint-line bg-tint px-2.5 py-1 text-primary">{index}</span>}
-        <motion.h2
-          className="text-h1"
-          variants={maskStagger}
-          initial={reduce ? false : 'hidden'}
-          whileInView="show"
-          viewport={{ once: true, margin: '-60px' }}
-        >
-          <MaskWords text={title} />
-        </motion.h2>
-        <motion.span
-          className="relative h-px flex-1 origin-left bg-border"
-          aria-hidden
-          initial={reduce ? false : { scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.9, ease: EASE }}
-        >
-          {/* a short accent tick where the hairline starts: the section's "you are here" */}
-          <span className="absolute left-0 top-0 h-px w-8 bg-primary" />
-        </motion.span>
-      </div>
-      {kicker && <p className={`mt-3 max-w-2xl text-muted-foreground ${index ? 'md:ml-[4.25rem]' : ''}`}>{kicker}</p>}
-    </div>
-  );
-};
-
-/**
- * Counts the numeric part of a stat up from 0 when it scrolls into view: "40%", "10M+", "4.6", "#14".
- * Values without a leading number (e.g. "1h→1m") render as-is.
- */
-export const CountUp: React.FC<{ value: string; className?: string; duration?: number }> = ({
-  value,
-  className,
-  duration = 1.2,
-}) => {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-40px' });
-  const reduce = useReducedMotion();
-  // Ranges like "1h→1m" or "50ms → 5ms" read wrong mid-count, and single-step numbers like
-  // "1K" would just flip 0→1, so both stay static.
-  const parsed = value.includes('→') ? null : value.match(/^([^\d]*)(\d+(?:\.\d+)?)(.*)$/);
-  const match = parsed && !(Number.isInteger(parseFloat(parsed[2])) && parseFloat(parsed[2]) < 2) ? parsed : null;
-  const target = match ? parseFloat(match[2]) : 0;
-  const decimals = match?.[2].split('.')[1]?.length ?? 0;
-  const [n, setN] = useState(reduce || !match ? target : 0);
-
-  useEffect(() => {
-    if (!inView || reduce || !match) return;
-    // ticks that slow as the digits settle (the cue is timed to the default 1.2 s; several numbers
-    // counting at once share one)
-    sound.play('count');
-    let raf = 0;
-    const start = performance.now();
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / (duration * 1000));
-      setN(target * (1 - Math.pow(1 - p, 3)));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inView]);
-
-  if (!match) return <span className={className}>{value}</span>;
-  return (
-    <span ref={ref} className={className}>
-      {/* screen readers get the final value as real text; the counting digits are visual only */}
-      <span className="sr-only">{value}</span>
-      <span aria-hidden>
-        {match[1]}
-        {n.toFixed(decimals)}
-        {match[3]}
-      </span>
-    </span>
-  );
-};
+/** A section's heading, and optionally one plain line under it. No numbers, rules or animation. */
+export const SectionHeader: React.FC<{ title: string; kicker?: string }> = ({ title, kicker }) => (
+  <div className="mb-8 md:mb-10">
+    <h2 className="text-h2">
+      <Rich text={title} />
+    </h2>
+    {kicker && <p className="mt-3 max-w-2xl text-muted-foreground">{kicker}</p>}
+  </div>
+);
 
 /** Thin reading progress bar pinned under the nav, in the palette highlighter. */
 export const ScrollProgress: React.FC = () => {
