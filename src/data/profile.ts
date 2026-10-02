@@ -27,17 +27,16 @@ export const PROFILE = {
   /** The one line under my name on the home page. */
   line: 'I build systems that stay simple at scale.',
   /**
-   * The home page in three plain paragraphs, newest first, with inline [links](/path). `zoho`
-   * carries the one highlighter on the page: the phrase that proves the line above.
+   * The home page copy, with inline [links](/path). `intro` is the hero's one sentence; `zoho`
+   * sits beside the live scheduler model and carries the page's one highlighter.
    */
   bio: {
-    now: 'I’m a software engineer at [PayPal](/work), working on multi-tenancy and cloud migration for its case management platform.',
+    intro: 'Software engineer at [PayPal](/work), working on multi-tenancy and cloud migration. Co-founder of [ZenMode OS](/zenmode).',
     zoho: {
-      before: 'Before that, at Zoho, I designed [the job scheduler behind Catalyst](/writing/scheduling-10m-cron-jobs), Zoho’s serverless platform. It took cron jobs from once an hour to every minute, for every user, and ',
+      before: 'Before PayPal, at Zoho, I designed [the job scheduler behind Catalyst](/writing/scheduling-10m-cron-jobs), Zoho’s serverless platform. It took cron jobs from once an hour to every minute, for every user, and ',
       mark: 'one if-condition cut its Kafka traffic from 7,000 messages a cycle to 32',
       after: '.',
     },
-    own: 'On my own time I build [ZenMode OS](/zenmode), an open-source Android launcher that helps people scroll less, together.',
   },
   intro:
     'I build cloud platforms by day and a calmer phone by night. At PayPal I work on multi-tenant platforms and cloud migration. On my own time I build ZenMode OS, an open-source Android launcher that helps people scroll less, together.',
@@ -86,6 +85,12 @@ export const PRINCIPLES = [
     ],
   },
 ] as const;
+
+/** The sky band on the home page: the dots the site started with, and what they stand for. */
+export const SKY = {
+  title: 'Every system starts as a *dot*.',
+  line: 'One point at a time, until it holds a sky.',
+} as const;
 
 /** The featured story on /beyond. Details from the LinkedIn post; photo in public/beyond. */
 export const SPEAKING = {
