@@ -13,14 +13,14 @@ Going from hourly to per-minute multiplies the number of scheduling decisions by
 
 The obvious version breaks in two places:
 
-1. **The queue floods.** Publishing every due job the moment it is due produced about **7,000 Kafka messages per scheduling cycle**, far more than the workers could take at once.
+1. **The queue floods.** The worst case is a burst: a customer submitting far more jobs than they meant to, often by mistake. Publishing every due job the moment it is due turned that into about **7,000 Kafka messages per scheduling cycle**, far more than the workers could take at once.
 2. **Failures multiply.** At 60× the volume, a node going down or a user function failing stops being rare. It happens every day.
 
 ## The design
 
 The scheduler is built on **Kafka** and **Redis**, and supports full **cron expressions** with an **SDK**, so developers can create and manage schedules from code.
 
-**Only queue what the workers can take.** The biggest win was also the smallest change. Instead of pushing every due job into the pending queue, the scheduler stops submitting once the queue holds about **ten times what the workers can process**, and tops it up as they drain it. One `if` condition, and messages per cycle dropped from **about 7,000 to 32**, a **99.5% reduction**.
+**Only queue what the workers can take.** The biggest win was also the smallest change. Instead of pushing every due job into the pending queue, the scheduler stops submitting once the queue holds about **ten times what the workers can process**, and tops it up as they drain it. Worker capacity is set per business: it starts small, grows on demand up to a default limit, and that limit is raised when a customer's business needs more. The cap follows the capacity, so a burst waits its turn and the rest of the system doesn't feel it. One `if` condition, and messages per cycle dropped from **about 7,000 to 32**, a **99.5% reduction**.
 
 Toggle between the two below. Same workers, same jobs; the only difference is what the scheduler lets into the queue.
 

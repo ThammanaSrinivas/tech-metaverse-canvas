@@ -139,12 +139,23 @@ export const Marker: React.FC<{ children: React.ReactNode; delay?: number }> = (
 };
 
 /** Top of every inner page: the title, and one line on what the page is for. */
-export const PageHeader: React.FC<{ title: string; lead: string; children?: React.ReactNode }> = ({ title, lead, children }) => (
+export const PageHeader: React.FC<{ title: string; lead: string; aside?: React.ReactNode; children?: React.ReactNode }> = ({
+  title,
+  lead,
+  aside,
+  children,
+}) => (
   <header className="mx-auto w-full max-w-[1120px] px-5 pb-4 pt-32 md:pt-40">
-    <h1 className="max-w-4xl text-title">
-      <Rich text={title} />
-    </h1>
-    <p className="mt-5 max-w-2xl text-lead text-muted-foreground">{lead}</p>
+    {/* an aside (e.g. the portrait on /about) sits above the title on phones, to its right on wide screens */}
+    <div className={aside ? 'flex flex-col gap-6 md:flex-row md:items-center md:justify-between md:gap-10' : ''}>
+      <div>
+        <h1 className="max-w-4xl text-title">
+          <Rich text={title} />
+        </h1>
+        <p className="mt-5 max-w-2xl text-lead text-muted-foreground">{lead}</p>
+      </div>
+      {aside && <div className="order-first shrink-0 md:order-none">{aside}</div>}
+    </div>
     {children}
   </header>
 );

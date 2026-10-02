@@ -66,6 +66,20 @@ another account is the default, else it fails with "Failed to get Firebase proje
 - **Claim only roles actually held.** On the Zoho scheduler, Srinivas designed it and *informally*
   led a small team: never write "led a team of three" or imply a formal lead title ("designed the
   scheduler and drove it through to production" and "mentored" are accurate).
+- **The scheduler's numbers, in behaviour terms only:** the 7,000 messages/cycle was a burst (a
+  customer submitting far too many jobs, often by mistake); worker capacity is per business,
+  starts small, grows on demand to a default limit that is raised when a business needs it; the
+  50 → 5 ms dispatch latency came from optimising cold starts. Never describe internals beyond that.
+- **Résumé:** on Google Drive; the owner updates that file. `RESUME_URL` opens it in Drive,
+  `RESUME_DOWNLOAD_URL` (Drive's `uc?export=download`) saves it directly as
+  Thammana_Srinivas_Resume.pdf with no PDF viewer involved (About and ⌘K offer both). No on-site
+  preview image: it would go stale and put the phone number in this repo. Self-hosting at
+  /resume.pdf was tried (Oct 2026) and parked: Chrome's PDF-viewer Save did nothing on the owner's
+  laptop, and the PDF (with a phone number) would land in this public repo. Source is the owner's
+  `~/Downloads/thammana_srinivas_resume.tex` (Overleaf/pdfTeX; tectonic builds it too once
+  `\input{glyphtounicode}` and `\pdfgentounicode=1` are stripped).
+- **Portrait:** `public/about/srinivas.webp` (square crop like LinkedIn, shown round on /about and
+  in the home page's schema.org Person JSON-LD, which `applyMetaToHtml` injects).
 - **Zoho internals:** publish only what is public (the Catalyst job-scheduling docs) or what the owner
   wrote for the article. The owner said Redis sorted sets must not be mentioned publicly.
 - Use they/them for anyone whose pronouns aren't stated.
@@ -127,7 +141,8 @@ another account is the default, else it fails with "Failed to get Firebase proje
   Referrer-Policy, Permissions-Policy, COOP). Any new third-party origin needs a CSP change.
 - **`public/sitemap.xml` is hand-written**; tests fail unless it equals home + live pages + published
   articles, and unless `ROUTE_META` matches it.
-- **Social cards:** 1200×630 PNG. Site default `public/og-image.png`; per article `public/og/<slug>.png`
+- **Social cards:** 1200×630 PNG. Site default `public/og-image.png` (name, line, role on the dark
+  espresso with a field of dots; redo it whenever the home hero changes, it once showed a retired design); per article `public/og/<slug>.png`
   set as `image` on the article (a test checks the file exists). Dark espresso card, brand fonts,
   title with the accent word in Instrument Serif, one proof visual.
 - **New article checklist:** entry in `src/content/writing/index.ts` → Markdown file → `<loc>` in

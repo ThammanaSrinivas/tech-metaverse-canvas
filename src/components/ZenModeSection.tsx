@@ -144,7 +144,8 @@ const ZenModeSection: React.FC = () => (
             <Globe className="h-4 w-4" /> zenmodeos.com
           </a>
         </div>
-        <p className="zen-label text-muted-foreground">
+        {/* not uppercased: "GPLv3" must keep its lowercase v */}
+        <p className="font-mono text-small text-muted-foreground">
           <span className="text-reward">{ZENMODE.award}</span> · GPLv3 · Kotlin + Compose
         </p>
       </div>

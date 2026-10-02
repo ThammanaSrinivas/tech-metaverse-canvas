@@ -5,6 +5,7 @@ import { Link } from '@/components/zen/Link';
 import { JOBS, type Job } from '@/data/profile';
 import { postFor } from '@/content/writing';
 import { plain } from '@/lib/rich';
+import { LinkedText } from '@/components/zen/primitives';
 
 /**
  * A role: dates in the margin, the story in prose. Its node on the timeline fills as you arrive.
@@ -33,7 +34,9 @@ const Role: React.FC<{ j: Job }> = ({ j }) => {
         <p className="mt-1 text-muted-foreground">{j.role}</p>
         <div className="mt-5 grid gap-4">
           {j.story.map((para) => (
-            <p key={para.slice(0, 24)}>{para}</p>
+            <p key={para.slice(0, 24)}>
+              <LinkedText text={para} />
+            </p>
           ))}
         </div>
         {post && (

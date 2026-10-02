@@ -1,8 +1,14 @@
 // Single source for everything the page and the zen shell say about me.
 // Edit here; sections and shell commands both read from it.
 
-export const RESUME_URL =
-  'https://drive.google.com/file/d/1dl6EqMYEaTCljbrqoKPbaH48pccvPxcX/view?usp=sharing';
+/**
+ * The résumé lives on Google Drive (the owner updates that file; self-hosting was tried and parked).
+ * Two links to the same file: view it in Drive, or download it directly (Drive answers with
+ * `attachment; filename="Thammana_Srinivas_Resume.pdf"`, so no PDF viewer is involved).
+ */
+const RESUME_DRIVE_ID = '1dl6EqMYEaTCljbrqoKPbaH48pccvPxcX';
+export const RESUME_URL = `https://drive.google.com/file/d/${RESUME_DRIVE_ID}/view?usp=sharing`;
+export const RESUME_DOWNLOAD_URL = `https://drive.google.com/uc?export=download&id=${RESUME_DRIVE_ID}`;
 
 /** The site's own address (custom domain on Firebase Hosting; srinivas-t.web.app still serves). */
 export const SITE_URL = 'https://thammanasrinivas.com';
@@ -16,7 +22,11 @@ export const LINKS = {
   playstore: 'https://play.google.com/store/apps/details?id=com.zenlauncher.zenmode',
   producthunt: 'https://www.producthunt.com/products/zenmode-os-android-launcher',
   resume: RESUME_URL,
+  resumeDownload: RESUME_DOWNLOAD_URL,
 } as const;
+
+/** Full years since my first engineering role (Zoho, Jan 2022): computed, so the copy never goes stale. */
+export const YEARS_BUILDING = Math.floor((Date.now() - Date.UTC(2022, 0, 1)) / (365.25 * 864e5));
 
 export const PROFILE = {
   name: 'Thammana Srinivas',
@@ -31,7 +41,7 @@ export const PROFILE = {
    * sits beside the live scheduler model and carries the page's one highlighter.
    */
   bio: {
-    intro: 'Software engineer at [PayPal](/work), working on multi-tenancy and cloud migration. Co-founder of [ZenMode OS](/zenmode).',
+    intro: `Software engineer at [PayPal](/work) with ${YEARS_BUILDING}+ years of building backend platforms: multi-tenancy, cloud migration, distributed schedulers. Co-founder of [ZenMode OS](/zenmode).`,
     zoho: {
       before: 'Before PayPal, at Zoho, I designed [the job scheduler behind Catalyst](/writing/scheduling-10m-cron-jobs), Zoho’s serverless platform. It took cron jobs from once an hour to every minute, for every user, and ',
       mark: 'one if-condition cut its Kafka traffic from 7,000 messages a cycle to 32',
@@ -42,6 +52,8 @@ export const PROFILE = {
     'I build cloud platforms by day and a calmer phone by night. At PayPal I work on multi-tenant platforms and cloud migration. On my own time I build ZenMode OS, an open-source Android launcher that helps people scroll less, together.',
   email: 'srinivas@thammanasrinivas.com',
   location: 'Chennai, India',
+  /** Headshot (cropped like the LinkedIn photo), shown round on /about and in search results. */
+  portrait: '/about/srinivas.webp',
 };
 
 export interface Job {
@@ -134,6 +146,7 @@ export const JOBS: Job[] = [
     current: true,
     story: [
       'I work on the Simplified Case Management (SCM) platform. I implemented multi-tenancy across it and built the SCM-Commons onboarding that cut new-tenant onboarding time by 40%. I took a mission-critical notification API up three levels on the Richardson Maturity Model without a single breaking change for its consumers, and moved data and workloads from on-prem to GCP, including onboarding a SaaS-native solution through RAMP.',
+      'Most recently I built a [knowledge base and cloud skill mapper](https://www.linkedin.com/feed/update/urn:li:activity:7496050634371178496/) that many teams now use for cloud migration and cloud feature development. With it, an engineer fixes 5–6 bugs a day, a feature is often a single prompt, and juniors get up to speed on the team much faster.',
       'I also ran a Bigtable proof of concept, benchmarking 500K+ records with secondary indexes. It showed Bigtable didn’t fit our relational model, which saved a costly redesign. And I build LLM-powered tools that replace manual SOPs: a code-review agent, a parallel git-worktree feature processor and an integration-test agent.',
     ],
   },
@@ -144,7 +157,7 @@ export const JOBS: Job[] = [
     period: 'Jan 2022 — Apr 2025',
     current: false,
     story: [
-      'I worked on Catalyst, Zoho’s serverless platform. I designed its distributed job scheduler on Kafka and Redis: it took the shortest cron interval from an hour to a minute for every user, handled 10M+ jobs a day, and brought job dispatch latency from 50 ms to 5 ms.',
+      'I worked on Catalyst, Zoho’s serverless platform. I designed its distributed job scheduler on Kafka and Redis: it took the shortest cron interval from an hour to a minute for every user, handled 10M+ jobs a day, and brought job dispatch latency from 50 ms to 5 ms by optimising cold starts.',
       'I also built a HIPAA-compliant audit-log service in a month, which unblocked the European release and grew revenue by 17%; an adapter between Catalyst and Zoho Cron for custom cron expressions that reached 35% adoption in three months; and error alerting by feature context that cut issue resolution time by 30–40%. As a project trainee I added environment variables for functions, which addressed 60% of user tickets, and Node.js 16 support with 12% faster cold starts.',
     ],
     writeup: 'scheduling-10m-cron-jobs',
@@ -152,9 +165,28 @@ export const JOBS: Job[] = [
   },
 ];
 
+/** The latest thing I shipped at PayPal, for the home page (its numbers live on /work). */
+export const RECENT = {
+  meta: 'PayPal · Aug 2026',
+  title: 'Knowledge base + cloud skill mapper',
+  body: 'Used by many teams at PayPal for cloud migration and cloud feature development. Bug fixes got dramatically faster, features often take a single prompt, and juniors onboard faster.',
+  post: 'https://www.linkedin.com/feed/update/urn:li:activity:7496050634371178496/',
+} as const;
+
+/** From the résumé. */
+export const EDUCATION = {
+  degree: 'B.E. in Computer Science and Engineering',
+  school: 'Anna University, Chennai',
+  period: '2018 — 2022',
+  grade: 'CGPA 9.18',
+  prize: 'Won the AICTE Chhatra Vishwakarma Hackathon with a mental-health and psychosocial support app.',
+  prizeUrl: 'https://drive.google.com/file/d/1pBWq6m5oIzMCK_uzAKlXQQR1xRPm2v84/view',
+} as const;
+
 export const TOOLBOX: { group: string; items: string[] }[] = [
-  { group: 'Backend', items: ['Java', 'Spring Boot', 'Golang', 'Kafka', 'Redis', 'PostgreSQL', 'Distributed systems'] },
-  { group: 'Cloud', items: ['GCP', 'Bigtable', 'Docker', 'Kubernetes', 'Serverless', 'Cloud migration', 'Multi-tenancy'] },
+  { group: 'Systems', items: ['Distributed systems', 'Multi-tenancy', 'Cloud migration', 'Serverless', 'System design'] },
+  { group: 'Backend', items: ['Java', 'Spring Boot', 'Golang', 'Kafka', 'Redis', 'PostgreSQL'] },
+  { group: 'Cloud', items: ['GCP', 'Bigtable', 'Docker', 'Kubernetes'] },
   { group: 'Android', items: ['Kotlin', 'Jetpack Compose', 'Firebase', 'Cloud Functions'] },
   { group: 'AI + Web', items: ['LLM agents', 'RAG', 'MCP', 'TypeScript', 'React', 'Node.js', 'Python'] },
 ];

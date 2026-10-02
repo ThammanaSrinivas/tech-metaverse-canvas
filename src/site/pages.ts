@@ -7,7 +7,7 @@
 // To add a page: add an entry below (shell included, or it won't type-check), map its component
 // in routes.tsx (also type-checked), done. The menu follows the order here; `nav: false` keeps a
 // page out of the menu (still routed, in the sitemap, the shell and ⌘K).
-import { BEYOND, JOBS, JOURNEY, LAB, LINKS, PRINCIPLES, PROFILE, SPEAKING, TOOLBOX, ZENMODE, formatDate } from '@/data/profile';
+import { BEYOND, EDUCATION, JOBS, JOURNEY, LAB, LINKS, PRINCIPLES, PROFILE, SPEAKING, TOOLBOX, ZENMODE, formatDate } from '@/data/profile';
 import { POSTS, PUBLISHED } from '@/content/writing';
 import { plain } from '@/lib/rich';
 
@@ -55,14 +55,15 @@ const DEFS = [
     shell: [
       {
         name: 'work',
-        files: Object.fromEntries(
-          JOBS.map((j) => [
-            `${j.id}.md`,
-            {
-              body: md(`# ${j.company}: ${j.role} (${j.period})`, '', ...j.story.flatMap((para) => [para, '']), j.earlier),
-            },
-          ])
-        ),
+        files: {
+          ...Object.fromEntries(
+            JOBS.map((j) => [`${j.id}.md`, { body: md(`# ${j.company}: ${j.role} (${j.period})`, '', ...j.story.flatMap((para) => [para, '']), j.earlier) }])
+          ),
+          'education.md': {
+            body: md(`# ${EDUCATION.degree}`, `${EDUCATION.school} (${EDUCATION.period}) · ${EDUCATION.grade}`, '', EDUCATION.prize),
+            url: EDUCATION.prizeUrl,
+          },
+        },
       },
       {
         name: 'how-i-build',
@@ -112,7 +113,7 @@ const DEFS = [
     path: '/zenmode',
     label: 'ZenMode',
     title: 'ZenMode OS',
-    lead: 'What I build on my own time: a launcher that makes your phone calmer, kept together with friends.',
+    lead: 'What I build on my own time with my co-founder, Kamalraaj: a launcher that makes your phone calmer, with friends keeping each other on track.',
     shell: [
       {
         name: 'zenmode',

@@ -6,7 +6,7 @@ import { DIAGRAMS } from '@/components/diagrams';
 import HeroSky from '@/components/HeroSky';
 import PostList from '@/components/PostList';
 import { POSTS, minutesOf, postFor } from '@/content/writing';
-import { LINKS, PROFILE, SKY, SPEAKING, ZENMODE } from '@/data/profile';
+import { LINKS, PROFILE, RECENT, SKY, SPEAKING, ZENMODE } from '@/data/profile';
 import { usePageMeta } from '@/lib/usePageMeta';
 import { HOME_META } from '@/site/meta';
 
@@ -102,6 +102,21 @@ const Home: React.FC = () => {
           <Suspense fallback={<div className="zen-card h-[460px]" aria-hidden />}>
             <Model className="mt-0" />
           </Suspense>
+        </Reveal>
+
+        {/* the current role, smaller: what I shipped at PayPal most recently */}
+        <Reveal className="mt-14 border-t pt-8">
+          <p className="text-small text-muted-foreground">{RECENT.meta}</p>
+          <h3 className="mt-2 text-h2">{RECENT.title}</h3>
+          <p className="mt-3 max-w-[60ch] text-muted-foreground">{RECENT.body}</p>
+          <div className="mt-4 flex flex-wrap items-baseline gap-x-6 gap-y-2">
+            <Link to="/work" className="zen-link inline-flex items-center gap-1.5 font-semibold">
+              More at PayPal <ArrowRight className="h-4 w-4" />
+            </Link>
+            <a href={RECENT.post} target="_blank" rel="noopener noreferrer" className="zen-link inline-flex items-center gap-1 text-muted-foreground">
+              The LinkedIn post <ArrowUpRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
         </Reveal>
       </Chapter>
 

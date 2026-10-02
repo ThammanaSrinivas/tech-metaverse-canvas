@@ -6,12 +6,12 @@ import { PageHeader } from './primitives';
 import NextPage from './NextPage';
 
 /** An inner page: meta, header from the site map, the content, then a pointer to the next page in the menu. */
-const Page: React.FC<{ id: PageId; children: React.ReactNode }> = ({ id, children }) => {
+const Page: React.FC<{ id: PageId; aside?: React.ReactNode; children: React.ReactNode }> = ({ id, aside, children }) => {
   const page = pageFor(id);
   usePageMeta(pageMeta(page));
   return (
     <>
-      <PageHeader title={page.title} lead={page.lead} />
+      <PageHeader title={page.title} lead={page.lead} aside={aside} />
       {children}
       <NextPage after={id} />
     </>

@@ -13,7 +13,7 @@ import { LAB, LINKS } from '@/data/profile';
 import { PAGES } from '@/site/pages';
 import { emitZen } from '@/lib/zenEvents';
 import { sound, useSound } from '@/lib/sound';
-import { Github, Hash, FileText, ExternalLink, Terminal, Volume2, VolumeX } from 'lucide-react';
+import { Download, Github, Hash, FileText, ExternalLink, Terminal, Volume2, VolumeX } from 'lucide-react';
 
 interface CommandPaletteProps {
   open?: boolean;
@@ -97,8 +97,12 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, o
           </CommandItem>
           <CommandItem onSelect={() => openUrl(LINKS.resume)}>
             <FileText className="mr-2 h-4 w-4" />
-            <span>View resume</span>
+            <span>View résumé</span>
             <ExternalLink className="ml-auto h-3 w-3 text-muted-foreground" />
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => (window.location.href = LINKS.resumeDownload))}>
+            <Download className="mr-2 h-4 w-4" />
+            <span>Download résumé (PDF)</span>
           </CommandItem>
         </CommandGroup>
       </CommandList>

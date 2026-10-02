@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { SITE_URL } from '@/data/profile';
-import { ROUTE_META, applyMetaToHtml, type Meta } from './meta';
+import { PERSON_LD, ROUTE_META, applyMetaToHtml, type Meta } from './meta';
 
 const indexHtml = readFileSync('index.html', 'utf8');
 
@@ -33,6 +33,14 @@ describe('page meta (link previews)', () => {
       expect(html).toContain(`<meta property="og:type" content="${m.type}"`);
       expect(html.match(/<title>/g)).toHaveLength(1);
     }
+  });
+
+  it('tells search engines who the site is about, on the home page only, with a photo that ships', () => {
+    const home = applyMetaToHtml(indexHtml, ROUTE_META[0]);
+    const block = home.match(/<script type="application\/ld\+json">(.*?)<\/script>/)?.[1];
+    expect(JSON.parse(block!)).toMatchObject({ '@type': 'Person', name: PERSON_LD.name, sameAs: expect.arrayContaining([expect.stringContaining('linkedin.com')]) });
+    expect(existsSync(`public${PERSON_LD.image.slice(SITE_URL.length)}`)).toBe(true);
+    expect(applyMetaToHtml(indexHtml, ROUTE_META[1])).not.toContain('application/ld+json');
   });
 
   it('escapes text so a quote in a summary cannot break the HTML', () => {

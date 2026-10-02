@@ -3,7 +3,7 @@
 //   runtime  usePageMeta applies it on every navigation (browser tabs, and Google, which runs the JS)
 //   build    the prerender plugin (scripts/prerender.ts) writes one HTML file per URL with it baked
 //            in, because link previews (LinkedIn, WhatsApp, Slack, X) read the HTML and never run JS
-import { PROFILE, SITE_URL } from '@/data/profile';
+import { EDUCATION, JOBS, LINKS, PROFILE, SITE_URL } from '@/data/profile';
 import { PUBLISHED_ARTICLES, type Article } from '@/content/writing';
 import { plain } from '@/lib/rich';
 import { PAGES, type SitePage } from './pages';
@@ -43,6 +43,26 @@ export const ROUTE_META: Meta[] = [
   ...(live.some((p) => p.path === '/writing') ? PUBLISHED_ARTICLES.map(articleMeta) : []),
 ];
 
+const current = JOBS.find((j) => j.current) ?? JOBS[0];
+
+/**
+ * Who the site is about, for search engines (schema.org Person, as JSON-LD on the home page): the
+ * same facts the page shows, so a search for the name can show a photo, role and profiles.
+ */
+export const PERSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: PROFILE.name,
+  url: `${SITE_URL}/`,
+  image: `${SITE_URL}${PROFILE.portrait}`,
+  jobTitle: current.role,
+  worksFor: { '@type': 'Organization', name: current.company },
+  alumniOf: { '@type': 'CollegeOrUniversity', name: EDUCATION.school.split(',')[0] },
+  address: { '@type': 'PostalAddress', addressLocality: PROFILE.location.split(',')[0], addressCountry: 'IN' },
+  email: LINKS.email,
+  sameAs: [LINKS.linkedin, LINKS.github],
+};
+
 /** The tags in index.html that carry a page's meta, and which field fills each. */
 const TAGS: { tag: 'meta' | 'link'; key: 'name' | 'property' | 'rel'; id: string; attr: 'content' | 'href'; value: (m: Meta) => string }[] = [
   { tag: 'meta', key: 'name', id: 'description', attr: 'content', value: (m) => m.description },
@@ -77,6 +97,11 @@ export function applyMetaToHtml(html: string, m: Meta): string {
     return src.replace(re, () => to);
   };
   let out = swap(html, /<title>[^<]*<\/title>/g, `<title>${escHtml(m.title)}</title>`);
+  if (m.path === '/') {
+    // a JSON data block (never executed, so the CSP's script-src does not apply); < escaped for safety
+    const ld = JSON.stringify(PERSON_LD).replace(/</g, '\\u003c');
+    out = swap(out, /<\/head>/g, `<script type="application/ld+json">${ld}</script></head>`);
+  }
   for (const t of TAGS) {
     const head = `<${t.tag} ${t.key}="${t.id}" ${t.attr}="`;
     out = swap(out, new RegExp(`${escRe(head)}[^"]*"`, 'g'), `${head}${escHtml(t.value(m))}"`);

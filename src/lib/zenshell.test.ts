@@ -22,7 +22,7 @@ describe('zen shell', () => {
     expect(cd.cwd).toBe('~/work');
     expect(cd.effect).toEqual({ type: 'go', to: '/work' });
     const inWork = { history: [], cwd: '~/work' };
-    expect(runCommand('ls', inWork).lines.map((l) => ('text' in l ? l.text : ''))).toEqual(['paypal.md', 'zoho.md']);
+    expect(runCommand('ls', inWork).lines.map((l) => ('text' in l ? l.text : ''))).toEqual(['paypal.md', 'zoho.md', 'education.md']);
     expect(runCommand('cat paypal.md', inWork).lines[0]).toEqual({ kind: 'accent', text: expect.stringContaining('PayPal') });
     expect(runCommand('cat ../about.md', inWork).lines[0]).toEqual({ kind: 'accent', text: expect.stringContaining('Thammana') });
     expect(runCommand('cd ..', inWork).cwd).toBe('~');

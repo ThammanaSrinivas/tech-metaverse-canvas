@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowUpRight, Check, Copy } from 'lucide-react';
+import { ArrowUpRight, Check, Copy, Download } from 'lucide-react';
 import { BEYOND, LINKS, PROFILE, SPEAKING } from '@/data/profile';
 import { Chapter, Marker } from '@/components/zen/primitives';
 
@@ -62,7 +62,6 @@ const Contact: React.FC = () => {
   const rows = [
     { label: 'LinkedIn', href: LINKS.linkedin, value: handleOf(LINKS.linkedin) },
     { label: 'GitHub', href: LINKS.github, value: handleOf(LINKS.github) },
-    { label: 'Résumé', href: LINKS.resume, value: 'PDF on Google Drive' },
   ];
   return (
     <Chapter id="contact" label="Get in touch">
@@ -95,6 +94,22 @@ const Contact: React.FC = () => {
             </dd>
           </div>
         ))}
+        {/* the résumé: open it in Drive, or download it straight away (no PDF viewer in between) */}
+        <div className="grid gap-1 py-4 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)] md:items-center md:gap-8">
+          <dt className="font-semibold">Résumé</dt>
+          <dd className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <a href={LINKS.resume} target="_blank" rel="noopener noreferrer" className="zen-link inline-flex items-center gap-1 text-muted-foreground">
+              Open in Drive <ArrowUpRight className="h-3.5 w-3.5" />
+            </a>
+            <a
+              href={LINKS.resumeDownload}
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-small text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Download className="h-3.5 w-3.5" /> Download PDF
+            </a>
+          </dd>
+        </div>
       </dl>
     </Chapter>
   );
