@@ -1,14 +1,14 @@
 import React from 'react';
 import { PRINCIPLES } from '@/data/profile';
-import { SectionHeader } from '@/components/zen/primitives';
+import { Chapter } from '@/components/zen/primitives';
 
 /** How I build: three principles, each with the places it actually shows up. */
 const Principles: React.FC = () => (
-  <section id="how-i-build" className="mx-auto w-full max-w-[1120px] px-5 py-12 md:py-16">
-    <SectionHeader title="How I build" kicker="Maintainable by design: the next big change should be small." />
-    <div className="divide-y border-y">
+  <Chapter id="how-i-build" label="How I build">
+    <p className="max-w-[60ch] text-lead">Maintainable by design: the next big change should be small.</p>
+    <div className="mt-8 divide-y border-y">
       {PRINCIPLES.map((p) => (
-        <article key={p.title} className="grid gap-4 py-8 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-10">
+        <article key={p.title} className="grid gap-4 py-7 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-10">
           <div>
             <h3 className="text-h3">{p.title}</h3>
             <p className="mt-2 text-muted-foreground">{p.claim}</p>
@@ -21,7 +21,7 @@ const Principles: React.FC = () => (
         </article>
       ))}
     </div>
-  </section>
+  </Chapter>
 );
 
 export default Principles;

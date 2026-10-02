@@ -47,6 +47,10 @@ another account is the default, else it fails with "Failed to get Firebase proje
   shell button, or the italic accent word on every heading (only article titles and the home sky
   band). One
   highlighter per page. Each fact or number appears once on the site, in its best place.
+  **One grid, chapters:** below each page's header, every section is a `Chapter` (primitives.tsx):
+  a hairline on top, its name in a 200px left margin (sticky on wide screens, with the logo's dot),
+  content beside it. Work's dates use the same margin (rail 40px + dates 160px), so every content
+  column starts at the same x on every page. New sections use `Chapter`, not ad-hoc headings.
   But don't strip personality: the owner found the fully stripped version "too simple". Keep
   what is uniquely his: the star sky (`HeroSky`, its own dark band on Home), the live scheduler model,
   real photos and screenshots, the zen shell, the sonic logo, motion that tells his story.
@@ -78,11 +82,12 @@ another account is the default, else it fails with "Failed to get Firebase proje
   from it. Menu: Work · Writing · ZenMode · About; Time Machine is `nav: false` (linked from
   Work's side projects); plus home and 404. Home, one job per section: a full-screen light hero
   with only the name (orange full stop = the logo dot), one line, one sentence and Email/Résumé
-  (the owner asked for a hero with less in it; keep it that way); "The scheduler, live" (the Zoho
-  paragraph with the page's one highlighter beside the live model; copy in `PROFILE.bio`, inline
+  (the owner asked for a hero with less in it; keep it that way); "Selected work": the scheduler
+  write-up as a case study (its title as the headline, the Zoho
+  paragraph with the page's one highlighter, then the live model full width; copy in `PROFILE.bio`, inline
   `[label](/path)` links via `LinkedText`); the star sky as a full-screen dark band ("Every system
-  starts as a dot", `SKY`); "Outside the day job" (ZenMode screenshot, Toastmasters photo); the
-  writing list. The live model draws in the dark palette if placed inside `.dark`.
+  starts as a dot", `SKY`); "Outside work" (ZenMode screenshot, Toastmasters photo); "Writing"
+  (everything but the featured write-up). The live model draws in the dark palette inside `.dark`.
 - **Retired addresses** (`/beyond`, `/contact`, `/lab`, `/explore`): `REDIRECTS` in `pages.ts`
   (the router follows them) and the same list as 301s in `firebase.json` `redirects` (a test
   checks they match whenever `firebase.json` is present).

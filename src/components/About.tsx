@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { ArrowUpRight, Check, Copy } from 'lucide-react';
 import { BEYOND, LINKS, PROFILE, SPEAKING } from '@/data/profile';
-import { Marker, SectionHeader } from '@/components/zen/primitives';
+import { Chapter, Marker } from '@/components/zen/primitives';
 
 /** The one story with a photo: the Toastmasters win. The page's single highlighter is on it. */
 const Speaking: React.FC = () => (
-  <section id="speaking" className="mx-auto w-full max-w-[1120px] px-5 pb-12 pt-8">
-    <div className="grid gap-8 md:grid-cols-[minmax(0,320px)_minmax(0,1fr)] md:gap-12">
+  <Chapter id="speaking" label="Speaking">
+    <div className="grid gap-8 md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] md:gap-10">
       <img
         src={SPEAKING.photo}
         alt={SPEAKING.alt}
@@ -15,7 +15,7 @@ const Speaking: React.FC = () => (
         loading="lazy"
         className="w-full max-w-[320px] rounded-[20px] border object-cover"
       />
-      <div className="max-w-[60ch] md:pt-2">
+      <div className="max-w-[60ch]">
         <p className="text-small text-muted-foreground">
           {SPEAKING.org} · {SPEAKING.level}
         </p>
@@ -28,22 +28,21 @@ const Speaking: React.FC = () => (
         </a>
       </div>
     </div>
-  </section>
+  </Chapter>
 );
 
 /** The rest, one line each. */
 const Also: React.FC = () => (
-  <section id="also" className="mx-auto w-full max-w-[1120px] px-5 py-12 md:py-16">
-    <SectionHeader title="Also" />
-    <dl className="divide-y border-y">
+  <Chapter id="also" label="Also">
+    <dl className="divide-y border-b [&>*:first-child]:pt-0">
       {BEYOND.map((b) => (
-        <div key={b.title} className="grid gap-1 py-4 md:grid-cols-[minmax(0,320px)_minmax(0,1fr)] md:gap-12">
+        <div key={b.title} className="grid gap-1 py-4 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)] md:gap-8">
           <dt className="font-semibold">{b.title}</dt>
           <dd className="text-muted-foreground">{b.body}</dd>
         </div>
       ))}
     </dl>
-  </section>
+  </Chapter>
 );
 
 const handleOf = (url: string) => url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
@@ -66,10 +65,10 @@ const Contact: React.FC = () => {
     { label: 'Résumé', href: LINKS.resume, value: 'PDF on Google Drive' },
   ];
   return (
-    <section id="contact" className="mx-auto w-full max-w-[1120px] px-5 py-12 md:py-16">
-      <SectionHeader title="Get in touch" kicker="Email is the quickest way to reach me." />
-      <dl className="divide-y border-y">
-        <div className="grid gap-1 py-4 md:grid-cols-[minmax(0,320px)_minmax(0,1fr)] md:items-center md:gap-12">
+    <Chapter id="contact" label="Get in touch">
+      <p className="max-w-[60ch] text-lead">Email is the quickest way to reach me.</p>
+      <dl className="mt-6 divide-y border-y">
+        <div className="grid gap-1 py-4 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)] md:items-center md:gap-8">
           <dt className="font-semibold">Email</dt>
           <dd className="flex flex-wrap items-center gap-3">
             <a href={LINKS.email} className="zen-link">
@@ -87,7 +86,7 @@ const Contact: React.FC = () => {
           </dd>
         </div>
         {rows.map((r) => (
-          <div key={r.label} className="grid gap-1 py-4 md:grid-cols-[minmax(0,320px)_minmax(0,1fr)] md:gap-12">
+          <div key={r.label} className="grid gap-1 py-4 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)] md:gap-8">
             <dt className="font-semibold">{r.label}</dt>
             <dd>
               <a href={r.href} target="_blank" rel="noopener noreferrer" className="zen-link inline-flex items-center gap-1 text-muted-foreground">
@@ -97,7 +96,7 @@ const Contact: React.FC = () => {
           </div>
         ))}
       </dl>
-    </section>
+    </Chapter>
   );
 };
 

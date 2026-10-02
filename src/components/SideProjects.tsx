@@ -3,7 +3,7 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { Link } from '@/components/zen/Link';
 import { LAB } from '@/data/profile';
 import { pageFor } from '@/site/pages';
-import { SectionHeader } from '@/components/zen/primitives';
+import { Chapter } from '@/components/zen/primitives';
 
 const row = 'group grid gap-1 py-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-baseline md:gap-8';
 
@@ -11,9 +11,9 @@ const row = 'group grid gap-1 py-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-ba
 const SideProjects: React.FC = () => {
   const tm = pageFor('time-machine');
   return (
-    <section id="side-projects" className="mx-auto w-full max-w-[1120px] px-5 py-12 md:py-16">
-      <SectionHeader title="Side projects" kicker="Smaller experiments, mostly around LLM agents and developer tooling." />
-      <ul className="divide-y border-y">
+    <Chapter id="side-projects" label="Side projects">
+      <p className="max-w-[60ch] text-lead">Smaller experiments, mostly around LLM agents and developer tooling.</p>
+      <ul className="mt-6 divide-y border-y">
         <li>
           <Link to={tm.path} className={row}>
             <span>
@@ -39,7 +39,7 @@ const SideProjects: React.FC = () => {
           </li>
         ))}
       </ul>
-    </section>
+    </Chapter>
   );
 };
 

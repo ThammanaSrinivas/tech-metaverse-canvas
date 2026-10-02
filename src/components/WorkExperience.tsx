@@ -6,14 +6,18 @@ import { JOBS, type Job } from '@/data/profile';
 import { postFor } from '@/content/writing';
 import { plain } from '@/lib/rich';
 
-/** A role: dates in the margin, the story in prose. Its node on the timeline fills as you arrive. */
+/**
+ * A role: dates in the margin, the story in prose. Its node on the timeline fills as you arrive.
+ * The rail's indent (40px) + date column (160px) = the Chapter margin (200px), so the story lines
+ * up with every chapter's content below it.
+ */
 const Role: React.FC<{ j: Job }> = ({ j }) => {
   const ref = useRef<HTMLElement>(null);
   const reached = useInView(ref, { once: true, margin: '0px 0px -45% 0px' });
   const reduce = useReducedMotion();
   const post = j.writeup ? postFor(j.writeup) : undefined;
   return (
-    <article ref={ref} className="relative grid gap-4 py-10 md:grid-cols-[200px_minmax(0,1fr)] md:gap-10 md:pl-10">
+    <article ref={ref} className="relative grid gap-4 py-10 md:grid-cols-[160px_minmax(0,1fr)] md:gap-10 md:pl-10">
       {/* timeline node (desktop): an outlined dot that fills when the role scrolls into view */}
       <span aria-hidden className="absolute left-[-6px] top-[3.15rem] hidden h-3 w-3 items-center justify-center rounded-full border-2 border-primary bg-background md:flex">
         <motion.span

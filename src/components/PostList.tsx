@@ -15,8 +15,9 @@ const meta = (p: Post) =>
  * Write-ups as a plain list: title, one line on what it is, the facts. Hairlines between, no
  * cards or tags. Used on the home page and on /writing.
  */
-const PostList: React.FC<{ posts: Post[] }> = ({ posts }) => (
-  <ul className="divide-y border-y">
+const PostList: React.FC<{ posts: Post[]; inChapter?: boolean }> = ({ posts, inChapter }) => (
+  // inside a Chapter the chapter's hairline is the top rule, so the list starts flush under it
+  <ul className={`divide-y ${inChapter ? 'border-b [&>li:first-child>*]:pt-0' : 'border-y'}`}>
     {posts.map((p) => {
       const inner = (
         <>

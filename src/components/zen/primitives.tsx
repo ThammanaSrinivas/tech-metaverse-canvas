@@ -149,6 +149,31 @@ export const PageHeader: React.FC<{ title: string; lead: string; children?: Reac
   </header>
 );
 
+/**
+ * A chapter on the site's one grid: a hairline across the top, the chapter's name in a 200px
+ * margin beside the content. The margin is the same as the dates on /work, so every page lines up;
+ * on wide screens the name stays in view while you read the chapter, like a running head. The
+ * small dot before it is the logo's dot.
+ */
+export const Chapter: React.FC<{ id: string; label: string; children: React.ReactNode; className?: string }> = ({
+  id,
+  label,
+  children,
+  className = '',
+}) => (
+  <section id={id} className={`mx-auto w-full max-w-[1120px] scroll-mt-20 px-5 py-12 md:py-16 ${className}`}>
+    <div className="grid gap-6 border-t pt-6 md:grid-cols-[200px_minmax(0,1fr)] md:gap-10 md:pt-8">
+      <div>
+        <h2 className="flex items-center gap-2.5 text-small font-semibold md:sticky md:top-24">
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary" />
+          {label}
+        </h2>
+      </div>
+      <div className="min-w-0">{children}</div>
+    </div>
+  </section>
+);
+
 /** A section's heading, and optionally one plain line under it. No numbers, rules or animation. */
 export const SectionHeader: React.FC<{ title: string; kicker?: string }> = ({ title, kicker }) => (
   <div className="mb-8 md:mb-10">

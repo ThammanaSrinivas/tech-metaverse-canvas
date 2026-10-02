@@ -1,21 +1,24 @@
 import React, { Suspense } from 'react';
 import { ArrowRight, ArrowUpRight, Mail } from 'lucide-react';
 import { Link } from '@/components/zen/Link';
-import { LinkedText, Marker, Reveal, Rich } from '@/components/zen/primitives';
+import { Chapter, LinkedText, Marker, Reveal, Rich } from '@/components/zen/primitives';
 import { DIAGRAMS } from '@/components/diagrams';
 import HeroSky from '@/components/HeroSky';
 import PostList from '@/components/PostList';
-import { POSTS } from '@/content/writing';
+import { POSTS, minutesOf, postFor } from '@/content/writing';
 import { LINKS, PROFILE, SKY, SPEAKING, ZENMODE } from '@/data/profile';
 import { usePageMeta } from '@/lib/usePageMeta';
 import { HOME_META } from '@/site/meta';
 
-// Home, one job per section: who I am (hero), one real thing I built, running (the scheduler),
-// the night sky the site started with (a full screen of its own), life outside the day job, and
-// the writing. What it avoids on purpose (see CLAUDE.md): badges, stat tiles, numbered labels, glows.
+// Home, one job per section, on the site's chapter grid (a hairline, the chapter's name in the
+// margin): who I am (hero), selected work (the scheduler, running), the night sky the site started
+// with (a full screen of its own), life outside work, and the writing. What it avoids on purpose
+// (see CLAUDE.md): badges, stat tiles, numbered labels, glows.
 
 const Model = DIAGRAMS['admission-control'];
+const SCHEDULER = postFor('scheduling-10m-cron-jobs');
 const SCHEDULER_POST = '/writing/scheduling-10m-cron-jobs';
+const MORE_POSTS = POSTS.filter((p) => p !== SCHEDULER);
 
 /** A picture and two lines, the whole block one link. Images keep their real proportions. */
 const Feature: React.FC<{ to: string; image: string; alt: string; aspect: string; meta: string; title: React.ReactNode; body: string }> = ({
@@ -46,7 +49,8 @@ const Home: React.FC = () => {
   return (
     <>
       {/* Hero: name, one line, one sentence, two ways to reach me. Nothing else competes. */}
-      <section className="mx-auto flex min-h-[92svh] w-full max-w-[1120px] flex-col justify-center px-5 pb-16 pt-28">
+      {/* a little shorter than the screen, so the first chapter's hairline peeks: there is more below */}
+      <section className="mx-auto flex min-h-[86svh] w-full max-w-[1120px] flex-col justify-center px-5 pb-8 pt-28">
         <h1 className="text-display">
           {PROFILE.name}
           {/* the logo's orange dot, as a full stop: things get finished */}
@@ -71,26 +75,35 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* One real thing I built, running, with the paragraph that explains it. */}
-      <section id="scheduler" className="mx-auto grid w-full max-w-[1120px] gap-10 px-5 py-16 md:py-24 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-center lg:gap-16">
+      {/* Selected work: the scheduler as a case study. Headline, the story, then the model full width. */}
+      <Chapter id="selected-work" label="Selected work" className="pt-0 md:pt-0">
         <Reveal>
-          <h2 className="text-h2">The scheduler, live</h2>
-          <p className="mt-5 max-w-[56ch]">
+          <p className="text-small text-muted-foreground">
+            Zoho · Catalyst{SCHEDULER && ` · ${minutesOf(SCHEDULER)} min read`}
+          </p>
+          <h3 className="mt-2 max-w-3xl text-h1">
+            <Link to={SCHEDULER_POST} className="transition-colors hover:text-primary">
+              <Rich text={SCHEDULER?.title ?? 'Scheduling 10M cron jobs a day'} />
+            </Link>
+          </h3>
+          <p className="mt-5 max-w-[60ch] text-lead">
             <LinkedText text={zoho.before} />
             <Marker delay={0.3}>{zoho.mark}</Marker>
             {zoho.after}
           </p>
-          <p className="mt-4 max-w-[56ch] text-muted-foreground">Flip between before and after: same workers, same jobs, one if.</p>
-          <Link to={SCHEDULER_POST} className="zen-link mt-6 inline-flex items-center gap-1.5 font-semibold">
-            How it works <ArrowRight className="h-4 w-4" />
-          </Link>
+          <div className="mt-6 flex flex-wrap items-baseline gap-x-5 gap-y-2">
+            <Link to={SCHEDULER_POST} className="zen-link inline-flex items-center gap-1.5 font-semibold">
+              Read the write-up <ArrowRight className="h-4 w-4" />
+            </Link>
+            <span className="text-small text-muted-foreground">or flip between before and after, below</span>
+          </div>
         </Reveal>
-        <Reveal delay={0.08}>
-          <Suspense fallback={<div className="zen-card h-[420px]" aria-hidden />}>
+        <Reveal delay={0.06} className="mt-10">
+          <Suspense fallback={<div className="zen-card h-[460px]" aria-hidden />}>
             <Model className="mt-0" />
           </Suspense>
         </Reveal>
-      </section>
+      </Chapter>
 
       {/* The sky: the dots from the site's first hero, a full screen of their own. They follow the cursor. */}
       <section className="dark relative overflow-hidden bg-background text-foreground">
@@ -109,11 +122,8 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-[1120px] px-5 py-16 md:py-24">
-        <Reveal>
-          <h2 className="mb-8 text-h2">Outside the day job</h2>
-        </Reveal>
-        <div className="grid gap-12 md:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] md:gap-10">
+      <Chapter id="outside-work" label="Outside work">
+        <div className="grid gap-12 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:gap-10">
           <Reveal>
             <Feature
               to="/zenmode"
@@ -137,15 +147,18 @@ const Home: React.FC = () => {
             />
           </Reveal>
         </div>
-      </section>
+      </Chapter>
 
-      {POSTS.length > 0 && (
-        <section className="mx-auto w-full max-w-[1120px] px-5 pb-12">
+      {/* the rest of the writing (the featured write-up is already above) */}
+      {MORE_POSTS.length > 0 && (
+        <Chapter id="writing" label="Writing">
           <Reveal>
-            <h2 className="mb-6 text-h2">Writing</h2>
-            <PostList posts={POSTS} />
+            <PostList posts={MORE_POSTS} inChapter />
+            <Link to="/writing" className="zen-link mt-6 inline-flex items-center gap-1.5 font-semibold">
+              All writing <ArrowRight className="h-4 w-4" />
+            </Link>
           </Reveal>
-        </section>
+        </Chapter>
       )}
     </>
   );
