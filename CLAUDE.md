@@ -46,6 +46,9 @@ another account is the default, else it fails with "Failed to get Firebase proje
   cards inside cards, stat tiles or count-ups, pill badges, glassy sheens or glows, a floating
   shell button, or the italic accent word on every heading (article titles only). One
   highlighter per page. Each fact or number appears once on the site, in its best place.
+  But don't strip personality: the owner found the fully stripped version "too simple". Keep
+  what is uniquely his: the dark hero over the star sky (`HeroSky`), the live scheduler model,
+  real photos and screenshots, the zen shell, the sonic logo, motion that tells his story.
 - **Name and links:** always "Thammana Srinivas" (short: "Srinivas"). LinkedIn `/in/thammanasrinivas`,
   GitHub `ThammanaSrinivas`. All links and facts come from `src/data/profile.ts`.
 
@@ -72,8 +75,10 @@ another account is the default, else it fails with "Failed to get Firebase proje
   not in the menu) and mapped to components in `src/site/routes.tsx`. Nav, mobile menu, footer,
   ⌘K palette, routes, "Next" links, sitemap test, page meta and the shell's filesystem all derive
   from it. Menu: Work · Writing · ZenMode · About; Time Machine is `nav: false` (linked from
-  Work's side projects); plus home and 404. Home = name, one line, a three-paragraph bio with
-  inline links (`LinkedText`, `[label](/path)` in `PROFILE.bio`) and the live scheduler model.
+  Work's side projects); plus home and 404. Home = a dark hero over the star sky with the name,
+  one line, a three-paragraph bio with inline links (`LinkedText`, `[label](/path)` in
+  `PROFILE.bio`) and the live scheduler model (it draws in the dark palette when inside `.dark`);
+  then "Outside the day job" (ZenMode screenshot, Toastmasters photo) and the writing list.
 - **Retired addresses** (`/beyond`, `/contact`, `/lab`, `/explore`): `REDIRECTS` in `pages.ts`
   (the router follows them) and the same list as 301s in `firebase.json` `redirects` (a test
   checks they match whenever `firebase.json` is present).

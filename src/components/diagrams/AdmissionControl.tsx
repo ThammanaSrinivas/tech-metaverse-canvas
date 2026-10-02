@@ -82,7 +82,8 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
     const wrap = wrapRef.current;
     if (!canvas || !wrap) return;
     const ctx = canvas.getContext('2d')!;
-    const s = theme.light;
+    // draw in the colours of wherever the model sits: paper in an article, ink in the home hero
+    const s = wrap.closest('.dark') ? theme.dark : theme.light;
     const C = {
       ink: s.foreground,
       muted: s.mutedForeground,

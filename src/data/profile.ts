@@ -98,6 +98,8 @@ export const SPEAKING = {
   photo: '/beyond/toastmasters-club-win.webp',
   alt: 'Holding the 1st-place trophy at a Toastmasters club speech contest.',
   post: 'https://www.linkedin.com/feed/update/urn:li:ugcPost:7504140202756730880/',
+  /** One line for the home page. */
+  teaser: 'Toastmasters is where I practise the other half of engineering: explaining ideas clearly.',
 } as const;
 
 /** Where building in public started. */
@@ -189,6 +191,8 @@ export const formatDate = (iso: string) => {
 export const ZENMODE = {
   pitch: 'ZenMode OS turns your home screen into a calm space built around intent. It doesn’t lock you out. It adds a small pause at the moments you tend to lose time, and makes keeping your screen-time promise something you do together with friends.',
   award: 'Top ~10% of ~780 at FOSS Hack 2026',
+  /** One line for the home page. */
+  teaser: 'Quiet the noise, together: an Android launcher that adds a small pause at the moments you tend to lose time.',
   // Public numbers only (Play listing, Product Hunt leaderboard). Internal installs/DAU stay in zenmode-brain.
   stats: [
     { value: '4.6', unit: '★', label: 'Play Store rating', sub: '24 reviews' },
