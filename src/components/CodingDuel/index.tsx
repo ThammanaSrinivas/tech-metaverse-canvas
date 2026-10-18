@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { X, Swords } from 'lucide-react';
 import { useCodeExecution } from '@/hooks/useCodeExecution';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
@@ -40,8 +40,54 @@ const CodingDuel: React.FC<CodingDuelProps> = ({ isOpen, onClose }) => {
   const [startTime, setStartTime] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { results, runTests, clearResults } = useCodeExecution();
+  const { results, isRunning, runTests, clearResults } = useCodeExecution();
   const { addEntry, getEntriesForChallenge } = useLeaderboard();
+  const reduce = useReducedMotion();
+
+  // A real modal: focus moves in on open and goes back where it was on close, Tab cycles inside,
+  // Escape closes. (The editor keeps Tab for indenting: it marks that keypress as handled.)
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!isOpen || !dialog) return;
+    const back = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dialog.focus({ preventScroll: true });
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeRef.current();
+        return;
+      }
+      if (e.key !== 'Tab' || e.defaultPrevented) return;
+      const stops = Array.from(
+        dialog.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')
+      );
+      if (!stops.length) return;
+      const first = stops[0];
+      const last = stops[stops.length - 1];
+      const at = document.activeElement;
+      if (e.shiftKey && (at === first || at === dialog)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && at === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    // focus that lands behind the duel (a script, a shortcut) comes back to it
+    const onFocusIn = (e: FocusEvent) => {
+      if (!dialog.contains(e.target as Node)) dialog.focus({ preventScroll: true });
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('focusin', onFocusIn);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('focusin', onFocusIn);
+      back?.focus({ preventScroll: true });
+    };
+  }, [isOpen]);
 
   const testsPassed = results.filter((r) => r.passed).length;
   const elapsedMs = elapsed * 1000;
@@ -159,19 +205,24 @@ const CodingDuel: React.FC<CodingDuelProps> = ({ isOpen, onClose }) => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) onClose();
-        }}
+        data-zen-modal
       >
-        {/* Backdrop */}
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        {/* Backdrop: a click on it closes the duel */}
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
 
         {/* Modal */}
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className={`relative w-full max-w-4xl max-h-[90vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden bg-card border-border`}
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="duel-title"
+          tabIndex={-1}
+          initial={reduce ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
+          animate={reduce ? { opacity: 1 } : { scale: 1, opacity: 1 }}
+          exit={reduce ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
+          className={`relative w-full max-w-4xl max-h-[90vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden bg-card border-border outline-none ${
+            state === 'PLAYING' ? 'h-[90vh]' : ''
+          }`}
         >
           {/* Header */}
           <div className={`flex items-center justify-between px-5 py-4 border-b flex-shrink-0 border-gray-200`}>
@@ -180,7 +231,7 @@ const CodingDuel: React.FC<CodingDuelProps> = ({ isOpen, onClose }) => {
                 <Swords className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-foreground">Coding Duel</h2>
+                <h2 id="duel-title" className="text-lg font-bold text-foreground">Coding Duel</h2>
                 {challenge && state !== 'SELECTING' && (
                   <p className="text-xs text-muted-foreground">{challenge.title}</p>
                 )}
@@ -228,9 +279,10 @@ const CodingDuel: React.FC<CodingDuelProps> = ({ isOpen, onClose }) => {
                   testsPassed={testsPassed}
                   testsTotal={challenge.testCases.length}
                 />
-                <div className="flex-1 flex flex-col min-h-0 px-4 pb-2">
+                <div className="flex-1 flex flex-col px-4 pb-2">
                   <p className="text-xs text-muted-foreground mb-2">{challenge.description}</p>
-                  <div className="flex-1 min-h-0" style={{ minHeight: '300px' }}>
+                  {/* a flex column, so the arena's flex-1 fills it (as a plain block it shrank to its text) */}
+                  <div className="flex-1 flex flex-col min-h-[300px]">
                     <DuelArena
                       keystrokes={challenge.keystrokes}
                       isPlaying={true}
@@ -251,7 +303,13 @@ const CodingDuel: React.FC<CodingDuelProps> = ({ isOpen, onClose }) => {
               </>
             )}
 
-            {state === 'FINISHED' && challenge && (
+            {state === 'FINISHED' && challenge && isRunning && (
+              <p className="p-8 text-center text-sm text-muted-foreground" role="status">
+                Running the tests…
+              </p>
+            )}
+
+            {state === 'FINISHED' && challenge && !isRunning && (
               <div className="p-4 space-y-6">
                 <DuelResults
                   challenge={challenge}
@@ -261,6 +319,8 @@ const CodingDuel: React.FC<CodingDuelProps> = ({ isOpen, onClose }) => {
                   onSubmitScore={handleSubmitScore}
                   onPlayAgain={handlePlayAgain}
                 />
+                {/* what went wrong (a wrong answer, an error, a loop cut off at the time limit) */}
+                {testsPassed < results.length && <TestRunner results={results} totalTests={challenge.testCases.length} />}
                 <div className="border-t border-primary/10 pt-4">
                   <button
                     onClick={() => setState('LEADERBOARD')}

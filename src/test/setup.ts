@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- loose stand-ins for third-party components and globals */
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 import React from 'react';

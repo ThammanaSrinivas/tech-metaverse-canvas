@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { complete, resolvePath, runCommand } from './zenshell';
+import { complete, resolvePath, runCommand, tabOptions } from './zenshell';
 import { LINKS } from '@/data/profile';
 import { PAGES } from '@/site/pages';
 
@@ -104,6 +104,20 @@ describe('zen shell', () => {
     expect(complete('cat about.')).toBe('cat about.md');
     expect(complete('cat pay', { history: [], cwd: '~/work' })).toBe('cat paypal.md');
     expect(complete('t')).toBe('t'); // ambiguous: timemachine, top, tree
+  });
+
+  it('tab-completes paths: cd wants directories, nested paths complete, an ambiguous tab lists the options', () => {
+    const dirs = text('ls').split('\n').filter((l) => l.endsWith('/'));
+    // `cd ` + Tab can't pick one directory, so it lists them all (and no files)
+    expect(complete('cd ')).toBe('cd ');
+    expect(tabOptions('cd ')).toEqual(dirs);
+    expect(complete('cd ab')).toBe('cd about/'); // about.md is a file, so cd doesn't stop at "about"
+    expect(complete('cd ~/wr')).toBe('cd ~/writing/');
+    expect(complete('cat work/pay')).toBe('cat work/paypal.md');
+    expect(tabOptions('cd ~/w')).toEqual(['work/', 'writing/']);
+    expect(complete('cd ', { history: [], cwd: '~/work' })).toBe('cd ../');
+    expect(complete('goto wr')).toBe('goto writing/'); // aliases complete like their command
+    expect(tabOptions('neofetch')).toEqual([]); // a tab that completes lists nothing
   });
 
   it('every page implements the shell: its directory is listed, readable and opens the page', () => {

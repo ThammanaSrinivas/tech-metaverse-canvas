@@ -40,6 +40,7 @@ const CAP = 10; // the if-condition's threshold, in dots (≈10× what the worke
 const BEFORE_BURST = 18;
 const QUEUE_DRAW_MAX = 92; // dots beyond this are counted as backlog, not drawn
 const REAL = { before: 7000, after: 32 } as const;
+const HEARD_FOR = CYCLE * 2; // seconds the model stays audible after the reader acts on it
 
 const ease = (p: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, p)), 3);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -53,6 +54,10 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
   const modeRef = useRef<Mode>('before');
   const [readout, setReadout] = useState({ messages: 0, backlog: 0, busy: 0, decision: '' as '' | 'submit' | 'skip' });
   const touched = useRef(false); // auto-toggle until the reader takes control
+  // The model plays on its own, so it must not sound on its own: it is heard only for a moment
+  // after the reader picks a mode or presses Play, long enough to hear what they changed.
+  const heardUntil = useRef(0);
+  const hear = () => (heardUntil.current = performance.now() + HEARD_FOR * 1000);
   const [failed, setFailed] = useState(false);
   const [playing, setPlaying] = useState(() => !reduce);
   const playingRef = useRef(playing);
@@ -69,11 +74,8 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
     ctl.current?.sync();
   }, [playing]);
 
-  const modeSeen = useRef(false);
   useEffect(() => {
     modeRef.current = mode;
-    if (modeSeen.current) sound.play('switch');
-    modeSeen.current = true;
     if (!playingRef.current) ctl.current?.settle();
   }, [mode]);
 
@@ -144,7 +146,8 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
     // Sound follows the picture: scheduler on the left, workers on the right. Silent while
     // fast-forwarding to a still frame.
     let silent = false;
-    const cue = (name: CueName, opts?: PlayOpts) => !silent && sound.play(name, opts);
+    const heard = () => !silent && performance.now() < heardUntil.current;
+    const cue = (name: CueName, opts?: PlayOpts) => heard() && sound.play(name, opts);
 
     const queueSlot = (i: number) => {
       const { qx0, qx1, cy, qh } = L();
@@ -278,7 +281,7 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
       jobs = jobs.filter((j) => !(j.state === 'acking' && j.t > 0.7));
       shownMessages = lerp(shownMessages, messages, 0.08);
       // the flood has a sound too: a drone that builds with the backlog (nothing once the if holds)
-      if (!silent) sound.level(m === 'before' ? (queued().length + backlog - CAP * 2) / 50 : 0);
+      if (!silent) sound.level(heard() && m === 'before' ? (queued().length + backlog - CAP * 2) / 50 : 0);
     };
 
     // Hand-built rounded rect: ctx.roundRect only exists from Safari 16 / iOS 16.
@@ -522,6 +525,8 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
 
   const choose = (m: Mode) => {
     touched.current = true;
+    hear();
+    if (m !== mode) sound.play('switch');
     setMode(m);
   };
 
@@ -554,7 +559,10 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
           {!failed && (
             <button
               type="button"
-              onClick={() => setPlaying((p) => !p)}
+              onClick={() => {
+                if (!playing) hear();
+                setPlaying(!playing);
+              }}
               aria-label={playing ? 'Pause the model' : 'Play the model'}
               className={`flex h-9 items-center justify-center gap-1.5 rounded-full border transition-colors ${
                 playing ? 'w-9 bg-secondary text-muted-foreground hover:text-foreground' : 'bg-card px-3.5 font-semibold text-foreground shadow-sm'

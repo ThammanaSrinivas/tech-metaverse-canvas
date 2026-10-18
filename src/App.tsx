@@ -6,6 +6,7 @@ import { createBrowserRouter, Navigate, RouterProvider, type RouteObject } from 
 import Layout from "@/components/Layout";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
+import PageError from "./pages/PageError";
 import { PAGES, REDIRECTS } from "@/site/pages";
 import { CHILD_LOADERS, LOADERS, lazyRoute } from "@/site/routes";
 
@@ -16,16 +17,23 @@ const queryClient = new QueryClient();
 const routes: RouteObject[] = [
   {
     element: <Layout />,
+    errorElement: <PageError />,
     children: [
-      { path: "/", element: <Home /> },
-      ...PAGES.map(({ id, path }) => ({ path, lazy: lazyRoute(LOADERS[id]) })),
-      ...PAGES.filter((p) => p.nested && CHILD_LOADERS[p.id]).map(({ id, path }) => ({
-        path: `${path}/:slug`,
-        lazy: lazyRoute(CHILD_LOADERS[id]!),
-      })),
-      // retired addresses (firebase.json answers these with 301s too)
-      ...Object.entries(REDIRECTS).map(([from, to]) => ({ path: from, element: <Navigate to={to} replace /> })),
-      { path: "*", element: <NotFound /> },
+      {
+        // a page that throws (or whose chunk is gone after a deploy) keeps the header and footer
+        errorElement: <PageError />,
+        children: [
+          { path: "/", element: <Home /> },
+          ...PAGES.map(({ id, path }) => ({ path, lazy: lazyRoute(LOADERS[id]) })),
+          ...PAGES.filter((p) => p.nested && CHILD_LOADERS[p.id]).map(({ id, path }) => ({
+            path: `${path}/:slug`,
+            lazy: lazyRoute(CHILD_LOADERS[id]!),
+          })),
+          // retired addresses (firebase.json answers these with 301s too)
+          ...Object.entries(REDIRECTS).map(([from, to]) => ({ path: from, element: <Navigate to={to} replace /> })),
+          { path: "*", element: <NotFound /> },
+        ],
+      },
     ],
   },
 ];

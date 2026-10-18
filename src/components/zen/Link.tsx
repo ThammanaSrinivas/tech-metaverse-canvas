@@ -23,6 +23,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>((props,
 NavLink.displayName = 'NavLink';
 
 /** navigate() with the same page transition, for the shell and the command palette. */
+// eslint-disable-next-line react-refresh/only-export-components -- one import for Link, NavLink and useGo (see CLAUDE.md)
 export function useGo() {
   const navigate = useNavigate();
   return (to: string) => navigate(to, { viewTransition: true });

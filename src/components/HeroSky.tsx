@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useBrandTheme } from '@/theme/runtime';
 import { toRgb } from '@/theme/color';
+import { useStarsEnabled } from '@/lib/stars';
 
 /**
  * The original hero, in the palette's colours: three shells of points slowly rotating around a
@@ -43,9 +44,12 @@ const HeroSky: React.FC = () => {
   // Shell colours follow the palette: bright neutral, primary, secondary, a few highlighter points.
   const { sky } = useBrandTheme();
   const [bright, primary, secondary, highlight] = sky;
+  // the shell's `stars off` turns this sky off too, like the Starfield
+  const [on] = useStarsEnabled();
 
   useEffect(() => {
-    const canvas = ref.current!;
+    const canvas = ref.current;
+    if (!canvas) return;
     const host = canvas.parentElement!;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -171,8 +175,9 @@ const HeroSky: React.FC = () => {
       window.removeEventListener('pointermove', onMove);
       document.removeEventListener('visibilitychange', restart);
     };
-  }, [bright, primary, secondary, highlight]);
+  }, [bright, primary, secondary, highlight, on]);
 
+  if (!on) return null;
   return <canvas ref={ref} className="pointer-events-none absolute inset-0" aria-hidden />;
 };
 

@@ -93,7 +93,8 @@
   html.zm-pointer, html.zm-pointer * { cursor: none !important; }
   html.zm-pointer :is(input, textarea, select, [contenteditable="true"]) { cursor: text !important; }
 }
-.zm-cur { position: fixed; inset: 0; z-index: 95; pointer-events: none; overflow: hidden; opacity: 0; transition: opacity 260ms ease; }
+/* The native pointer is hidden, so this must sit above every overlay (the duel, toasts), or there is no pointer at all. */
+.zm-cur { position: fixed; inset: 0; z-index: 2147483647; pointer-events: none; overflow: hidden; opacity: 0; transition: opacity 260ms ease; }
 .zm-cur.on { opacity: 1; }
 .zm-cur.typing { opacity: 0; }
 .zm-cur-in { position: absolute; left: 0; top: 0; will-change: transform; }

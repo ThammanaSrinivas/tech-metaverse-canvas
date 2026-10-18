@@ -7,7 +7,7 @@
     "dev": "rimraf coverage && vite",
     "build": "npm run test:all && npm run test:coverage && vite build",
     "build:dev": "vite build --mode development",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 && npm run lint:brand",
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0 && npm run lint:brand",
     "lint:brand": "node scripts/check-brand.mjs",
     "preview": "vite preview",
     "test": "vitest",

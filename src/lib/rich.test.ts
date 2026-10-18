@@ -13,5 +13,6 @@ describe('heading markup', () => {
 
   it('strips markup for plain text', () => {
     expect(plain('Say *hi*')).toBe('Say hi');
+    expect(plain('I built a [knowledge base](https://example.com/post) for [ZenMode](/zenmode).')).toBe('I built a knowledge base for ZenMode.');
   });
 });

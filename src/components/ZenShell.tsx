@@ -3,7 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useGo } from '@/components/zen/Link';
 import { JOBS, LAB, PROFILE } from '@/data/profile';
-import { complete, runCommand, SUGGESTIONS, type Line } from '@/lib/zenshell';
+import { complete, runCommand, SUGGESTIONS, tabOptions, type Line } from '@/lib/zenshell';
 import { PAGES } from '@/site/pages';
 import { emitZen, onZen } from '@/lib/zenEvents';
 import { setStarsEnabled, useStarsEnabled } from '@/lib/stars';
@@ -209,7 +209,6 @@ const ZenShell: React.FC = () => {
   const go = useGo();
   const [open, setOpen] = useState(false);
   const [lines, setLines] = useState<Line[]>([]);
-  const [booted, setBooted] = useState(false);
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<string[]>([]);
   const [cursor, setCursor] = useState<number | null>(null);
@@ -225,10 +224,12 @@ const ZenShell: React.FC = () => {
 
   const toggle = useCallback(() => setOpen((o) => !o), []);
 
-  // ` toggles the shell from anywhere except other text fields; the palette and hero can open it too.
+  // ` toggles the shell from anywhere except other text fields and modals (the duel); the palette
+  // and hero can open it too.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== '`' || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (document.querySelector('[data-zen-modal]')) return;
       const el = e.target as HTMLElement;
       const typing = el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
       if (typing && el !== inputRef.current) return;
@@ -243,7 +244,7 @@ const ZenShell: React.FC = () => {
     };
   }, [toggle]);
 
-  // Boot once, line by line. On close, hand focus back to wherever it was (not on first mount).
+  // On open, focus the prompt; on close, hand focus back to wherever it was (not on first mount).
   const wasOpen = useRef(false);
   useEffect(() => {
     if (!open) {
@@ -254,11 +255,16 @@ const ZenShell: React.FC = () => {
     const active = document.activeElement;
     returnFocus.current = active instanceof HTMLElement && active !== document.body ? active : null;
     inputRef.current?.focus();
-    if (booted) return;
-    setBooted(true);
-    const timers = BOOT.map((l, i) => setTimeout(() => setLines((prev) => [...prev, l]), 180 * (i + 1)));
-    return () => timers.forEach(clearTimeout);
-  }, [open, booted]);
+  }, [open]);
+
+  // Boot once, line by line, the first time it opens. A ref, not state: re-rendering must not
+  // cancel the timers (a closed shell keeps booting, and shows the lines when it reopens).
+  const booted = useRef(false);
+  useEffect(() => {
+    if (!open || booted.current) return;
+    booted.current = true;
+    BOOT.forEach((l, i) => setTimeout(() => setLines((prev) => [...prev, l]), 180 * (i + 1)));
+  }, [open]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -316,7 +322,14 @@ const ZenShell: React.FC = () => {
   };
 
   // Editing actions, shared by the keyboard and the touch key row.
-  const completeInput = () => setInput((v) => complete(v, { history, cwd }));
+  const completeInput = () => {
+    const ctx = { history, cwd };
+    const next = complete(input, ctx);
+    if (next !== input) return setInput(next);
+    // nothing more to fill in, but several ways to go: list them under the prompt, like zsh
+    const options = tabOptions(input, ctx);
+    if (options.length) setLines((prev) => [...prev, { kind: 'cmd', text: `${cwd}\t${input}` }, { kind: 'accent', text: options.join('   ') }]);
+  };
   const historyUp = () => {
     if (!history.length) return;
     const next = cursor === null ? history.length - 1 : Math.max(0, cursor - 1);

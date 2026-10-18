@@ -124,7 +124,8 @@ const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; pathname: string
  */
 const Navigation: React.FC = () => {
   const { pathname } = useLocation();
-  const [solid, setSolid] = useState(false);
+  // solid until measured: the first frame must not paint light-on-dark text over a light page
+  const [solid, setSolid] = useState(true);
   // The page the menu was opened on. Deriving "open" from it closes the menu in the same render
   // that shows a new page, never a frame later.
   const [menuAt, setMenuAt] = useState<string | null>(null);

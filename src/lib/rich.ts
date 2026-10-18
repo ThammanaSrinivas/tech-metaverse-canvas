@@ -14,8 +14,8 @@ export function parseRich(text: string): Segment[] {
     .map((part) => (part.startsWith('*') && part.endsWith('*') ? { text: part.slice(1, -1), accent: true } : { text: part, accent: false }));
 }
 
-/** The same text without markup: for <title>, the shell, aria labels. */
-export const plain = (text: string) => text.replace(/\*([^*]+)\*/g, '$1');
+/** The same text without markup (accents, inline links): for <title>, the shell, aria labels. */
+export const plain = (text: string) => text.replace(/\*([^*]+)\*/g, '$1').replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '$1');
 
 export type LinkSegment = { text: string; href?: string };
 

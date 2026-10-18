@@ -2,6 +2,7 @@
 // directory, returns lines to print, an optional side effect, and the new directory.
 import { JOBS, LAB, LINKS, PROFILE, TOOLBOX, ZENMODE } from '@/data/profile';
 import { PAGES, SHELL_HOME, pathFor, type ShellFile } from '@/site/pages';
+import { plain } from '@/lib/rich';
 
 export type LineKind = 'out' | 'accent' | 'muted' | 'reward' | 'error' | 'cmd';
 
@@ -96,15 +97,27 @@ const allFiles = () =>
 // ---------------------------------------------------------------- commands
 interface Command {
   help: string;
-  args?: (ctx: ShellContext) => string[];
+  /** Completion candidates for the argument being typed (`partial`, lower-cased). */
+  args?: (ctx: ShellContext, partial: string) => string[];
   run: (args: string[], ctx: ShellContext) => ShellResult;
 }
 
 const cwdOf = (ctx: ShellContext) => ctx.cwd ?? '~';
-const pathArgs = (ctx: ShellContext) => {
-  const d = FS[cwdOf(ctx)];
-  return [...d.dirs.map((n) => `${n}/`), ...Object.keys(d.files), '..', '~'];
-};
+/**
+ * Path completion: the entries of the directory the partial path points into, so `cd ~/wr` and
+ * `cat work/pa` complete as well as `cd wr`. `cd` only wants directories.
+ */
+const pathArgs =
+  (dirsOnly = false) =>
+  (ctx: ShellContext, partial: string) => {
+    const prefix = partial.slice(0, partial.lastIndexOf('/') + 1);
+    const dir = prefix ? resolvePath(cwdOf(ctx), prefix) : cwdOf(ctx);
+    const d = dir && FS[dir];
+    if (!d) return [];
+    const names = [...d.dirs.map((n) => `${n}/`), ...(dirsOnly ? [] : Object.keys(d.files))];
+    if (!prefix && dir !== '~') names.push('../');
+    return names.map((n) => prefix + n);
+  };
 
 const FORTUNES = [
   'the feed is infinite. your evening is not.',
@@ -139,7 +152,7 @@ const COMMANDS: Record<string, Command> = {
   },
   ls: {
     help: 'list files  [-l] [dir]',
-    args: pathArgs,
+    args: pathArgs(),
     run: (args, ctx) => {
       const long = args.some((a) => /^-[la]+$/.test(a));
       const arg = args.find((a) => !a.startsWith('-'));
@@ -152,7 +165,7 @@ const COMMANDS: Record<string, Command> = {
   },
   cd: {
     help: 'change directory (opens that page)',
-    args: pathArgs,
+    args: pathArgs(true),
     run: ([arg], ctx) => {
       const target = resolvePath(cwdOf(ctx), arg ?? '~');
       if (target && FS[target]) {
@@ -168,7 +181,7 @@ const COMMANDS: Record<string, Command> = {
   pwd: { help: 'print working directory', run: (_, ctx) => ({ lines: [t('out', cwdOf(ctx).replace('~', `/home/${PROFILE.shortName.toLowerCase()}`))] }) },
   cat: {
     help: 'print a file',
-    args: pathArgs,
+    args: pathArgs(),
     run: ([arg], ctx) => {
       if (!arg) return { lines: [t('error', 'cat: which file? try `ls`')] };
       const hit = findFile(cwdOf(ctx), arg);
@@ -236,7 +249,7 @@ const COMMANDS: Record<string, Command> = {
           .flatMap((j) => [
             t('accent', `${j.company} · ${j.role} · ${j.period}`),
             // the whole story for one company; the opening sentence of each for the overview
-            ...(which ? j.story.map((para) => t('out', `  ${para}`)) : [t('out', `  ${j.story[0].split(/(?<=\.) /)[0]}`)]),
+            ...(which ? j.story.map((para) => t('out', `  ${plain(para)}`)) : [t('out', `  ${plain(j.story[0]).split(/(?<=\.) /)[0]}`)]),
           ])
           .concat(which ? [] : [t('muted', 'details: work paypal · cat work/zoho.md')]),
         effect: { type: 'go', to: pathFor('work') },
@@ -390,7 +403,6 @@ export function runCommand(input: string, ctx: ShellContext): ShellResult {
   return cmd.run(args, ctx);
 }
 
-/** Tab completion: completes the command name, then its argument (paths are cwd-relative). */
 /** The longest start every candidate shares, e.g. about.md + about/ → "about". */
 const commonPrefix = (words: string[]) =>
   words.reduce((pre, w) => {
@@ -399,17 +411,33 @@ const commonPrefix = (words: string[]) =>
     return pre.slice(0, i);
   });
 
+/** Everything the last word of the line could become: a command name, then that command's argument. */
+function completions(input: string, ctx: ShellContext): string[] {
+  const parts = input.split(/\s+/);
+  const partial = parts[parts.length - 1].toLowerCase();
+  if (parts.length === 1) return COMMAND_NAMES.filter((c) => c.startsWith(partial));
+  const name = parts[0].toLowerCase();
+  const cmd = COMMANDS[name] ?? COMMANDS[ALIASES[name]?.split(' ')[0]];
+  return (cmd?.args?.(ctx, partial) ?? []).filter((a) => a.toLowerCase().startsWith(partial));
+}
+
 /** Tab completion like a real shell: a unique match completes; several complete as far as they agree. */
 export function complete(input: string, ctx: ShellContext = { history: [] }): string {
   const parts = input.split(/\s+/);
-  if (parts.length === 1) {
-    const hits = COMMAND_NAMES.filter((c) => c.startsWith(parts[0].toLowerCase()));
-    if (hits.length === 1) return `${hits[0]} `;
-    return hits.length && commonPrefix(hits).length > parts[0].length ? commonPrefix(hits) : input;
-  }
-  const cmd = COMMANDS[parts[0].toLowerCase()];
-  const partial = parts[parts.length - 1].toLowerCase();
-  const hits = (cmd?.args?.(ctx) ?? []).filter((a) => a.toLowerCase().startsWith(partial));
-  const done = hits.length === 1 ? hits[0] : hits.length && commonPrefix(hits).length > partial.length ? commonPrefix(hits) : null;
+  const word = parts[parts.length - 1];
+  const hits = completions(input, ctx);
+  if (parts.length === 1 && hits.length === 1) return `${hits[0]} `;
+  const done = hits.length === 1 ? hits[0] : hits.length && commonPrefix(hits).length > word.length ? commonPrefix(hits) : null;
   return done === null ? input : [...parts.slice(0, -1), done].join(' ');
+}
+
+/**
+ * When Tab can't complete any further but there are several ways to go (`cd ` + Tab), the
+ * options to list under the prompt, like zsh: names only, without the path typed so far.
+ */
+export function tabOptions(input: string, ctx: ShellContext = { history: [] }): string[] {
+  if (complete(input, ctx) !== input) return [];
+  const hits = completions(input, ctx);
+  const word = input.split(/\s+/).pop()!;
+  return hits.length > 1 ? hits.map((h) => h.slice(word.lastIndexOf('/') + 1)) : [];
 }

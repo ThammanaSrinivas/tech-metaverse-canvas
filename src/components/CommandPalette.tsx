@@ -38,6 +38,8 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, o
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
+        // not over a modal (the duel): the palette would open hidden behind it
+        if (document.querySelector('[data-zen-modal]')) return;
         setOpen(!open);
       }
     };

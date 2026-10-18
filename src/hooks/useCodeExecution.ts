@@ -1,85 +1,79 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { TestCase } from '@/data/challenges';
+import { timedOut, type CaseReply, type RunRequest, type TestResult } from '@/lib/duelRunner';
 
-export interface TestResult {
-  label: string;
-  passed: boolean;
-  actual: unknown;
-  expected: unknown;
-  error?: string;
-}
+export type { TestResult };
 
-function deepEqual(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (typeof a !== typeof b) return false;
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    return a.every((val, i) => deepEqual(val, b[i]));
-  }
-  if (typeof a === 'object' && a !== null && b !== null) {
-    const objA = a as Record<string, unknown>;
-    const objB = b as Record<string, unknown>;
-    const keysA = Object.keys(objA);
-    const keysB = Object.keys(objB);
-    if (keysA.length !== keysB.length) return false;
-    return keysA.every((key) => deepEqual(objA[key], objB[key]));
-  }
-  return false;
-}
+/** Each test case gets this long; a stuck one is cut off by terminating its worker. */
+export const CASE_LIMIT_MS = 5000;
 
 export function useCodeExecution() {
   const [results, setResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  // the run in flight, so a newer run, a reset or unmount can stop it and ignore its late replies
+  const live = useRef<{ worker: Worker; timer: number } | null>(null);
+
+  const stop = useCallback(() => {
+    if (!live.current) return;
+    window.clearTimeout(live.current.timer);
+    live.current.worker.terminate();
+    live.current = null;
+  }, []);
+
+  useEffect(() => stop, [stop]);
 
   const runTests = useCallback(
-    (code: string, functionName: string, testCases: TestCase[]) => {
-      setIsRunning(true);
-      const testResults: TestResult[] = [];
+    (code: string, functionName: string, testCases: TestCase[]) =>
+      new Promise<TestResult[]>((resolve) => {
+        stop();
+        setIsRunning(true);
+        const out: TestResult[] = [];
+        const worker = new Worker(new URL('../lib/duelRunner.worker.ts', import.meta.url), { type: 'module' });
+        const run = { worker, timer: 0 };
+        live.current = run;
 
-      for (const tc of testCases) {
-        try {
-          const wrappedCode = `${code}\nreturn ${functionName}(...args);`;
-          const fn = new Function('args', wrappedCode);
+        const finish = () => {
+          stop();
+          setResults(out);
+          setIsRunning(false);
+          resolve(out);
+        };
+        // restarted after every reply: only the case currently running is on the clock
+        const watch = () => {
+          window.clearTimeout(run.timer);
+          run.timer = window.setTimeout(() => {
+            if (live.current !== run) return;
+            testCases.slice(out.length).forEach((tc, i) => out.push(timedOut(tc, CASE_LIMIT_MS, i === 0)));
+            finish();
+          }, CASE_LIMIT_MS);
+        };
 
-          const start = Date.now();
-          const result: unknown = fn(tc.input);
-          const elapsed = Date.now() - start;
+        worker.onmessage = (e: MessageEvent<CaseReply>) => {
+          if (live.current !== run || e.data?.index !== out.length) return;
+          out.push(e.data.result);
+          if (out.length === testCases.length) finish();
+          else watch();
+        };
+        // the worker itself failed to load or crashed: every unfinished case fails with that
+        worker.onerror = (e) => {
+          if (live.current !== run) return;
+          e.preventDefault();
+          const error = e.message || 'The test runner could not start';
+          testCases.slice(out.length).forEach((tc) => out.push({ label: tc.label, passed: false, actual: null, expected: tc.expected, error }));
+          finish();
+        };
 
-          if (elapsed > 5000) {
-            testResults.push({
-              label: tc.label,
-              passed: false,
-              actual: 'Timeout',
-              expected: tc.expected,
-              error: 'Execution exceeded 5 second time limit',
-            });
-          } else {
-            testResults.push({
-              label: tc.label,
-              passed: deepEqual(result, tc.expected),
-              actual: result,
-              expected: tc.expected,
-            });
-          }
-        } catch (err: unknown) {
-          testResults.push({
-            label: tc.label,
-            passed: false,
-            actual: null,
-            expected: tc.expected,
-            error: err instanceof Error ? err.message : 'Unknown error',
-          });
-        }
-      }
-
-      setResults(testResults);
-      setIsRunning(false);
-      return testResults;
-    },
-    []
+        watch();
+        worker.postMessage({ code, functionName, testCases } satisfies RunRequest);
+      }),
+    [stop]
   );
 
-  const clearResults = useCallback(() => setResults([]), []);
+  const clearResults = useCallback(() => {
+    stop();
+    setIsRunning(false);
+    setResults([]);
+  }, [stop]);
 
   return { results, isRunning, runTests, clearResults };
 }

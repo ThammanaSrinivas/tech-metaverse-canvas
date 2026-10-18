@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import ZenShell from '@/components/ZenShell';
@@ -28,14 +28,34 @@ function usePageSound() {
   }, [pathname]);
 }
 
+/** Where the reader left each history entry, so Back returns there. */
+const leftAt = new Map<string, number>();
+
 function useScrollOnNavigate() {
-  const { pathname, hash } = useLocation();
+  const { pathname, hash, key } = useLocation();
+  const navType = useNavigationType();
   // We restore position ourselves; the browser's own restoration fights it on iOS.
+  const keyRef = useRef(key);
   useEffect(() => {
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    const save = () => leftAt.set(keyRef.current, window.scrollY);
+    window.addEventListener('scroll', save, { passive: true });
+    return () => window.removeEventListener('scroll', save);
   }, []);
   // Layout effect: reset before the new page is painted, so it never shows at the old offset.
   useLayoutEffect(() => {
+    keyRef.current = key; // before any scroll below, so it is saved against the new entry
+    const back = navType === 'POP' ? leftAt.get(key) : undefined;
+    if (back !== undefined) {
+      // Back / Forward: where the reader was. Retry while the page is still too short to get there.
+      let tries = 0;
+      const restore = () => {
+        window.scrollTo({ top: back, left: 0, behavior: 'instant' as ScrollBehavior });
+        if (Math.abs(window.scrollY - back) > 1 && tries++ < 20) setTimeout(restore, 50);
+      };
+      restore();
+      return;
+    }
     if (!hash) {
       // 'instant' overrides `scroll-behavior: smooth` on <html>: a new page should simply start at
       // the top, not animate the old page scrolling up (very visible on phones).
@@ -50,7 +70,7 @@ function useScrollOnNavigate() {
       else if (tries++ < 20) setTimeout(seek, 50); // lazy pages land a moment later
     };
     seek();
-  }, [pathname, hash]);
+  }, [pathname, hash, key, navType]);
 }
 
 /** Shared chrome for every page: nav, footer, shell, cursor, lab. */

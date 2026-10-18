@@ -1,5 +1,6 @@
 
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
 import colors from "./src/theme/colors.json";
 
 const { zen, amber, ember, stone } = colors.zenmode;
@@ -173,5 +174,5 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [animate],
 } satisfies Config;

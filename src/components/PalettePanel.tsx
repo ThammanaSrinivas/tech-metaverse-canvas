@@ -22,6 +22,7 @@ const ROLES: { key: keyof Omit<Palette, 'name'>; label: string; hint: string }[]
  * lightest → light, darkest → dark, then by saturation: most saturated → primary,
  * next → highlight, the rest → secondary.
  */
+// eslint-disable-next-line react-refresh/only-export-components -- dev-only lab: the palette parser lives with its panel
 export function autoAssign(text: string): Omit<Palette, 'name'> | null {
   const hexes = [...new Set((text.match(/#?\b[0-9a-f]{6}\b/gi) ?? []).map(normalizeHex))];
   if (hexes.length < 5) return null;

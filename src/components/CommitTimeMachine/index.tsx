@@ -14,6 +14,17 @@ import CommitDetailPanel from './CommitDetailPanel';
 // three.js is the heaviest dependency on the page; load it only when this section renders.
 const CommitTimelineScene = lazy(() => import('./CommitTimelineScene'));
 
+/** No WebGL (or the scene's chunk failed to load): show the list instead of breaking the page. */
+class SceneBoundary extends React.Component<{ fallback: React.ReactNode; children: React.ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
 // Bot/automation branches (Claude Code worktrees, nightly routines) are noise on a portfolio.
 const HIDDEN_BRANCH = /^(claude|routine)\//;
 
@@ -42,9 +53,6 @@ const CommitTimeMachine: React.FC = () => {
   const sceneReady = useSettled(1000);
   const { data: repos, isLoading: reposLoading, error: reposError } = useGitHubRepos();
   const { data: branches, isLoading: branchesLoading } = useRepoBranches(selectedRepo);
-  const { data: newestFirst, isLoading: commitsLoading, error: commitsError } = useRepoCommits(selectedRepo, 30, selectedBranch);
-  // GitHub returns newest first; the timeline reads left to right, oldest → newest.
-  const commits = useMemo(() => (newestFirst ? [...newestFirst].reverse() : undefined), [newestFirst]);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 640);
@@ -68,6 +76,15 @@ const CommitTimeMachine: React.FC = () => {
   useEffect(() => {
     if (sortedBranches.length > 0 && selectedBranch === undefined) setSelectedBranch(sortedBranches[0].name);
   }, [sortedBranches, selectedBranch]);
+
+  // Ask for commits once the branch is known (or there is no branch list to wait for): asking
+  // before it arrives costs a second request against GitHub's 60-an-hour budget.
+  const branchKnown = selectedBranch !== undefined || (!!selectedRepo && !branchesLoading && sortedBranches.length === 0);
+  const { data: newestFirst, isLoading: commitsLoading, error: commitsError } = useRepoCommits(branchKnown ? selectedRepo : null, 30, selectedBranch);
+  // GitHub returns newest first; the timeline reads left to right, oldest → newest.
+  const commits = useMemo(() => (newestFirst ? [...newestFirst].reverse() : undefined), [newestFirst]);
+  // nothing to draw yet: repos, branches or commits are still on their way
+  const waiting = !commits && (commitsLoading || reposLoading || (!!repos?.length && !branchKnown));
 
   useEffect(() => {
     if (repos && repos.length > 0 && !selectedRepo) setSelectedRepo(repos[0].name);
@@ -172,6 +189,27 @@ const CommitTimeMachine: React.FC = () => {
 
   const error = (reposError || commitsError) as Error | null;
 
+  // The timeline as a list: what phones get, and the fallback when the 3D scene can't run.
+  const commitList = commits && (
+    <ol className="relative max-h-[420px] overflow-y-auto rounded-[20px] border bg-background/50 py-3 pl-8 pr-4">
+      <span className="absolute bottom-0 left-[1.1rem] top-0 w-px bg-border" aria-hidden />
+      {commits.map((commit, i) => ({ commit, i })).reverse().slice(0, 20).map(({ commit, i }) => (
+        <li key={commit.sha}>
+          <button onClick={() => openDetail(i)} className="relative w-full py-2 text-left">
+            <span
+              className="absolute -left-[0.95rem] top-3.5 h-2.5 w-2.5 rounded-full ring-4 ring-card"
+              style={{ background: selectedCommitIndex === i ? pickColor : nodeColor }}
+            />
+            <span className="line-clamp-1 text-sm">{commit.commit.message.split('\n')[0]}</span>
+            <span className="font-mono text-xs text-muted-foreground">
+              {fmt(commit.commit.author.date)} · {commit.sha.slice(0, 7)}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ol>
+  );
+
   return (
     <Section id="time-machine" ink>
 
@@ -249,33 +287,18 @@ const CommitTimeMachine: React.FC = () => {
               onKeyDown={onSceneKey}
               aria-label="Commit timeline. Use left and right arrows to move, Enter for details."
             >
-              {commitsLoading ? (
+              {waiting ? (
                 <div className="flex h-[320px] w-full animate-pulse items-center justify-center rounded-[20px] border bg-secondary/50 md:h-[420px]">
                   <GitBranch className="h-8 w-8 text-primary/40" />
                 </div>
               ) : commits && commits.length > 0 ? (
                 isMobile ? (
-                  <ol className="relative max-h-[420px] overflow-y-auto rounded-[20px] border bg-background/50 py-3 pl-8 pr-4">
-                    <span className="absolute bottom-0 left-[1.1rem] top-0 w-px bg-border" aria-hidden />
-                    {commits.map((commit, i) => ({ commit, i })).reverse().slice(0, 20).map(({ commit, i }) => (
-                      <li key={commit.sha}>
-                        <button onClick={() => openDetail(i)} className="relative w-full py-2 text-left">
-                          <span
-                            className="absolute -left-[0.95rem] top-3.5 h-2.5 w-2.5 rounded-full ring-4 ring-card"
-                            style={{ background: selectedCommitIndex === i ? pickColor : nodeColor }}
-                          />
-                          <span className="line-clamp-1 text-sm">{commit.commit.message.split('\n')[0]}</span>
-                          <span className="font-mono text-xs text-muted-foreground">
-                            {fmt(commit.commit.author.date)} · {commit.sha.slice(0, 7)}
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ol>
+                  commitList
                 ) : (
                   !sceneReady ? (
                     <div className="h-[320px] w-full animate-pulse rounded-[20px] border bg-secondary/50 md:h-[420px]" />
                   ) : (
+                  <SceneBoundary fallback={commitList}>
                   <Suspense fallback={<div className="h-[320px] w-full animate-pulse rounded-[20px] border bg-secondary/50 md:h-[420px]" />}>
                   <div className="animate-fade-in">
                   <CommitTimelineScene
@@ -290,6 +313,7 @@ const CommitTimeMachine: React.FC = () => {
                   />
                   </div>
                   </Suspense>
+                  </SceneBoundary>
                   )
                 )
               ) : (

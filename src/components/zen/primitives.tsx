@@ -54,6 +54,7 @@ export const Monogram: React.FC<{ size?: number; className?: string; title?: str
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 /** Parent variants for MaskWords: words rise one after another. */
+// eslint-disable-next-line react-refresh/only-export-components -- the stagger these primitives animate with
 export const maskStagger = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
 const wordRise = { hidden: { y: '105%' }, show: { y: 0, transition: { duration: 0.75, ease: EASE } } };
 

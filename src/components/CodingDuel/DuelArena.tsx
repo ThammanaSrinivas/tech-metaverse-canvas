@@ -20,12 +20,12 @@ const DuelArena: React.FC<DuelArenaProps> = ({
 
   return (
     <div className={`flex flex-col md:flex-row flex-1 min-h-0 rounded-lg overflow-hidden border border-gray-200 bg-white/50`}>
-      {/* Left — Replay */}
-      <div className={`flex-1 flex flex-col min-h-0 border-b md:border-b-0 md:border-r border-gray-200`}>
+      {/* Left — Replay. Stacked on phones, each pane keeps a usable height. */}
+      <div className={`flex-1 flex flex-col min-h-[120px] md:min-h-0 border-b md:border-b-0 md:border-r border-gray-200`}>
         <ReplayPane keystrokes={keystrokes} isPlaying={isPlaying} />
       </div>
       {/* Right — Editor */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col min-h-[200px] md:min-h-0">
         <EditorPane code={code} onChange={onCodeChange} disabled={disabled} />
       </div>
     </div>

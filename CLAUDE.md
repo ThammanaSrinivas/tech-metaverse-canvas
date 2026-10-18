@@ -123,7 +123,11 @@ another account is the default, else it fails with "Failed to get Firebase proje
 - **Commit Time Machine** (`src/components/CommitTimeMachine/`): lazy three.js. GitHub calls via
   `getJson` in `src/lib/github.ts` (sessionStorage cache, fallback `public/gh-snapshot.json`); commit
   details fetched only on click/Enter to save the 60 req/hour budget.
-- **CodingDuel** (`src/components/CodingDuel/`): lazy modal; code runs via `new Function()`, own browser only.
+- **CodingDuel** (`src/components/CodingDuel/`): lazy modal (`data-zen-modal`; focus trap, Escape and
+  a backdrop click close it). The player's code runs in a fresh Web Worker per run
+  (`src/lib/duelRunner.worker.ts`, logic in `duelRunner.ts`), never on the page: the page's CSP
+  forbids `new Function()`, and `useCodeExecution` terminates the worker after 5 s per test, so
+  `while(true){}` can't freeze the tab. Own browser only.
 
 ## SEO and link previews
 
@@ -139,6 +143,9 @@ another account is the default, else it fails with "Failed to get Firebase proje
   `/assets/**`, and the security headers (CSP `default-src 'self'`, `script-src 'self'`,
   `connect-src 'self' https://api.github.com`, `frame-ancestors 'none'`; HSTS, nosniff, DENY,
   Referrer-Policy, Permissions-Policy, COOP). Any new third-party origin needs a CSP change.
+  One exception, listed AFTER the `**` block so it replaces that CSP for this file only:
+  `/assets/duelRunner.worker-*.js` gets `default-src 'none'; script-src 'self' 'unsafe-eval'` (a
+  worker takes the CSP of its own response). Without it every duel answer scores 0 in production.
 - **`public/sitemap.xml` is hand-written**; tests fail unless it equals home + live pages + published
   articles, and unless `ROUTE_META` matches it.
 - **Social cards:** 1200×630 PNG. Site default `public/og-image.png` (name, line, role on the dark
@@ -163,7 +170,9 @@ another account is the default, else it fails with "Failed to get Firebase proje
   suspends while the tab is hidden.
 - `sound.play(cue, { step, pan, delay, gain })` is a no-op while off, so call it freely. Never add
   hover, scroll or page-load sounds, and keep simulated fast-forwards silent (see the diagram's
-  `silent` flag). Tests check every cue's voice, gain, pitch range and length.
+  `silent` flag). Nothing sounds on its own: the scheduler model plays itself, so it is heard only
+  for `HEARD_FOR` after the reader picks a mode or presses Play (the owner heard it "every 2–3
+  seconds"). Tests check every cue's voice, gain, pitch range and length.
 - Video soundtracks: dev builds expose `window.__zenSound` (`sound.tap`, `renderOffline`, `toWav`),
   so a frame-by-frame recorder can log the cues each frame asked for and render the same synth
   offline, in sync with the picture.
@@ -178,7 +187,13 @@ another account is the default, else it fails with "Failed to get Firebase proje
   content that plays on its own needs a Pause control (WCAG 2.2.2); under reduced motion it starts
   paused with a Play button (see `AdmissionControl.tsx`).
 - **Canvas:** no `ctx.roundRect` (iOS < 16 lacks it; use the arcTo helper), redraw after resize, pause
-  off screen (IntersectionObserver), and show a text fallback if drawing throws.
+  off screen (IntersectionObserver), and show a text fallback if drawing throws (the Time Machine's
+  3D scene falls back to its phone list when WebGL is missing).
+- **Cursor and overlays:** the native pointer is hidden, so `.zm-cur` sits at the top z-index; every
+  overlay stays below it. A modal carries `data-zen-modal`, which mutes the shell and ⌘K shortcuts.
+- **Errors:** a page that throws renders `src/pages/PageError.tsx` inside the layout (header and
+  footer stay); a page chunk missing after a deploy reloads the tab once. Back/Forward return to
+  where the reader was (`useScrollOnNavigate` in `Layout.tsx`); new links still start at the top.
 - **Mobile menu** (`Navigation.tsx`): never lock body scroll with `overflow: hidden` (iOS Safari
   re-lays out the page, which looks like a reload); never fade an opaque panel in from opacity 0 over
   content (the page shows through); the menu's `AnimatePresence` is keyed by pathname so it leaves
