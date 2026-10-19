@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GitCommit, ExternalLink, Plus, Minus, FileText } from 'lucide-react';
 import type { GitHubCommit } from '@/lib/github';
+import { MODAL_MOTION } from '@/components/overlayMotion';
 
 interface CommitDetailPanelProps {
   commit: GitHubCommit | null;
@@ -22,11 +23,9 @@ const CommitDetailPanel: React.FC<CommitDetailPanelProps> = ({ commit, onClose }
 
   return (
     <AnimatePresence>
+      {/* opaque from its first frame: fading it in showed the scene through it (overlayMotion.ts) */}
       <motion.div
-        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-        transition={{ duration: 0.2 }}
+        {...MODAL_MOTION.panel}
         className="absolute bottom-4 left-4 right-4 z-20 rounded-[20px] border bg-popover/95 p-5 shadow-2xl md:left-auto md:right-4 md:w-96"
       >
         <button

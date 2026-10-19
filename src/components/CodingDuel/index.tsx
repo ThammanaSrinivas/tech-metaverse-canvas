@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { X, Swords } from 'lucide-react';
 import { useCodeExecution } from '@/hooks/useCodeExecution';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
+import { MODAL_MOTION, STILL } from '@/components/overlayMotion';
 import { sound } from '@/lib/sound';
 import type { Challenge } from '@/data/challenges';
 import ChallengeSelector from './ChallengeSelector';
@@ -196,167 +197,173 @@ const CodingDuel: React.FC<CodingDuelProps> = ({ isOpen, onClose }) => {
     ? computeScore(testsPassed, challenge.testCases.length, elapsedMs, challenge.timeLimit * 1000)
     : 0;
 
-  if (!isOpen) return null;
+  const still = reduce ? STILL : {};
 
+  // The card is opaque from its first frame and goes at once; only the dim fades (overlayMotion.ts).
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-        data-zen-modal
-      >
-        {/* Backdrop: a click on it closes the duel */}
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
+      {isOpen && (
+        <React.Fragment key="duel">
+          {/* The dim: absolute over the whole document (Layout's root), never a fixed layer at the
+              screen's edges, which Safari 26 would paint its toolbars with. A click on it closes the duel. */}
+          <motion.div
+            {...MODAL_MOTION.backdrop}
+            {...still}
+            className="absolute inset-x-0 top-0 -bottom-px z-[100] bg-black/60 will-change-[opacity]"
+            style={{ touchAction: 'none' }}
+            onClick={onClose}
+            aria-hidden="true"
+          />
 
-        {/* Modal */}
-        <motion.div
-          ref={dialogRef}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="duel-title"
-          tabIndex={-1}
-          initial={reduce ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
-          animate={reduce ? { opacity: 1 } : { scale: 1, opacity: 1 }}
-          exit={reduce ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
-          className={`relative w-full max-w-4xl max-h-[90vh] rounded-2xl border shadow-2xl flex flex-col overflow-hidden bg-card border-border outline-none ${
-            state === 'PLAYING' ? 'h-[90vh]' : ''
-          }`}
-        >
-          {/* Header */}
-          <div className={`flex items-center justify-between px-5 py-4 border-b flex-shrink-0 border-gray-200`}>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                <Swords className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h2 id="duel-title" className="text-lg font-bold text-foreground">Coding Duel</h2>
-                {challenge && state !== 'SELECTING' && (
-                  <p className="text-xs text-muted-foreground">{challenge.title}</p>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Close"
+          {/* Centres the card 16px clear of every edge; taps around the card fall through to the dim */}
+          <div className="pointer-events-none fixed inset-4 z-[100] flex items-center justify-center" data-zen-modal>
+            <motion.div
+              ref={dialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="duel-title"
+              tabIndex={-1}
+              {...MODAL_MOTION.panel}
+              {...still}
+              className={`pointer-events-auto relative w-full max-w-4xl max-h-[min(90svh,100%)] rounded-2xl border shadow-2xl flex flex-col overflow-hidden bg-card border-border outline-none will-change-transform ${
+                state === 'PLAYING' ? 'h-[min(90svh,100%)]' : ''
+              }`}
             >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Body */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-            {state === 'SELECTING' && (
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground mb-4 text-center">
-                  Choose a challenge and race against a pre-recorded solution!
-                </p>
-                <ChallengeSelector onSelect={handleSelectChallenge} />
-              </div>
-            )}
-
-            {state === 'COUNTDOWN' && (
-              <div className="flex-1 flex items-center justify-center">
-                <motion.div
-                  key={countdown}
-                  initial={{ scale: 2, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.5, opacity: 0 }}
-                  className="text-7xl font-bold text-primary"
-                >
-                  {countdown > 0 ? countdown : 'GO!'}
-                </motion.div>
-              </div>
-            )}
-
-            {state === 'PLAYING' && challenge && (
-              <>
-                <TimerBar
-                  elapsed={elapsed}
-                  timeLimit={challenge.timeLimit}
-                  testsPassed={testsPassed}
-                  testsTotal={challenge.testCases.length}
-                />
-                <div className="flex-1 flex flex-col px-4 pb-2">
-                  <p className="text-xs text-muted-foreground mb-2">{challenge.description}</p>
-                  {/* a flex column, so the arena's flex-1 fills it (as a plain block it shrank to its text) */}
-                  <div className="flex-1 flex flex-col min-h-[300px]">
-                    <DuelArena
-                      keystrokes={challenge.keystrokes}
-                      isPlaying={true}
-                      code={code}
-                      onCodeChange={setCode}
-                    />
+              {/* Header */}
+              <div className={`flex items-center justify-between px-5 py-4 border-b flex-shrink-0 border-gray-200`}>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                    <Swords className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 id="duel-title" className="text-lg font-bold text-foreground">Coding Duel</h2>
+                    {challenge && state !== 'SELECTING' && (
+                      <p className="text-xs text-muted-foreground">{challenge.title}</p>
+                    )}
                   </div>
                 </div>
-                <TestRunner results={results} totalTests={challenge.testCases.length} />
-                <div className="flex justify-end px-4 py-3 border-t border-primary/10">
-                  <button
-                    onClick={handleSubmit}
-                    className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
-                  >
-                    Run & Submit
-                  </button>
-                </div>
-              </>
-            )}
-
-            {state === 'FINISHED' && challenge && isRunning && (
-              <p className="p-8 text-center text-sm text-muted-foreground" role="status">
-                Running the tests…
-              </p>
-            )}
-
-            {state === 'FINISHED' && challenge && !isRunning && (
-              <div className="p-4 space-y-6">
-                <DuelResults
-                  challenge={challenge}
-                  results={results}
-                  elapsedMs={elapsedMs}
-                  score={score}
-                  onSubmitScore={handleSubmitScore}
-                  onPlayAgain={handlePlayAgain}
-                />
-                {/* what went wrong (a wrong answer, an error, a loop cut off at the time limit) */}
-                {testsPassed < results.length && <TestRunner results={results} totalTests={challenge.testCases.length} />}
-                <div className="border-t border-primary/10 pt-4">
-                  <button
-                    onClick={() => setState('LEADERBOARD')}
-                    className="text-sm text-primary hover:text-primary/80 transition-colors"
-                  >
-                    View Leaderboard
-                  </button>
-                </div>
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-            )}
 
-            {state === 'LEADERBOARD' && challenge && (
-              <div className="p-4 space-y-4">
-                <Leaderboard
-                  entries={getEntriesForChallenge(challenge.id)}
-                  challengeTitle={challenge.title}
-                />
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setState('FINISHED')}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Back to Results
-                  </button>
-                  <button
-                    onClick={handlePlayAgain}
-                    className="text-sm text-primary hover:text-primary/80 transition-colors"
-                  >
-                    Play Again
-                  </button>
-                </div>
+              {/* Body */}
+              <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+                {state === 'SELECTING' && (
+                  <div className="p-4">
+                    <p className="text-sm text-muted-foreground mb-4 text-center">
+                      Choose a challenge and race against a pre-recorded solution!
+                    </p>
+                    <ChallengeSelector onSelect={handleSelectChallenge} />
+                  </div>
+                )}
+
+                {state === 'COUNTDOWN' && (
+                  <div className="flex-1 flex items-center justify-center">
+                    <motion.div
+                      key={countdown}
+                      initial={{ scale: 2, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.5, opacity: 0 }}
+                      className="text-7xl font-bold text-primary"
+                    >
+                      {countdown > 0 ? countdown : 'GO!'}
+                    </motion.div>
+                  </div>
+                )}
+
+                {state === 'PLAYING' && challenge && (
+                  <>
+                    <TimerBar
+                      elapsed={elapsed}
+                      timeLimit={challenge.timeLimit}
+                      testsPassed={testsPassed}
+                      testsTotal={challenge.testCases.length}
+                    />
+                    <div className="flex-1 flex flex-col px-4 pb-2">
+                      <p className="text-xs text-muted-foreground mb-2">{challenge.description}</p>
+                      {/* a flex column, so the arena's flex-1 fills it (as a plain block it shrank to its text) */}
+                      <div className="flex-1 flex flex-col min-h-[300px]">
+                        <DuelArena
+                          keystrokes={challenge.keystrokes}
+                          isPlaying={true}
+                          code={code}
+                          onCodeChange={setCode}
+                        />
+                      </div>
+                    </div>
+                    <TestRunner results={results} totalTests={challenge.testCases.length} />
+                    <div className="flex justify-end px-4 py-3 border-t border-primary/10">
+                      <button
+                        onClick={handleSubmit}
+                        className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
+                      >
+                        Run & Submit
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {state === 'FINISHED' && challenge && isRunning && (
+                  <p className="p-8 text-center text-sm text-muted-foreground" role="status">
+                    Running the tests…
+                  </p>
+                )}
+
+                {state === 'FINISHED' && challenge && !isRunning && (
+                  <div className="p-4 space-y-6">
+                    <DuelResults
+                      challenge={challenge}
+                      results={results}
+                      elapsedMs={elapsedMs}
+                      score={score}
+                      onSubmitScore={handleSubmitScore}
+                      onPlayAgain={handlePlayAgain}
+                    />
+                    {/* what went wrong (a wrong answer, an error, a loop cut off at the time limit) */}
+                    {testsPassed < results.length && <TestRunner results={results} totalTests={challenge.testCases.length} />}
+                    <div className="border-t border-primary/10 pt-4">
+                      <button
+                        onClick={() => setState('LEADERBOARD')}
+                        className="text-sm text-primary hover:text-primary/80 transition-colors"
+                      >
+                        View Leaderboard
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {state === 'LEADERBOARD' && challenge && (
+                  <div className="p-4 space-y-4">
+                    <Leaderboard
+                      entries={getEntriesForChallenge(challenge.id)}
+                      challengeTitle={challenge.title}
+                    />
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setState('FINISHED')}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Back to Results
+                      </button>
+                      <button
+                        onClick={handlePlayAgain}
+                        className="text-sm text-primary hover:text-primary/80 transition-colors"
+                      >
+                        Play Again
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            </motion.div>
           </div>
-        </motion.div>
-      </motion.div>
+        </React.Fragment>
+      )}
     </AnimatePresence>
   );
 };

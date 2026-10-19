@@ -7,7 +7,7 @@ import { LINKS, PROFILE } from '@/data/profile';
 import { NAV_PAGES } from '@/site/pages';
 import { Monogram } from '@/components/zen/primitives';
 import CommandPalette from './CommandPalette';
-import { MENU_MOTION } from './menuMotion';
+import { MENU_MOTION, STILL } from './overlayMotion';
 import SoundToggle from './SoundToggle';
 import { sound } from '@/lib/sound';
 import { emitZen } from '@/lib/zenEvents';
@@ -20,7 +20,7 @@ import { emitZen } from '@/lib/zenEvents';
  * scroll. Takes the bar's mode: ink over the hero, paper elsewhere.
  *
  * The card is opaque and shadowed from its first frame and slides out from under the bar; only
- * transform and opacity animate (menuMotion.ts has the rules and why). Picking a page does not
+ * transform and opacity animate (overlayMotion.ts has the rules and why). Picking a page does not
  * close it: it stays until the new page is ready, then leaves together with the old page (see the
  * AnimatePresence below).
  *
@@ -31,10 +31,7 @@ import { emitZen } from '@/lib/zenEvents';
  * whole document, and the card keeps 8px off the sides (and, upright, far off the bottom). The
  * toolbars just show the dimmed page through their glass.
  */
-const STILL = { initial: false, exit: undefined } as const;
-
 const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; pathname: string }> = ({ onClose, ink, pathname }) => {
-  // Reduced motion: no slide, no fade; the menu is simply there, and simply gone.
   const still = useReducedMotion() ? STILL : {};
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();

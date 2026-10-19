@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { GitBranch, Play, Pause, AlertCircle, ChevronDown, Keyboard } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGitHubRepos, useRepoCommits, useRepoBranches, useCommitDetail } from '@/hooks/useCommitHistory';
@@ -34,6 +34,17 @@ const CommitTimeMachine: React.FC = () => {
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string | undefined>(undefined);
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
+  // A tap outside the branch list closes it. (A transparent full-screen `fixed` catcher did this; on iOS
+  // 26 Safari such a layer at the screen's edges makes it snapshot the page for its toolbars.)
+  const branchRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!branchDropdownOpen) return;
+    const onDown = (e: PointerEvent) => {
+      if (!branchRef.current?.contains(e.target as Node)) setBranchDropdownOpen(false);
+    };
+    document.addEventListener('pointerdown', onDown);
+    return () => document.removeEventListener('pointerdown', onDown);
+  }, [branchDropdownOpen]);
   const [selectedCommitIndex, setSelectedCommitIndex] = useState<number>(-1);
   const [detailOpen, setDetailOpen] = useState(false);
   const [hoveredCommitIndex, setHoveredCommitIndex] = useState<number | null>(null);
@@ -236,7 +247,7 @@ const CommitTimeMachine: React.FC = () => {
               ) : null}
 
               {selectedRepo && (
-                <div className="relative shrink-0">
+                <div ref={branchRef} className="relative shrink-0">
                   <button
                     onClick={() => setBranchDropdownOpen(!branchDropdownOpen)}
                     disabled={branchesLoading}
@@ -249,26 +260,23 @@ const CommitTimeMachine: React.FC = () => {
                     <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${branchDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {branchDropdownOpen && sortedBranches.length > 0 && (
-                    <>
-                      <div className="fixed inset-0 z-10" onClick={() => setBranchDropdownOpen(false)} />
-                      <ul role="listbox" className="absolute right-0 top-full z-20 mt-2 max-h-64 w-56 overflow-y-auto rounded-2xl border bg-popover p-1 shadow-xl">
-                        {sortedBranches.map((branch) => (
-                          <li key={branch.name}>
-                            <button
-                              role="option"
-                              aria-selected={selectedBranch === branch.name}
-                              onClick={() => handleBranchSelect(branch.name)}
-                              className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-mono text-xs hover:bg-secondary ${
-                                selectedBranch === branch.name ? 'text-primary' : ''
-                              }`}
-                            >
-                              <GitBranch className="h-3 w-3 shrink-0 text-muted-foreground" />
-                              <span className="truncate">{branch.name}</span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </>
+                    <ul role="listbox" className="absolute right-0 top-full z-20 mt-2 max-h-64 w-56 overflow-y-auto rounded-2xl border bg-popover p-1 shadow-xl">
+                      {sortedBranches.map((branch) => (
+                        <li key={branch.name}>
+                          <button
+                            role="option"
+                            aria-selected={selectedBranch === branch.name}
+                            onClick={() => handleBranchSelect(branch.name)}
+                            className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-mono text-xs hover:bg-secondary ${
+                              selectedBranch === branch.name ? 'text-primary' : ''
+                            }`}
+                          >
+                            <GitBranch className="h-3 w-3 shrink-0 text-muted-foreground" />
+                            <span className="truncate">{branch.name}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </div>
               )}

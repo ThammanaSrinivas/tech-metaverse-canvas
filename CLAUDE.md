@@ -194,15 +194,22 @@ another account is the default, else it fails with "Failed to get Firebase proje
 - **Errors:** a page that throws renders `src/pages/PageError.tsx` inside the layout (header and
   footer stay); a page chunk missing after a deploy reloads the tab once. Back/Forward return to
   where the reader was (`useScrollOnNavigate` in `Layout.tsx`); new links still start at the top.
-- **Mobile menu** (`Navigation.tsx`): never lock body scroll with `overflow: hidden` (iOS Safari
-  re-lays out the page, which looks like a reload); never fade an opaque panel in from opacity 0 over
-  content (the page shows through); the menu's `AnimatePresence` is keyed by pathname so it leaves
-  with the old page instead of flashing over the new one. Animate only transform and opacity (an
-  animated clip-path hid the card's shadow until it popped in at the end); exits name a target,
-  never a keyframe list (closing mid-open jumped to fully open first); the card waits behind the
-  bar, which is opaque for that reason. No `fixed` layer of the menu may reach the screen's edges:
-  Safari 26+ paints its toolbar strips in such a layer's colour, at once and then held (the
-  backdrop is `absolute` over the whole document). `menuMotion.test.ts` checks these rules.
+- **Overlays** (phone menu, zen shell, duel, ⌘K palette; rules in `src/components/overlayMotion.ts`,
+  checked by `overlayMotion.test.ts`): never lock body scroll with `overflow: hidden` (iOS Safari
+  re-lays out the page, which looks like a reload; Radix's Dialog overlay does it, so the palette
+  renders without one). Panels are opaque from their first frame and leave at once; only the dim
+  fades (fading a panel showed the page, or the menu, through it). Animate only transform and
+  opacity (an animated clip-path hid the menu card's shadow until it popped in); exits name a
+  target, never a keyframe list (closing mid-open jumped to fully open first). The menu card waits
+  behind the bar, which is opaque for that reason; the menu's `AnimatePresence` is keyed by pathname
+  so it leaves with the old page instead of flashing over the new one. On touch screens the shell
+  focuses its window, not the prompt (the keyboard rising on open made iOS scroll and resize it).
+- **Safari 26 toolbars:** it paints the strips behind its toolbars in the colour of the `fixed` box
+  covering a point 4px inside the top or bottom edge, at once (no fade). So dims are `absolute`
+  over the whole document (rendered inside Layout's root, not portalled), no fixed layer covers the
+  screen (not even a transparent click-catcher), and nothing fixed crosses those lines while it
+  animates: the shell rests 8px above the bottom and grows from that edge (it used to rise 24px
+  into place, and the bar flashed dark).
 - **Tap highlight is off** (`html { -webkit-tap-highlight-color: transparent }`): iOS flashed a
   dark box over every tapped button and link. Controls give their own feedback (`:active`
   styles, or what the tap does).

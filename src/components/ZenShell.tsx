@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useGo } from '@/components/zen/Link';
 import { JOBS, LAB, PROFILE } from '@/data/profile';
@@ -11,6 +11,7 @@ import { sound } from '@/lib/sound';
 import { Monogram } from '@/components/zen/primitives';
 import { useBrandTheme } from '@/theme/runtime';
 import { readsDarkAt } from '@/lib/zenCursor';
+import { SHELL_MOTION, STILL } from './overlayMotion';
 
 // Two skins, always the opposite of the ground behind the shell: an ink terminal over
 // paper, a paper terminal over the ink sections, so it never melts into the page.
@@ -29,10 +30,13 @@ const PAPER_SKIN = skin('light');
 const kindColor = (k: string, sk: Skin) =>
   ({ out: sk.text, muted: sk.muted, accent: sk.accent, reward: sk.reward, error: sk.error, cmd: sk.text })[k] ?? sk.text;
 
-/** Is the page behind this element dark? Samples its centre, looking through the shell itself. */
+/**
+ * Is the page behind this element dark? Samples its centre, looking through the shell itself.
+ * The first sample runs before paint, so the shell never opens in the wrong skin for a frame.
+ */
 function useDarkGround(el: React.RefObject<HTMLElement>, deps: unknown[]) {
   const [dark, setDark] = useState(false);
-  useEffect(() => {
+  useLayoutEffect(() => {
     let raf = 0;
     const check = () => {
       raf = 0;
@@ -44,7 +48,7 @@ function useDarkGround(el: React.RefObject<HTMLElement>, deps: unknown[]) {
     const schedule = () => {
       if (!raf) raf = requestAnimationFrame(check);
     };
-    schedule();
+    check();
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule);
     return () => {
@@ -175,7 +179,8 @@ interface ShellFit {
  */
 function useShellFit(open: boolean): ShellFit {
   const [fit, setFit] = useState<ShellFit>({ style: {}, touch: false, compact: false, tiny: false });
-  useEffect(() => {
+  // before paint: the window opens at its size, not at the last one or the CSS fallback
+  useLayoutEffect(() => {
     const vv = window.visualViewport;
     if (!open) return;
     const update = () => {
@@ -245,6 +250,9 @@ const ZenShell: React.FC = () => {
   }, [toggle]);
 
   // On open, focus the prompt; on close, hand focus back to wherever it was (not on first mount).
+  // A touch screen focuses the window instead: focusing the prompt there raised the keyboard at
+  // once, and iOS scrolled the page and resized the window while it was still appearing. A tap
+  // anywhere in the window focuses the prompt.
   const wasOpen = useRef(false);
   useEffect(() => {
     if (!open) {
@@ -254,7 +262,8 @@ const ZenShell: React.FC = () => {
     wasOpen.current = true;
     const active = document.activeElement;
     returnFocus.current = active instanceof HTMLElement && active !== document.body ? active : null;
-    inputRef.current?.focus();
+    if (matchMedia('(pointer: coarse)').matches) windowRef.current?.focus({ preventScroll: true });
+    else inputRef.current?.focus();
   }, [open]);
 
   // Boot once, line by line, the first time it opens. A ref, not state: re-rendering must not
@@ -380,122 +389,121 @@ const ZenShell: React.FC = () => {
     inputRef.current?.focus();
   };
   const fit = useShellFit(open);
+  const still = useReducedMotion() ? STILL : {};
   // When the window resizes (keyboard up/down, rotation) keep the prompt line in view.
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [fit.style.height]);
 
+  // Opaque from its first frame, grows from its bottom edge, and goes at once (overlayMotion.ts).
   return (
     <>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            key="shell"
-            ref={windowRef}
-            data-zen-shell
-            role="dialog"
-            aria-label="Zen shell"
-            initial={{ opacity: 0, y: 24, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.98 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-x-2 bottom-2 z-50 flex h-[78svh] flex-col overflow-hidden rounded-[22px] border font-mono text-[14px] leading-relaxed shadow-2xl shadow-black/40 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:h-[460px] sm:w-[600px] sm:text-[13px]"
-            style={{ background: windowSk.bg, borderColor: windowSk.line, color: windowSk.text, ...fit.style }}
-            onClick={() => inputRef.current?.focus()}
-          >
-            <div className={`flex items-center gap-2 border-b px-4 ${fit.tiny ? 'py-1.5' : 'py-3'}`} style={{ borderColor: windowSk.line, background: windowSk.raised }}>
-              <span className="flex gap-1.5" aria-hidden>
-                <span className="h-3 w-3 rounded-full" style={{ background: palette.highlight }} />
-                <span className="h-3 w-3 rounded-full" style={{ background: palette.secondary }} />
-                <span className="h-3 w-3 rounded-full" style={{ background: palette.primary }} />
-              </span>
-              <span className="flex-1 text-center text-xs" style={{ color: windowSk.muted }}>
-                {PROMPT}: {cwd} — zsh
-              </span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpen(false);
+      {open && (
+        <motion.div
+          key="shell"
+          ref={windowRef}
+          data-zen-shell
+          role="dialog"
+          aria-label="Zen shell"
+          tabIndex={-1}
+          {...SHELL_MOTION}
+          {...still}
+          className="fixed inset-x-2 bottom-2 z-50 flex h-[78svh] origin-bottom flex-col overflow-hidden rounded-[22px] border font-mono text-[14px] leading-relaxed shadow-2xl shadow-black/40 outline-none will-change-transform sm:inset-x-auto sm:bottom-5 sm:right-5 sm:h-[460px] sm:w-[600px] sm:text-[13px]"
+          style={{ background: windowSk.bg, borderColor: windowSk.line, color: windowSk.text, ...fit.style }}
+          onClick={() => inputRef.current?.focus()}
+        >
+          <div className={`flex items-center gap-2 border-b px-4 ${fit.tiny ? 'py-1.5' : 'py-3'}`} style={{ borderColor: windowSk.line, background: windowSk.raised }}>
+            <span className="flex gap-1.5" aria-hidden>
+              <span className="h-3 w-3 rounded-full" style={{ background: palette.highlight }} />
+              <span className="h-3 w-3 rounded-full" style={{ background: palette.secondary }} />
+              <span className="h-3 w-3 rounded-full" style={{ background: palette.primary }} />
+            </span>
+            <span className="flex-1 text-center text-xs" style={{ color: windowSk.muted }}>
+              {PROMPT}: {cwd} — zsh
+            </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpen(false);
+              }}
+              className="rounded-md p-1 transition-colors hover:bg-white/10"
+              aria-label="Close zen shell"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3" aria-live="polite">
+            {lines.map((l, i) => renderLine(l, i, windowSk))}
+            <div className="flex items-center">
+              <span style={{ color: windowSk.accent }}>{PROMPT}</span>
+              <span className="mx-1.5" style={{ color: windowSk.muted }}>{cwd} %</span>
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={(e) => {
+                  sound.play('key');
+                  setInput(e.target.value);
                 }}
-                className="rounded-md p-1 transition-colors hover:bg-white/10"
-                aria-label="Close zen shell"
-              >
-                <X className="h-4 w-4" />
-              </button>
+                onKeyDown={onKeyDown}
+                className="min-w-0 flex-1 bg-transparent text-[16px] outline-none sm:text-[13px]"
+                style={{ color: windowSk.text, caretColor: windowSk.accent }}
+                spellCheck={false}
+                autoCapitalize="off"
+                autoComplete="off"
+                autoCorrect="off"
+                enterKeyHint="go"
+                aria-label="Shell command"
+              />
             </div>
+          </div>
 
-            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3" aria-live="polite">
-              {lines.map((l, i) => renderLine(l, i, windowSk))}
-              <div className="flex items-center">
-                <span style={{ color: windowSk.accent }}>{PROMPT}</span>
-                <span className="mx-1.5" style={{ color: windowSk.muted }}>{cwd} %</span>
-                <input
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => {
-                    sound.play('key');
-                    setInput(e.target.value);
+          <div className="border-t pb-[env(safe-area-inset-bottom)]" style={{ borderColor: windowSk.line }}>
+            {/* Touch keys: phones have no Tab or arrow keys. */}
+            {fit.touch && !fit.tiny && (
+            <div className="flex gap-1.5 px-3 pt-3">
+              {[
+                { label: 'tab', run: completeInput },
+                { label: '↑', run: historyUp },
+                { label: '↓', run: historyDown },
+                { label: 'clear', run: () => setLines([]) },
+              ].map((k) => (
+                <button
+                  key={k.label}
+                  onPointerDown={tap(k.run)}
+                  className="h-10 flex-1 rounded-lg border text-xs"
+                  style={{ borderColor: windowSk.line, color: windowSk.text, background: windowSk.raised }}
+                  aria-label={k.label === '↑' ? 'previous command' : k.label === '↓' ? 'next command' : k.label}
+                >
+                  {k.label}
+                </button>
+              ))}
+            </div>
+            )}
+            {/* One-tap commands, then every page from the site map. Dropped when space is tight. */}
+            {!fit.compact && (
+            <div className="flex gap-2 overflow-x-auto px-3 py-3 [scrollbar-width:none] sm:px-4">
+              {[...SUGGESTIONS, ...PAGES.map((p) => `cd ${p.shell[0].name}`)].map((cmd) => (
+                <button
+                  key={cmd}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    exec(cmd);
+                    inputRef.current?.focus();
                   }}
-                  onKeyDown={onKeyDown}
-                  className="min-w-0 flex-1 bg-transparent text-[16px] outline-none sm:text-[13px]"
-                  style={{ color: windowSk.text, caretColor: windowSk.accent }}
-                  spellCheck={false}
-                  autoCapitalize="off"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  enterKeyHint="go"
-                  aria-label="Shell command"
-                />
-              </div>
+                  className="h-9 shrink-0 rounded-lg border px-3 text-xs transition-colors hover:opacity-80 sm:h-auto sm:px-2.5 sm:py-1"
+                  style={{ borderColor: windowSk.line, color: cmd.startsWith('cd ') ? windowSk.accent : windowSk.muted }}
+                >
+                  {cmd}
+                </button>
+              ))}
             </div>
-
-            <div className="border-t pb-[env(safe-area-inset-bottom)]" style={{ borderColor: windowSk.line }}>
-              {/* Touch keys: phones have no Tab or arrow keys. */}
-              {fit.touch && !fit.tiny && (
-              <div className="flex gap-1.5 px-3 pt-3">
-                {[
-                  { label: 'tab', run: completeInput },
-                  { label: '↑', run: historyUp },
-                  { label: '↓', run: historyDown },
-                  { label: 'clear', run: () => setLines([]) },
-                ].map((k) => (
-                  <button
-                    key={k.label}
-                    onPointerDown={tap(k.run)}
-                    className="h-10 flex-1 rounded-lg border text-xs"
-                    style={{ borderColor: windowSk.line, color: windowSk.text, background: windowSk.raised }}
-                    aria-label={k.label === '↑' ? 'previous command' : k.label === '↓' ? 'next command' : k.label}
-                  >
-                    {k.label}
-                  </button>
-                ))}
-              </div>
-              )}
-              {/* One-tap commands, then every page from the site map. Dropped when space is tight. */}
-              {!fit.compact && (
-              <div className="flex gap-2 overflow-x-auto px-3 py-3 [scrollbar-width:none] sm:px-4">
-                {[...SUGGESTIONS, ...PAGES.map((p) => `cd ${p.shell[0].name}`)].map((cmd) => (
-                  <button
-                    key={cmd}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      exec(cmd);
-                      inputRef.current?.focus();
-                    }}
-                    className="h-9 shrink-0 rounded-lg border px-3 text-xs transition-colors hover:opacity-80 sm:h-auto sm:px-2.5 sm:py-1"
-                    style={{ borderColor: windowSk.line, color: cmd.startsWith('cd ') ? windowSk.accent : windowSk.muted }}
-                  >
-                    {cmd}
-                  </button>
-                ))}
-              </div>
-              )}
-              {fit.compact && fit.touch && !fit.tiny && <div className="h-3" />}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            )}
+            {fit.compact && fit.touch && !fit.tiny && <div className="h-3" />}
+          </div>
+        </motion.div>
+      )}
     </>
   );
 };

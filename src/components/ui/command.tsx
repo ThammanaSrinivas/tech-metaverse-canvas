@@ -1,10 +1,13 @@
 import * as React from "react"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { type DialogProps } from "@radix-ui/react-dialog"
 import { Command as CommandPrimitive } from "cmdk"
-import { Search } from "lucide-react"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
+import { Search, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogTitle } from "@/components/ui/dialog"
+import { MODAL_MOTION, STILL } from "@/components/overlayMotion"
 
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
@@ -25,16 +28,43 @@ interface CommandDialogProps extends DialogProps {
   children?: React.ReactNode;
 }
 
+/**
+ * Not the shared DialogContent: its Radix overlay is a `fixed` layer at the screen's edges, which
+ * Safari 26 paints its toolbars with (at once, while the dim is still fading), and it locks scroll
+ * with `overflow: hidden` on <body>, which makes iOS re-lay out the page. Here the dim is `absolute`
+ * over the whole document, so the dialog renders in place (inside Layout's root), not in a portal.
+ * Radix still traps focus and closes on Escape or a tap outside. The panel is opaque from its first
+ * frame and goes at once; only the dim fades (overlayMotion.ts).
+ */
 const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
+  const still = useReducedMotion() ? STILL : {}
   return (
     <Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0 shadow-2xl border-0 bg-transparent" aria-describedby={undefined}>
+      <AnimatePresence>
+        {props.open && (
+          <motion.div
+            key="dim"
+            {...MODAL_MOTION.backdrop}
+            {...still}
+            className="absolute inset-x-0 top-0 -bottom-px z-50 bg-black/80"
+            aria-hidden
+          />
+        )}
+      </AnimatePresence>
+      <DialogPrimitive.Content
+        className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] overflow-hidden shadow-2xl duration-200 data-[state=open]:animate-in data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] motion-reduce:animate-none sm:rounded-lg"
+        aria-describedby={undefined}
+      >
         {/* screen readers announce the dialog by name; sighted users see the search field */}
         <DialogTitle className="sr-only">Command palette</DialogTitle>
         <Command className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input-wrapper]_svg]:text-muted-foreground/70 [&_[cmdk-input]]:h-14 [&_[cmdk-input]]:text-base [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-3 [&_[cmdk-item]]:rounded-lg [&_[cmdk-item]]:mx-2 [&_[cmdk-item]]:my-1 [&_[cmdk-item]_svg]:h-4 [&_[cmdk-item]_svg]:w-4">
           {children}
         </Command>
-      </DialogContent>
+        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
     </Dialog>
   )
 }
