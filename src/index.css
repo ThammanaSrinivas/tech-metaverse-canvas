@@ -32,6 +32,10 @@
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 5rem;
+    /* iOS flashes a dark box over every tapped button and link (the menu button blinked on each
+       tap). Controls give their own feedback (:active styles, or what the tap does); keyboard focus
+       keeps its ring. */
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {

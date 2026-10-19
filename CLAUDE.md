@@ -182,7 +182,15 @@ another account is the default, else it fails with "Failed to get Firebase proje
 - **Mobile menu** (`Navigation.tsx`): never lock body scroll with `overflow: hidden` (iOS Safari
   re-lays out the page, which looks like a reload); never fade an opaque panel in from opacity 0 over
   content (the page shows through); the menu's `AnimatePresence` is keyed by pathname so it leaves
-  with the old page instead of flashing over the new one.
+  with the old page instead of flashing over the new one. Animate only transform and opacity (an
+  animated clip-path hid the card's shadow until it popped in at the end); exits name a target,
+  never a keyframe list (closing mid-open jumped to fully open first); the card waits behind the
+  bar, which is opaque for that reason. No `fixed` layer of the menu may reach the screen's edges:
+  Safari 26+ paints its toolbar strips in such a layer's colour, at once and then held (the
+  backdrop is `absolute` over the whole document). `menuMotion.test.ts` checks these rules.
+- **Tap highlight is off** (`html { -webkit-tap-highlight-color: transparent }`): iOS flashed a
+  dark box over every tapped button and link. Controls give their own feedback (`:active`
+  styles, or what the tap does).
 - Targets: Lighthouse accessibility, best practices and SEO at 100, performance 90+. Don't preload
   the three.js scene; idle preload skips data-saver / 2G.
 

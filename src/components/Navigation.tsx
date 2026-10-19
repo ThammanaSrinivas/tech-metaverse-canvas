@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Link, NavLink } from '@/components/zen/Link';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, FileText, Menu, Search, Terminal, X } from 'lucide-react';
 import { LINKS, PROFILE } from '@/data/profile';
 import { NAV_PAGES } from '@/site/pages';
 import { Monogram } from '@/components/zen/primitives';
 import CommandPalette from './CommandPalette';
+import { MENU_MOTION } from './menuMotion';
 import SoundToggle from './SoundToggle';
 import { sound } from '@/lib/sound';
 import { emitZen } from '@/lib/zenEvents';
@@ -18,14 +19,23 @@ import { emitZen } from '@/lib/zenEvents';
  * which looks like a reload. The backdrop swallows touches instead, and the card contains its own
  * scroll. Takes the bar's mode: ink over the hero, paper elsewhere.
  *
- * The card is opaque from its first frame and unrolls from under the bar (a clip, not a fade:
- * fading it in showed the page through it). Picking a page does not close it: it stays until the
- * new page is ready, then leaves together with the old page (see the AnimatePresence below).
+ * The card is opaque and shadowed from its first frame and slides out from under the bar; only
+ * transform and opacity animate (menuMotion.ts has the rules and why). Picking a page does not
+ * close it: it stays until the new page is ready, then leaves together with the old page (see the
+ * AnimatePresence below).
+ *
+ * TOOLBARS: Safari on iOS 26+ paints the strips behind its own toolbars in the colour of any
+ * `fixed` box that reaches the screen's edge, at once and then held (WebKit's fixedContainerEdges).
+ * A fixed backdrop would turn the bottom strip solid dim a moment after the page dims, and keep it
+ * dim while the page fades back on close. So no layer of the menu is a fixed box at an edge: the backdrop is `absolute` over the
+ * whole document, and the card keeps 8px off the sides (and, upright, far off the bottom). The
+ * toolbars just show the dimmed page through their glass.
  */
-const CLIP_OPEN = 'inset(0% 0% 0% 0% round 16px)';
-const CLIP_SHUT = 'inset(0% 0% 100% 0% round 16px)';
+const STILL = { initial: false, exit: undefined } as const;
 
 const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; pathname: string }> = ({ onClose, ink, pathname }) => {
+  // Reduced motion: no slide, no fade; the menu is simply there, and simply gone.
+  const still = useReducedMotion() ? STILL : {};
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -34,24 +44,22 @@ const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; pathname: string
 
   return (
     <>
+      {/* Covers the whole document (Layout's root), not `fixed`: see TOOLBARS above. One pixel
+          past its end, as the root's height is fractional and the scroll range is rounded up. */}
       <motion.div
         aria-hidden
         onClick={onClose}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-[44] bg-foreground/25 lg:hidden"
+        {...MENU_MOTION.backdrop}
+        {...still}
+        className="absolute inset-x-0 top-0 -bottom-px z-[44] bg-foreground/25 will-change-[opacity] lg:hidden"
         style={{ touchAction: 'none' }}
       />
+      {/* Starts hidden behind the bar (z-50, opaque) and slides out from under it. */}
       <motion.div
         id="mobile-menu"
-        initial={{ clipPath: CLIP_SHUT, y: -6 }}
-        // the clip also cuts off the card's shadow, so drop it once the card is fully open
-        animate={{ clipPath: CLIP_OPEN, y: 0, transitionEnd: { clipPath: 'none' } }}
-        exit={{ clipPath: [CLIP_OPEN, CLIP_SHUT], y: -6, transition: { duration: 0.16, ease: [0.4, 0, 1, 1] } }}
-        transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-        className={`fixed inset-x-2 top-[3.75rem] z-[45] max-h-[calc(100svh-5.5rem)] overflow-y-auto overscroll-contain rounded-2xl border bg-background text-foreground shadow-2xl md:top-[4.25rem] lg:hidden ${
+        {...MENU_MOTION.card}
+        {...still}
+        className={`fixed inset-x-2 top-[3.75rem] z-[45] max-h-[calc(100svh-5.5rem)] overflow-y-auto overscroll-contain rounded-2xl border bg-background text-foreground shadow-2xl will-change-transform md:top-[4.25rem] lg:hidden ${
           ink ? 'dark' : ''
         }`}
       >
@@ -155,13 +163,15 @@ const Navigation: React.FC = () => {
     <>
       {/*
         A plain full-width bar with a hairline under it: no floating pill, no shadow, no blur (blur
-        costs a lot on phones while scrolling). Over an ink top it goes transparent. Opening the
-        phone menu never changes the bar (that morph read as a glitch).
+        costs a lot on phones while scrolling). Opaque, so the phone menu can wait behind it and
+        slide out from under it. Over an ink top it goes transparent (and the menu would show as it
+        slides; no page has an ink top today). Opening the phone menu never
+        changes the bar (that morph read as a glitch).
       */}
       <header data-site-header className="fixed inset-x-0 top-0 z-50">
         <div
           className={`border-b transition-[background-color,border-color] duration-300 ease-out ${
-            solid ? 'bg-background/95' : 'dark border-transparent text-foreground'
+            solid ? 'bg-background' : 'dark border-transparent text-foreground'
           }`}
         >
         <nav className="mx-auto flex h-14 max-w-[1120px] items-center gap-6 px-5 md:h-16" aria-label="Main">
