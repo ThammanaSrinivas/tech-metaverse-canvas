@@ -2,14 +2,14 @@ Zoho Catalyst is a serverless platform: developers write functions, and Catalyst
 
 When we picked it up, it had two limits users kept running into:
 
-- **The smallest interval was one hour.** Anything that had to run more often simply couldn't.
+- **The smallest interval was one hour.** Anything that had to run more often simply couldn’t.
 - **Each project had a cap on how many crons it could create.**
 
 The goal was to remove both: run jobs **down to every minute, for everyone**, with **no per-project limit**, at platform scale. A small team of us built it over about six months; I designed the scheduler and drove it through to production.
 
-## Why per-minute is not "just run it more often"
+## Why per-minute is not “just run it more often”
 
-Going from hourly to per-minute multiplies the number of scheduling decisions by 60. Every minute the scheduler has to answer one question quickly, *which jobs are due right now?*, and hand each of them to a worker, without losing any or running any twice.
+Going from hourly to per-minute multiplies the number of scheduling decisions by 60. Every minute the scheduler has to answer one question quickly, *which jobs are due right now?*, and hand each of them to a worker, without losing any.
 
 The obvious version breaks in two places:
 
@@ -20,7 +20,7 @@ The obvious version breaks in two places:
 
 The scheduler is built on **Kafka** and **Redis**, and supports full **cron expressions** with an **SDK**, so developers can create and manage schedules from code.
 
-**Only queue what the workers can take.** The biggest win was also the smallest change. Instead of pushing every due job into the pending queue, the scheduler stops submitting once the queue holds about **ten times what the workers can process**, and tops it up as they drain it. Worker capacity is set per business: it starts small, grows on demand up to a default limit, and that limit is raised when a customer's business needs more. The cap follows the capacity, so a burst waits its turn and the rest of the system doesn't feel it. One `if` condition, and messages per cycle dropped from **about 7,000 to 32**, a **99.5% reduction**.
+**Only queue what the workers can take.** The biggest win was also the smallest change. Instead of pushing every due job into the pending queue, the scheduler stops submitting once the queue holds about **ten times what the workers can process**, and tops it up as they drain it. Worker capacity is set per business: it starts small, grows on demand up to a default limit, and that limit is raised when a customer’s business needs more. The cap follows the capacity, so a burst waits its turn and the rest of the system doesn’t feel it. One `if` condition, and messages per cycle dropped from **about 7,000 to 32**, a **99.5% reduction**.
 
 Toggle between the two below. Same workers, same jobs; the only difference is what the scheduler lets into the queue.
 
@@ -34,8 +34,8 @@ admission-control
 
 ## Results
 
-| | Before | After |
-|---|---|---|
+| Metric | Before | After |
+|---|--:|--:|
 | Smallest interval | 1 hour | **1 minute**, for every user |
 | Per-project cron limit | Yes | **Removed** |
 | Dispatch latency | 50 ms | **5 ms** (10× faster) |
@@ -56,6 +56,6 @@ The feature is public: [Catalyst job scheduling docs](https://docs.catalyst.zoho
 
 **Depth becomes part of you.** Going deep enough on one system to really master it changes how you think about every system after it. It stops being something you know and becomes part of how you work.
 
-**Making people happy is the point.** Turning "you can't run this more than once an hour" into "run it every minute" made a lot of developers happy, and that is the best part of the job.
+**Making people happy is the point.** Turning “you can’t run this more than once an hour” into “run it every minute” made a lot of developers happy, and that is the best part of the job.
 
-**Late nights and serendipity.** None of this happened on a schedule. There were a lot of late nights, and more than a few moments where the answer showed up by accident. You can't plan those moments, but you have to be there for them.
+**Late nights and serendipity.** None of this happened on a schedule. There were a lot of late nights, and more than a few moments where the answer showed up by accident. You can’t plan those moments, but you have to be there for them.

@@ -2,6 +2,9 @@ import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+/** The latest commit pulses, except for people who asked for less motion. */
+const REDUCE = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 interface CommitNodeProps {
   position: [number, number, number];
   color: string;
@@ -32,7 +35,7 @@ const CommitNode: React.FC<CommitNodeProps> = ({
     // Clamp: a long frame (tab resumed, slow device) would otherwise overshoot the lerp and blow the node up.
     const k = Math.min(1, delta * 5);
     if (meshRef.current) {
-      const pulse = isLatest ? 1 + Math.sin(clock.elapsedTime * 2) * 0.15 : 1;
+      const pulse = isLatest && !REDUCE ? 1 + Math.sin(clock.elapsedTime * 2) * 0.15 : 1;
       const targetScale = (hovered || isSelected ? 1.5 : 1) * pulse;
       meshRef.current.scale.lerp(
         new THREE.Vector3(targetScale, targetScale, targetScale),

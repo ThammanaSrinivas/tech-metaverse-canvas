@@ -53,7 +53,7 @@ const ALL: Post[] = [
           title: 'Scheduling *10M* cron jobs a day',
           date: '2026-10-01',
           summary:
-            'Taking a serverless platform’s scheduler from hourly to per-minute for every user: one if-condition that cut Kafka messages by 99.5%, persistent queues so no job is lost, and code clean enough that a race-condition fix took two lines.',
+            'Taking a serverless platform’s scheduler from hourly to per-minute for every user: one if-condition that cut Kafka messages by 99.5%, persistent queues so no job is lost, and code clean enough that a race-condition fix took a few lines.',
           tags: ['Distributed systems', 'Kafka', 'Leadership'],
           draft: DRAFT_SCHEDULING,
           body: scheduling10m,

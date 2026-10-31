@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Pause, Play } from 'lucide-react';
 import { useBrandTheme } from '@/theme/runtime';
 import { mix } from '@/theme/color';
@@ -13,10 +13,12 @@ import { sound, type CueName, type PlayOpts } from '@/lib/sound';
  * Before: every cycle, every due job is published straight into the pending queue, whatever its
  * length. The queue floods. After: one `if`: publish only while the queue holds less than ~10×
  * what the workers can process. The counters show the real numbers from production (7,000 → 32
- * messages per cycle); each dot stands for a batch of jobs. Canvas, brand colours, pauses when
- * off screen. It plays on its own, with a Pause button (moving content needs one). Under reduced
- * motion it starts paused on a still frame that already tells the story, and plays only when the
- * reader asks it to.
+ * messages per cycle), and only those: the message readout swaps from one to the other, it never
+ * counts through numbers that didn't happen. Each dot stands for a batch of jobs. Canvas, brand
+ * colours, pauses when off screen. It plays on its own, with a Pause button (moving content needs
+ * one), and starts alternating before/after only once the reader can see it, so everyone sees the
+ * flood first. Under reduced motion it starts paused on a still frame that already tells the
+ * story, and plays only when the reader asks it to.
  */
 
 type Mode = 'before' | 'after';
@@ -41,6 +43,12 @@ const BEFORE_BURST = 18;
 const QUEUE_DRAW_MAX = 92; // dots beyond this are counted as backlog, not drawn
 const REAL = { before: 7000, after: 32 } as const;
 const HEARD_FOR = CYCLE * 2; // seconds the model stays audible after the reader acts on it
+const WRITE_TIME = 0.25; // seconds the if takes to be written in on a switch to After
+const SEEN_RATIO = 0.35; // how much of the model must be in view before it starts alternating
+const ALTERNATE_EVERY = 9000; // ms between automatic before/after flips, until the reader picks one
+// the message readout's swap: the old figure rises out as the new one rises in
+const SWAP = { duration: 0.3, ease: [0.22, 1, 0.36, 1] } as const;
+const SWAP_INSTANT = { duration: 0 } as const;
 
 const ease = (p: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, p)), 3);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -49,11 +57,14 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
+  const reduceRef = useRef(reduce);
   const theme = useBrandTheme();
   const [mode, setMode] = useState<Mode>('before');
   const modeRef = useRef<Mode>('before');
-  const [readout, setReadout] = useState({ messages: 0, backlog: 0, busy: 0, decision: '' as '' | 'submit' | 'skip' });
+  // simulated state only (dots waiting, workers busy): the message figure comes straight from REAL
+  const [readout, setReadout] = useState({ backlog: 0, busy: 0, decision: '' as '' | 'submit' | 'skip' });
   const touched = useRef(false); // auto-toggle until the reader takes control
+  const [seen, setSeen] = useState(false); // the auto-toggle clock starts once the reader can see the model
   // The model plays on its own, so it must not sound on its own: it is heard only for a moment
   // after the reader picks a mode or presses Play, long enough to hear what they changed.
   const heardUntil = useRef(0);
@@ -66,6 +77,7 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
   const ctl = useRef<{ sync: () => void; settle: () => void } | null>(null);
 
   useEffect(() => {
+    reduceRef.current = reduce;
     if (reduce) setPlaying(false);
   }, [reduce]);
 
@@ -83,7 +95,12 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
     const canvas = canvasRef.current;
     const wrap = wrapRef.current;
     if (!canvas || !wrap) return;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      // no 2D canvas at all: show the text version rather than throw
+      setFailed(true);
+      return;
+    }
     // draw in the colours of wherever the model sits: paper in an article, ink in the home hero
     const s = wrap.closest('.dark') ? theme.dark : theme.light;
     const C = {
@@ -114,9 +131,13 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
     };
     resize();
     let drawNow: () => void = () => {};
+    let settle: () => void = () => {};
     const ro = new ResizeObserver(() => {
+      const was = W;
       resize();
-      drawNow();
+      // paused, the dots still sit where the old layout put them: settle a fresh still frame
+      if (W !== was && !playingRef.current) settle();
+      else drawNow();
     });
     ro.observe(wrap);
 
@@ -139,8 +160,9 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
     let pulse = 0;
     let decisionT = 0;
     let decision: '' | 'submit' | 'skip' = '';
-    let messages = 0;
-    let shownMessages = 0;
+    // writing the if: on a switch to After, the chip and the cap line draw in before the first
+    // cycle that obeys them (complete from the start if the model mounts in After)
+    let writeT = WRITE_TIME;
     let lastMode: Mode = modeRef.current;
     const workerBusy: (Job | null)[] = Array(WORKERS).fill(null);
     // Sound follows the picture: scheduler on the left, workers on the right. Silent while
@@ -200,23 +222,27 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
       const m = modeRef.current;
       if (m !== lastMode) {
         lastMode = m;
-        messages = 0;
-        // switching to "after": the cap only governs what is submitted next; the backlog drains
-        if (m === 'after') backlog = 0;
+        if (m === 'after') {
+          // switching to "after": the cap only governs what is submitted next; the backlog drains
+          backlog = 0;
+          // write the if in (at once under reduced motion)
+          writeT = reduceRef.current ? WRITE_TIME : 0;
+        }
       }
       clock += dt;
       cycleT += dt;
+      writeT = Math.min(WRITE_TIME, writeT + dt);
       pulse = Math.max(0, pulse - dt * 2.2);
       decisionT = Math.max(0, decisionT - dt);
 
-      if (cycleT >= CYCLE) {
+      // the first cycle after a switch to "after" waits until the if is written
+      if (cycleT >= CYCLE && (m === 'before' || writeT >= WRITE_TIME)) {
         cycleT = 0;
         pulse = 1;
         cue('cycle', { pan: -0.55 });
         const len = queued().length + backlog;
         if (m === 'before') {
           publish(BEFORE_BURST);
-          messages = REAL.before;
           decision = '';
         } else {
           const room = CAP - len;
@@ -226,7 +252,6 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
           } else decision = 'skip';
           cue(decision, { pan: -0.4 });
           decisionT = 1.1;
-          messages = REAL.after;
         }
       }
 
@@ -279,7 +304,6 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
         }
       }
       jobs = jobs.filter((j) => !(j.state === 'acking' && j.t > 0.7));
-      shownMessages = lerp(shownMessages, messages, 0.08);
       // the flood has a sound too: a drone that builds with the backlog (nothing once the if holds)
       if (!silent) sound.level(heard() && m === 'before' ? (queued().length + backlog - CAP * 2) / 50 : 0);
     };
@@ -328,7 +352,8 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
       ctx.arc(sx, cy, r, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-      const a = (cycleT / CYCLE) * Math.PI * 2 - Math.PI / 2;
+      // (the hand holds at the top while a cycle waits for the if to be written)
+      const a = (Math.min(cycleT, CYCLE) / CYCLE) * Math.PI * 2 - Math.PI / 2;
       ctx.strokeStyle = C.ink;
       ctx.lineWidth = 2;
       ctx.lineCap = 'round';
@@ -338,8 +363,12 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
       ctx.stroke();
       label('SCHEDULER', sx, cy + 44, C.muted);
 
+      // how far the if is written in (After only): the chip fades in as the cap line draws down
+      const written = m === 'after' ? ease(writeT / WRITE_TIME) : 0;
+
       // the if-condition chip (after mode): lights up on submit, dims on skip
       if (m === 'after') {
+        ctx.globalAlpha = written;
         const txt = narrow ? 'if (q < 10×cap)' : 'if (pending < 10 × capacity)';
         ctx.font = `${narrow ? 9 : 10}px ${mono}`;
         const w = ctx.measureText(txt).width + 18;
@@ -354,7 +383,9 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
         ctx.lineWidth = 1;
         ctx.stroke();
         label(txt, x + 9, y + 15, on ? C.accent : off ? C.muted : C.ink, 'left', narrow ? 9 : 10);
-        if (decisionT > 0) label(on ? 'submit ✓' : 'skip, queue is full', x + w + 8, y + 15, on ? C.accent : C.muted, 'left', 9);
+        // above the chip: beside it, it ran into the PENDING QUEUE title at article widths
+        if (decisionT > 0) label(on ? 'submit ✓' : 'skip, queue is full', x + 9, y - 7, on ? C.accent : C.muted, 'left', 9);
+        ctx.globalAlpha = 1;
       }
 
       // ---- pending queue capsule
@@ -368,17 +399,29 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
       ctx.stroke();
       label(flooding ? 'PENDING QUEUE · FLOODED' : 'PENDING QUEUE', (qx0 + qx1) / 2, cy - qh / 2 - 10, flooding ? C.hot : C.muted);
 
-      // the 10× capacity line, where the if draws its boundary
-      const capSlot = queueSlot(CAP);
-      ctx.strokeStyle = m === 'after' ? C.accent : C.line;
+      // the 10× capacity line, where the if draws its boundary: faint before, drawn down in the
+      // accent colour as the if is written
+      const capX = queueSlot(CAP).x + 6.5;
+      const capY0 = cy - qh / 2 + 4;
+      const capY1 = cy + qh / 2 - 4;
       ctx.setLineDash([2, 3]);
       ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(capSlot.x + 6.5, cy - qh / 2 + 4);
-      ctx.lineTo(capSlot.x + 6.5, cy + qh / 2 - 4);
-      ctx.stroke();
+      if (written < 1) {
+        ctx.strokeStyle = C.line;
+        ctx.beginPath();
+        ctx.moveTo(capX, capY0);
+        ctx.lineTo(capX, capY1);
+        ctx.stroke();
+      }
+      if (written > 0) {
+        ctx.strokeStyle = C.accent;
+        ctx.beginPath();
+        ctx.moveTo(capX, capY0);
+        ctx.lineTo(capX, lerp(capY0, capY1, written));
+        ctx.stroke();
+      }
       ctx.setLineDash([]);
-      label('10× cap', capSlot.x + 6.5, cy + qh / 2 + 12, m === 'after' ? C.accent : C.muted, 'center', 9);
+      label('10× cap', capX, cy + qh / 2 + 12, written >= 1 ? C.accent : mix(C.muted, C.accent, written), 'center', 9);
 
       // ---- workers
       for (let w = 0; w < WORKERS; w++) {
@@ -456,8 +499,8 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
     const report = () =>
       setReadout((r) => {
         const busy = workerBusy.filter(Boolean).length;
-        const next = { messages: Math.round(shownMessages), backlog: queued().length + backlog, busy, decision };
-        return r.messages === next.messages && r.backlog === next.backlog && r.busy === next.busy && r.decision === next.decision ? r : next;
+        const next = { backlog: queued().length + backlog, busy, decision };
+        return r.backlog === next.backlog && r.busy === next.busy && r.decision === next.decision ? r : next;
       });
     const loop = (t: number) => {
       raf = 0;
@@ -487,7 +530,7 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
         sound.level(0);
       }
     };
-    const settle = () => {
+    settle = () => {
       // fast-forward a few cycles so a still frame tells the story of the current mode
       silent = true;
       safe(() => {
@@ -498,10 +541,18 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
       if (!dead) report();
     };
     ctl.current = { sync, settle };
-    const io = new IntersectionObserver(([e]) => {
-      visible = e.isIntersecting;
-      sync();
-    });
+    // on screen at all: the loop runs. Properly in view (SEEN_RATIO) for the first time: the
+    // auto-alternate clock starts, so a reader who scrolls down late still sees the flood first.
+    const io = new IntersectionObserver(
+      (entries) => {
+        const e = entries[entries.length - 1];
+        visible = e.isIntersecting;
+        // (a ratio reported at the threshold can land a hair under it)
+        if (e.isIntersecting && e.intersectionRatio >= SEEN_RATIO - 0.01) setSeen(true);
+        sync();
+      },
+      { threshold: [0, SEEN_RATIO] },
+    );
     if (!playingRef.current) settle();
     io.observe(wrap);
 
@@ -514,20 +565,37 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
     };
   }, [theme]);
 
-  // gently auto-alternate so a skimming reader sees both states; stops once they click
+  // gently auto-alternate so a skimming reader sees both states, starting from the first time they
+  // can see the model (not from mount); stops once they pick a mode. Not in the text fallback,
+  // which has no Pause button to stop it.
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || !seen || failed) return;
     const id = window.setInterval(() => {
       if (!touched.current) setMode((m) => (m === 'before' ? 'after' : 'before'));
-    }, 9000);
+    }, ALTERNATE_EVERY);
     return () => window.clearInterval(id);
-  }, [playing]);
+  }, [playing, seen, failed]);
 
   const choose = (m: Mode) => {
     touched.current = true;
     hear();
     if (m !== mode) sound.play('switch');
     setMode(m);
+  };
+
+  // the before/after switch is a radio group: one tab stop (the checked radio), arrow keys move
+  // the choice and the focus. Space/Enter pick the focused radio through the button's own click.
+  // Every key choice goes through choose(), exactly like a click.
+  const radios = useRef<Partial<Record<Mode, HTMLButtonElement | null>>>({});
+  const onRadioKey = (e: React.KeyboardEvent) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return; // leave browser shortcuts (Alt+← is Back) alone
+    if (!['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(e.key)) return;
+    e.preventDefault(); // arrows move the choice, not the page
+    // two options, so every arrow wraps to the other one (counted from the checked radio, which
+    // is the focused one unless the auto-alternate flipped it under the reader's focus)
+    const next: Mode = mode === 'before' ? 'after' : 'before';
+    choose(next);
+    radios.current[next]?.focus();
   };
 
   return (
@@ -539,9 +607,15 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
             {(['before', 'after'] as Mode[]).map((m) => (
               <button
                 key={m}
+                ref={(el) => {
+                  radios.current[m] = el;
+                }}
+                type="button"
                 role="radio"
                 aria-checked={mode === m}
+                tabIndex={mode === m ? 0 : -1}
                 onClick={() => choose(m)}
+                onKeyDown={onRadioKey}
                 className={`rounded-full px-3 py-1 transition-colors ${mode === m ? 'bg-card font-semibold text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
               >
                 {m === 'before' ? (
@@ -601,7 +675,22 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
       </div>
       <div className="grid grid-cols-3 border-t text-center">
         <div className="border-r px-3 py-3">
-          <p className={`font-mono text-h3 ${mode === 'before' ? 'text-reward' : 'text-primary'}`}>{readout.messages.toLocaleString('en-US')}</p>
+          {/* only ever one of the two real figures: the old one rises out as the new one rises in
+              (an instant swap under reduced motion), never a count through numbers that didn't happen */}
+          <p className="grid overflow-hidden font-mono text-h3">
+            <AnimatePresence initial={false}>
+              <motion.span
+                key={mode}
+                className={`col-start-1 row-start-1 ${mode === 'before' ? 'text-reward' : 'text-primary'}`}
+                initial={{ y: '0.6em', opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: '-0.6em', opacity: 0 }}
+                transition={reduce ? SWAP_INSTANT : SWAP}
+              >
+                {REAL[mode].toLocaleString('en-US')}
+              </motion.span>
+            </AnimatePresence>
+          </p>
           <p className="text-small text-muted-foreground">
             <span className="sm:hidden">msgs / cycle</span>
             <span className="hidden sm:inline">Kafka messages / cycle</span>

@@ -277,10 +277,10 @@ const COMMANDS: Record<string, Command> = {
     run: () => ({
       lines: [
         t('muted', '  PID  %FOCUS  COMMAND'),
-        t('accent', '    1    62.0  paypal --scm --multi-tenant --gcp'),
-        t('accent', '    2    30.0  zenmode-os --build --night-shift'),
-        t('out', '    3     5.0  zen-shell (you are here)'),
-        t('out', '    4     3.0  sleep   # working on it'),
+        t('accent', '    1    88.0  paypal --platforms --gcp'),
+        t('accent', '    2     7.0  zenmode-os   # own time'),
+        t('out', '    3     3.0  zen-shell (you are here)'),
+        t('out', '    4     2.0  sleep   # working on it'),
         t('muted', '    -     0.0  doomscroll   [killed]'),
       ],
     }),
@@ -292,7 +292,7 @@ const COMMANDS: Record<string, Command> = {
   uptime: {
     help: 'how long I have been shipping',
     run: (_, ctx) => {
-      const years = ((ctx.now ?? new Date()).getTime() - new Date('2021-05-01').getTime()) / (365.25 * 864e5);
+      const years = ((ctx.now ?? new Date()).getTime() - Date.UTC(2022, 0, 1)) / (365.25 * 864e5);
       return { lines: [t('out', `up ${years.toFixed(1)} years, 2 companies, 1 launcher, load average: calm`)] };
     },
   },

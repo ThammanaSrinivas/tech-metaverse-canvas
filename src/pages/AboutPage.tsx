@@ -7,7 +7,7 @@ const AboutPage = () => (
     id="about"
     aside={
       <img
-        src={PROFILE.portrait}
+        src={PROFILE.portraitSmall}
         alt={PROFILE.name}
         width={160}
         height={160}

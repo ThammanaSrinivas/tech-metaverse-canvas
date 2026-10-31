@@ -55,17 +55,31 @@
     letter-spacing: -0.01em;
   }
 
-  /* Details: balanced headlines, no orphaned last words, brand-tinted selection and scrollbar. */
+  /* Details: balanced headlines, no orphaned last words, hanging quotes, brand-tinted scrollbar. */
   h1, h2, h3 { text-wrap: balance; }
   p, li { text-wrap: pretty; }
-  ::selection { background: hsl(var(--highlight) / 0.32); }
+  html { hanging-punctuation: first; }
   html { scrollbar-width: thin; scrollbar-color: hsl(var(--border)) transparent; }
   a[data-magnet]:active, button[data-magnet]:active { filter: brightness(0.94); }
 
+  /* the ring alone: never reshape what has focus */
   *:focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
-    border-radius: 6px;
+  }
+
+  /* Keys, as in "press ` for the shell": a small keycap, so a lone backtick is visible. */
+  kbd {
+    display: inline-block;
+    min-width: 1.5em;
+    padding: 0 0.35em;
+    border: 1px solid hsl(var(--border));
+    border-bottom-width: 2px;
+    border-radius: 0.3em;
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    line-height: 1.5;
+    text-align: center;
   }
 
   ::selection {
@@ -89,7 +103,7 @@
 
 /* The ZenMode pointer (ported from zenmodeos.com css/cursor.css). Colours are set per frame
    by lib/zenCursor.ts from the ground under the pointer; this is structure only. */
-@media (hover: hover) and (pointer: fine) {
+@media (hover: hover) and (pointer: fine) and (forced-colors: none) and (prefers-contrast: no-preference) {
   html.zm-pointer, html.zm-pointer * { cursor: none !important; }
   html.zm-pointer :is(input, textarea, select, [contenteditable="true"]) { cursor: text !important; }
 }
@@ -123,36 +137,9 @@
 }
 
 @layer components {
-  /* Small ambient motions. All are disabled by the reduced-motion rule above. */
-  .zen-flicker { animation: zen-flicker 2.4s ease-in-out infinite; transform-box: fill-box; }
-  @keyframes zen-flicker {
-    0%, 100% { transform: scale(1, 1); }
-    30% { transform: scale(0.96, 1.06); }
-    60% { transform: scale(1.03, 0.97); }
-  }
-  .zen-shine { animation: zen-shine 3.6s ease-in-out infinite; }
-  @keyframes zen-shine {
-    0%, 60% { transform: skewX(-20deg) translateX(0); }
-    100% { transform: skewX(-20deg) translateX(80px); }
-  }
-  .zen-drift { animation: zen-drift 40s linear infinite; }
-  @keyframes zen-drift {
-    from { transform: translateX(0); }
-    to { transform: translateX(-128px); }
-  }
-
-  /* Kept for the Time Machine heading until it moves to SectionHeader. */
-  .heading-primary { color: hsl(var(--foreground)); }
-
   .zen-card {
     @apply rounded-[20px] border bg-card;
   }
-
-  /* Flat surfaces: one border, the card colour, nothing glassy. Hover only sharpens the border. */
-  .zen-tile {
-    @apply relative rounded-[20px] border bg-card transition-colors duration-300;
-  }
-  .zen-tile:hover { border-color: hsl(var(--foreground) / 0.28); }
 
   /* Links inside running text: part of the sentence, underlined, never a button. */
   .zen-link {
@@ -164,28 +151,26 @@
   }
   .zen-link:hover { color: hsl(var(--primary)); text-decoration-color: currentColor; }
 
-  .zen-chip {
-    @apply inline-flex items-center rounded-lg border bg-secondary px-3 py-1.5 text-sm;
-  }
-
   .zen-pill {
     @apply inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 font-mono text-xs uppercase tracking-[0.08em];
   }
 
-  /* Highlighter mark (Marker in primitives.tsx): full-height swipe, ink flips to stay readable. */
+  /*
+   * Highlighter mark (Marker in primitives.tsx): a band across the lower half of the line, swept in
+   * once, like a pen on a printout. The ink stays ink (it reads on the band and above it).
+   */
   .zen-marker {
     color: inherit;
-    padding: 0 0.12em;
+    padding: 0 0.1em;
     margin: 0 -0.04em;
-    border-radius: 0.18em;
+    border-radius: 0.12em;
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
-    background: linear-gradient(hsl(var(--highlight)), hsl(var(--highlight))) no-repeat 0 0 / 0% 100%;
-    transition: background-size 0.7s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease;
+    background: linear-gradient(hsl(var(--highlight) / 0.85), hsl(var(--highlight) / 0.85)) no-repeat 0 88% / 0% 0.5em;
+    transition: background-size 0.7s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .zen-marker.is-on {
-    background-size: 100% 100%;
-    color: var(--highlight-ink);
+    background-size: 100% 0.5em;
   }
   @media (prefers-reduced-motion: reduce) {
     .zen-marker { transition: none; }
@@ -206,6 +191,15 @@
 
   .zen-label {
     @apply font-mono text-label uppercase;
+  }
+
+  /* The logo's dot lands: once in time with the hero's full stop, and again on hover. */
+  .zen-mono-dot { transform-box: fill-box; transform-origin: center; }
+  .zen-mono-dot.is-popping, .group:hover .zen-mono-dot { animation: zen-dot-pop 520ms cubic-bezier(0.22, 1, 0.36, 1); }
+  @keyframes zen-dot-pop {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.25); }
+    100% { transform: scale(1); }
   }
 }
 
@@ -243,3 +237,17 @@
   ::view-transition-new(*) { animation: none !important; }
 }
 
+
+/*
+ * Print (recruiters print /work): ink on white, no chrome, nothing waiting to animate in, and the
+ * address of every outside link written after it.
+ */
+@media print {
+  [data-site-header], footer, .zm-cur, [data-zen-shell], [data-zen-modal], button { display: none !important; }
+  html, body { background: none !important; }
+  * { color: black !important; box-shadow: none !important; }
+  * { opacity: 1 !important; transform: none !important; }
+  main a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.8em; overflow-wrap: anywhere; }
+  p, li { break-inside: avoid; }
+  h1, h2, h3 { break-after: avoid; }
+}

@@ -290,9 +290,12 @@ const CommitTimeMachine: React.FC = () => {
             )}
 
             <div
-              className="relative mt-4 rounded-[20px] outline-none"
+              className="relative mt-4 rounded-[20px] outline-none focus-visible:outline-2 focus-visible:outline-ring"
               tabIndex={commits?.length ? 0 : -1}
               onKeyDown={onSceneKey}
+              // a label needs a role to be announced: a group, described as the timeline it is
+              role="group"
+              aria-roledescription="commit timeline"
               aria-label="Commit timeline. Use left and right arrows to move, Enter for details."
             >
               {waiting ? (

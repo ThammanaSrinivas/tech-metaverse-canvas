@@ -3,9 +3,10 @@
 //   runtime  usePageMeta applies it on every navigation (browser tabs, and Google, which runs the JS)
 //   build    the prerender plugin (scripts/prerender.ts) writes one HTML file per URL with it baked
 //            in, because link previews (LinkedIn, WhatsApp, Slack, X) read the HTML and never run JS
-import { EDUCATION, JOBS, LINKS, PROFILE, SITE_URL } from '@/data/profile';
+import { EDUCATION, JOBS, LINKS, PROFILE, SITE_URL, SPEAKING, ZENMODE } from '@/data/profile';
 import { PUBLISHED_ARTICLES, type Article } from '@/content/writing';
 import { plain } from '@/lib/rich';
+import { ACTIVE_PALETTE, PALETTES } from '@/theme/palettes';
 import { PAGES, type SitePage } from './pages';
 
 export interface Meta {
@@ -16,6 +17,12 @@ export interface Meta {
   /** Absolute URL of the 1200×630 social card. */
   image: string;
   type: 'website' | 'article';
+  /** Articles: when it was published (ISO yyyy-mm-dd), for search engines' article cards. */
+  published?: string;
+  /** Pages that must not be indexed (the not-found page). */
+  noindex?: boolean;
+  /** The page's largest image, fetched from the HTML before the app renders it (its LCP). */
+  preload?: { href: string; srcset?: string; sizes?: string };
 }
 
 const SITE_CARD = '/og-image.png';
@@ -30,9 +37,22 @@ const meta = (path: string, title: string | null, description: string, image = S
 });
 
 export const HOME_META = meta('/', null, PROFILE.intro);
-export const pageMeta = (p: SitePage) => meta(p.path, p.title, p.lead);
-export const articleMeta = (a: Article) => meta(`/writing/${a.slug}`, a.title, a.summary, a.image, 'article');
-export const notFoundMeta = (path: string) => meta(path, 'Not found', PROFILE.intro);
+/** Pages whose largest paint is an image the app would otherwise only discover after it renders. */
+const PRELOAD: Record<string, Meta['preload']> = {
+  '/zenmode': { href: ZENMODE.hero.src, srcset: ZENMODE.hero.srcset, sizes: ZENMODE.hero.sizes },
+  '/about': { href: SPEAKING.photo },
+};
+
+export const pageMeta = (p: SitePage): Meta => ({ ...meta(p.path, p.title, p.lead), preload: PRELOAD[p.path] });
+export const articleMeta = (a: Article): Meta => ({ ...meta(`/writing/${a.slug}`, a.title, a.summary, a.image, 'article'), published: a.date });
+export const notFoundMeta = (path: string): Meta => ({ ...meta(path, 'Not found', PROFILE.intro), noindex: true });
+
+/** What the social card shows, for people who can't see it (public/og-image.png: name, line, roles). */
+const SITE_CARD_ALT = `${PROFILE.name}. ${PROFILE.line} Software engineer at PayPal, co-founder of ZenMode OS.`;
+const imageAlt = (m: Meta) => (m.image.endsWith(SITE_CARD) ? SITE_CARD_ALT : m.title);
+
+/** The browser chrome's colour on phones: the palette's dark, as the runtime sets it. */
+const THEME_COLOR = (PALETTES.find((p) => p.name === ACTIVE_PALETTE) ?? PALETTES[0]).dark;
 
 const live = PAGES.filter((p) => !p.draft);
 
@@ -71,16 +91,42 @@ const TAGS: { tag: 'meta' | 'link'; key: 'name' | 'property' | 'rel'; id: string
   { tag: 'meta', key: 'property', id: 'og:type', attr: 'content', value: (m) => m.type },
   { tag: 'meta', key: 'property', id: 'og:url', attr: 'content', value: (m) => `${SITE_URL}${m.path}` },
   { tag: 'meta', key: 'property', id: 'og:image', attr: 'content', value: (m) => m.image },
+  { tag: 'meta', key: 'property', id: 'og:image:alt', attr: 'content', value: imageAlt },
   { tag: 'meta', key: 'name', id: 'twitter:title', attr: 'content', value: (m) => m.title },
   { tag: 'meta', key: 'name', id: 'twitter:description', attr: 'content', value: (m) => m.description },
   { tag: 'meta', key: 'name', id: 'twitter:image', attr: 'content', value: (m) => m.image },
+  { tag: 'meta', key: 'name', id: 'twitter:image:alt', attr: 'content', value: imageAlt },
+  { tag: 'meta', key: 'name', id: 'theme-color', attr: 'content', value: () => THEME_COLOR },
   { tag: 'link', key: 'rel', id: 'canonical', attr: 'href', value: (m) => `${SITE_URL}${m.path}` },
 ];
+
+/** schema.org BlogPosting for an article: headline, date, author, card. */
+const articleLd = (m: Meta) => ({
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: m.title.split(' · ')[0],
+  description: m.description,
+  datePublished: m.published,
+  image: m.image,
+  url: `${SITE_URL}${m.path}`,
+  mainEntityOfPage: `${SITE_URL}${m.path}`,
+  author: { '@type': 'Person', name: PROFILE.name, url: `${SITE_URL}/` },
+});
+
+/** A JSON data block (never executed, so the CSP's script-src does not apply); < escaped for safety. */
+const ldBlock = (data: object) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 
 /** Runtime: point the live document at this page. */
 export function applyMetaToDocument(m: Meta) {
   document.title = m.title;
-  for (const t of TAGS) document.querySelector(`${t.tag}[${t.key}="${t.id}"]`)?.setAttribute(t.attr, t.value(m));
+  // the theme colour is the runtime's to set (it follows the live palette)
+  for (const t of TAGS) if (t.id !== 'theme-color') document.querySelector(`${t.tag}[${t.key}="${t.id}"]`)?.setAttribute(t.attr, t.value(m));
+  // a not-found page tells crawlers that render JS not to index it
+  let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+  if (m.noindex && !robots) {
+    robots = Object.assign(document.createElement('meta'), { name: 'robots', content: 'noindex' });
+    document.head.appendChild(robots);
+  } else if (!m.noindex) robots?.remove();
 }
 
 const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -97,14 +143,19 @@ export function applyMetaToHtml(html: string, m: Meta): string {
     return src.replace(re, () => to);
   };
   let out = swap(html, /<title>[^<]*<\/title>/g, `<title>${escHtml(m.title)}</title>`);
-  if (m.path === '/') {
-    // a JSON data block (never executed, so the CSP's script-src does not apply); < escaped for safety
-    const ld = JSON.stringify(PERSON_LD).replace(/</g, '\\u003c');
-    out = swap(out, /<\/head>/g, `<script type="application/ld+json">${ld}</script></head>`);
-  }
+  const extra = [
+    m.path === '/' && ldBlock(PERSON_LD),
+    m.type === 'article' && m.published && `<meta property="article:published_time" content="${m.published}" />${ldBlock(articleLd(m))}`,
+    m.noindex && '<meta name="robots" content="noindex" />',
+    m.preload &&
+      `<link rel="preload" as="image" href="${m.preload.href}"${m.preload.srcset ? ` imagesrcset="${m.preload.srcset}" imagesizes="${m.preload.sizes}"` : ''} fetchpriority="high" />`,
+  ].filter(Boolean);
+  if (extra.length) out = swap(out, /<\/head>/g, `${extra.join('')}</head>`);
   for (const t of TAGS) {
     const head = `<${t.tag} ${t.key}="${t.id}" ${t.attr}="`;
     out = swap(out, new RegExp(`${escRe(head)}[^"]*"`, 'g'), `${head}${escHtml(t.value(m))}"`);
   }
+  // a page that must not be indexed shouldn't name a canonical address either
+  if (m.noindex) out = out.replace(/\s*<link rel="canonical"[^>]*>/, '');
   return out;
 }

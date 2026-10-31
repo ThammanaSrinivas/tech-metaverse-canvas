@@ -49,7 +49,9 @@ type MagnetEl = HTMLElement & { zmOff?: { x: number; y: number } };
 export function mountZenCursor(): (() => void) | null {
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!fine || reduce) return null;
+  // index.css gives these people their own (native, possibly enlarged) pointer back: no second one
+  const ownPointer = matchMedia('(forced-colors: active), (prefers-contrast: more)').matches;
+  if (!fine || reduce || ownPointer) return null;
 
   const root = document.createElement('div');
   root.className = 'zm-cur';
@@ -122,8 +124,10 @@ export function mountZenCursor(): (() => void) | null {
     magnetEls.forEach((el) => (el.zmOff ??= { x: 0, y: 0 }));
   };
   const pending: [MagnetEl, number, number][] = [];
+  /** Pulls each magnet toward the pointer; true while any of them is still moving. */
   const magnets = () => {
     pending.length = 0;
+    let moving = false;
     for (const el of magnetEls) {
       const r = el.getBoundingClientRect();
       if (r.bottom < -160 || r.top > innerHeight + 160) continue;
@@ -137,21 +141,34 @@ export function mountZenCursor(): (() => void) | null {
       pending.push([el, dx * pull * 0.22, dy * pull * 0.22]);
     }
     for (const [el, ox, oy] of pending) {
+      if (Math.abs(ox - el.zmOff!.x) > 0.05 || Math.abs(oy - el.zmOff!.y) > 0.05) moving = true;
       el.zmOff = { x: ox, y: oy };
       el.style.transform = ox || oy ? `translate(${ox.toFixed(1)}px,${oy.toFixed(1)}px)` : '';
     }
+    return moving;
   };
   // Sections mount lazily; re-collect when the DOM changes shape.
   const mo = new MutationObserver(collectMagnets);
   mo.observe(document.body, { childList: true, subtree: true });
 
+  // The loop runs only while something is still moving: it sleeps once the ring has caught up with
+  // the pointer and every magnet has let go, and the next pointer move or scroll wakes it.
   let last = performance.now();
   let raf = 0;
-  const frame = (now: number) => {
+  const wake = () => {
+    if (raf) return;
+    last = performance.now();
     raf = requestAnimationFrame(frame);
+  };
+  const frame = (now: number) => {
+    raf = 0;
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    if (!moved || dt <= 0) return;
+    if (!moved) return;
+    if (dt <= 0) {
+      raf = requestAnimationFrame(frame);
+      return;
+    }
 
     scale = lerp(scale, hot ? 1.75 : 1, k(3.6e-5, dt));
     draw.x = lerp(draw.x, p.x, k(1e-11, dt));
@@ -168,7 +185,9 @@ export function mountZenCursor(): (() => void) | null {
     root.classList.toggle('flip', flipped);
 
     paint();
-    magnets();
+    const pulling = magnets();
+    const settled = !pulling && Math.abs(draw.x - p.x) < 0.15 && Math.abs(draw.y - p.y) < 0.15 && Math.abs(scale - (hot ? 1.75 : 1)) < 0.002;
+    if (!settled) raf = requestAnimationFrame(frame);
   };
 
   const onDown = () => root.classList.add('down');
@@ -177,12 +196,14 @@ export function mountZenCursor(): (() => void) | null {
   const onEnter = () => moved && root.classList.add('on');
   const onVisible = () => {
     last = performance.now();
+    wake();
   };
   // Scrolling moves content under a still pointer (and flips the top bar between transparent and
   // solid): re-read the ground at the pointer, at most once a frame.
   let groundFrame = 0;
   const onScroll = () => {
     checkedOn = null;
+    wake(); // magnets move under a still pointer
     if (!moved || groundFrame) return;
     groundFrame = requestAnimationFrame(() => {
       groundFrame = 0;
@@ -191,6 +212,7 @@ export function mountZenCursor(): (() => void) | null {
   };
 
   addEventListener('pointermove', onMove, { passive: true });
+  addEventListener('pointermove', wake, { passive: true });
   addEventListener('pointerdown', onDown);
   addEventListener('pointerup', onUp);
   addEventListener('resize', collectMagnets);
@@ -201,7 +223,7 @@ export function mountZenCursor(): (() => void) | null {
 
   collectMagnets();
   paint();
-  raf = requestAnimationFrame(frame);
+  wake();
 
   return () => {
     cancelAnimationFrame(raf);
@@ -209,6 +231,7 @@ export function mountZenCursor(): (() => void) | null {
     offPalette();
     mo.disconnect();
     removeEventListener('pointermove', onMove);
+    removeEventListener('pointermove', wake);
     removeEventListener('pointerdown', onDown);
     removeEventListener('pointerup', onUp);
     removeEventListener('resize', collectMagnets);

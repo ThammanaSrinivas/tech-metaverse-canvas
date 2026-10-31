@@ -74,9 +74,9 @@ const Neofetch: React.FC<{ sk: Skin }> = ({ sk }) => {
   const rows: [string, string][] = [
     ['os', 'ZenMode OS / human 1.0'],
     ['host', `${now.company} · ${now.role}`],
-    ['uptime', 'shipping since 2021'],
+    ['uptime', 'shipping since 2022'],
     ['shell', 'zen shell 1.0'],
-    ['peak load', '10M+ jobs/day'],
+    ['load', '10M+ jobs/day'],
     ['langs', 'Java · Kotlin · TypeScript · Go · Python'],
     ['palette', palette.name.toLowerCase()],
   ];
@@ -210,9 +210,10 @@ function useShellFit(open: boolean): ShellFit {
   return fit;
 }
 
-const ZenShell: React.FC = () => {
+/** Loaded on first use (Layout), so it mounts already open: the key or event that asked for it has passed. */
+const ZenShell: React.FC<{ startOpen?: boolean }> = ({ startOpen = false }) => {
   const go = useGo();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(startOpen);
   const [lines, setLines] = useState<Line[]>([]);
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<string[]>([]);

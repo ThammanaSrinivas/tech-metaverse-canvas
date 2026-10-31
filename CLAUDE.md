@@ -95,13 +95,19 @@ another account is the default, else it fails with "Failed to get Firebase proje
   ⌘K palette, routes, "Next" links, sitemap test, page meta and the shell's filesystem all derive
   from it. Menu: Work · Writing · ZenMode · About; Time Machine is `nav: false` (linked from
   Work's side projects); plus home and 404. Home, one job per section: a full-screen light hero
-  with only the name (orange full stop = the logo dot), one line, one sentence and Email/Résumé
-  (the owner asked for a hero with less in it; keep it that way); "Selected work": the scheduler
+  with only the name on two lines (orange full stop = the logo dot, `FullStop`), one line, one
+  sentence and Email/Résumé/LinkedIn (the owner asked for a hero with less in it; keep it that way).
+  Its entrance plays once per visit: the name and the line rise, the full stop lands last and the
+  header logo's dot lands with it (`emitZen('dot')`); the sentence and links are there from the
+  first frame; nothing loops; "Selected work": the scheduler
   write-up as a case study (its title as the headline, the Zoho
   paragraph with the page's one highlighter, then the live model full width; copy in `PROFILE.bio`, inline
-  `[label](/path)` links via `LinkedText`); the star sky as a full-screen dark band ("Every system
-  starts as a dot", `SKY`); "Outside work" (ZenMode screenshot, Toastmasters photo); "Writing"
-  (everything but the featured write-up). The live model draws in the dark palette inside `.dark`.
+  `[label](/path)` links via `LinkedText`), then the latest PayPal work (`RECENT`); the star sky as
+  a full-screen dark band ("Every system starts as a dot", `SKY`): its title ends in a `FullStop`
+  and the sky is born from that dot, one point at a time, the first time the band is in view
+  (`HeroSky bornFrom`), with a Pause control; "Outside work" (ZenMode screenshot, Toastmasters
+  photo); "Writing" (everything but the featured write-up, shown once there are two or more). The
+  live model draws in the dark palette inside `.dark`.
 - **Retired addresses** (`/beyond`, `/contact`, `/lab`, `/explore`): `REDIRECTS` in `pages.ts`
   (the router follows them) and the same list as 301s in `firebase.json` `redirects` (a test
   checks they match whenever `firebase.json` is present).
@@ -118,7 +124,9 @@ another account is the default, else it fails with "Failed to get Firebase proje
   on any colour literal or font name elsewhere (`brand-lint-ignore` on a line opts out). The brand lab
   (`PalettePanel.tsx`, `?theme=`/`?palette=`/`?type=`) exists in dev builds only.
 - **Zen shell** (`ZenShell.tsx` + pure interpreter `src/lib/zenshell.ts`): backtick key, ⌘K, the
-  phone menu, or `emitZen('shell')`; no floating launcher. The coding duel is only in the shell. **Event bus** `src/lib/zenEvents.ts`. **Cursor** `src/lib/zenCursor.ts`
+  phone menu, or `emitZen('shell')`; no floating launcher. It and the ⌘K palette are lazy chunks,
+  loaded on first use (Layout's `useShellWanted` and Navigation stand in for their shortcuts until
+  then; the shell is also fetched when idle). The coding duel is only in the shell. **Event bus** `src/lib/zenEvents.ts`. **Cursor** `src/lib/zenCursor.ts`
   (port of zenmodeos.com's; `data-cursor`, `data-magnet`).
 - **Commit Time Machine** (`src/components/CommitTimeMachine/`): lazy three.js. GitHub calls via
   `getJson` in `src/lib/github.ts` (sessionStorage cache, fallback `public/gh-snapshot.json`); commit
@@ -138,9 +146,11 @@ another account is the default, else it fails with "Failed to get Firebase proje
   is still client-rendered. `applyMetaToHtml` throws if `index.html` loses one of its tags: keep the
   tag shapes in `index.html` as they are.
 - **Firebase must serve those files:** `firebase.json` is gitignored (local only) and needs
-  `"cleanUrls": true`, `"trailingSlash": false`, the `redirects` above, the `** → /index.html`
-  rewrite, immutable caching on
-  `/assets/**`, and the security headers (CSP `default-src 'self'`, `script-src 'self'`,
+  `"cleanUrls": true`, `"trailingSlash": false`, the `redirects` above, NO catch-all rewrite
+  (every route is a prerendered file; unknown URLs get `dist/404.html`, the app with the not-found
+  meta and `noindex`, with a real 404 status; a `** → /index.html` rewrite made every bad URL a
+  200 "home page" and answered missing `/assets/*` chunks with HTML cached for a year), immutable
+  caching on `/assets/**`, longer caching on `/fonts/**` and images, and the security headers (CSP `default-src 'self'`, `script-src 'self'`,
   `connect-src 'self' https://api.github.com`, `frame-ancestors 'none'`; HSTS, nosniff, DENY,
   Referrer-Policy, Permissions-Policy, COOP). Any new third-party origin needs a CSP change.
   One exception, listed AFTER the `**` block so it replaces that CSP for this file only:
@@ -148,6 +158,8 @@ another account is the default, else it fails with "Failed to get Firebase proje
   worker takes the CSP of its own response). Without it every duel answer scores 0 in production.
 - **`public/sitemap.xml` is hand-written**; tests fail unless it equals home + live pages + published
   articles, and unless `ROUTE_META` matches it.
+- **Structured data:** the home page carries a schema.org Person; every article a BlogPosting and
+  `article:published_time` (tests check both). Every page has `og:image:alt` and a `theme-color`.
 - **Social cards:** 1200×630 PNG. Site default `public/og-image.png` (name, line, role on the dark
   espresso with a field of dots; redo it whenever the home hero changes, it once showed a retired design); per article `public/og/<slug>.png`
   set as `image` on the article (a test checks the file exists). Dark espresso card, brand fonts,
@@ -185,7 +197,17 @@ another account is the default, else it fails with "Failed to get Firebase proje
   a duplicate name aborts every transition silently.
 - **Reduced motion is respected everywhere:** transitions off, scroll storytelling static. Moving
   content that plays on its own needs a Pause control (WCAG 2.2.2); under reduced motion it starts
-  paused with a Play button (see `AdmissionControl.tsx`).
+  paused with a Play button (see `AdmissionControl.tsx`, `HeroSky.tsx`).
+- **Motion system: structure draws, content is there.** One easing, `EASE` from primitives.tsx.
+  `Chapter` hairlines rule themselves in once and the margin dot lands; `Reveal` is a quiet 10px,
+  0.45s settle, at most one per block; dots and nodes land with one spring (600/30). Every number
+  shown is real at every frame (no count-ups, no lerping through values that never happened).
+  Nothing replays on scrolling back. Content a reader needs is never hidden waiting for an
+  animation. On /work the dates stay in view beside their role; the rail carries only dated events
+  (the role nodes), so no undated marks on it.
+- **Orange is rationed:** the logo's dot, the full stops, and the page's one highlighter (`Marker`,
+  a band across the lower half of the line, ink unchanged). The nav's current-page mark is ink; the
+  reading-progress bar is articles only, in the primary.
 - **Canvas:** no `ctx.roundRect` (iOS < 16 lacks it; use the arcTo helper), redraw after resize, pause
   off screen (IntersectionObserver), and show a text fallback if drawing throws (the Time Machine's
   3D scene falls back to its phone list when WebGL is missing).

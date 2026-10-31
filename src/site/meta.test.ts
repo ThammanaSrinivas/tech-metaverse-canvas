@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { SITE_URL } from '@/data/profile';
-import { PERSON_LD, ROUTE_META, applyMetaToHtml, type Meta } from './meta';
+import { PERSON_LD, ROUTE_META, applyMetaToHtml, notFoundMeta, type Meta } from './meta';
 
 const indexHtml = readFileSync('index.html', 'utf8');
 
@@ -41,6 +41,33 @@ describe('page meta (link previews)', () => {
     expect(JSON.parse(block!)).toMatchObject({ '@type': 'Person', name: PERSON_LD.name, sameAs: expect.arrayContaining([expect.stringContaining('linkedin.com')]) });
     expect(existsSync(`public${PERSON_LD.image.slice(SITE_URL.length)}`)).toBe(true);
     expect(applyMetaToHtml(indexHtml, ROUTE_META[1])).not.toContain('application/ld+json');
+  });
+
+  it('gives every article its publish date and a BlogPosting, and nothing else one', () => {
+    const articles = ROUTE_META.filter((m) => m.type === 'article');
+    expect(articles.length).toBeGreaterThan(0);
+    for (const m of articles) {
+      const html = applyMetaToHtml(indexHtml, m);
+      expect(html).toContain(`<meta property="article:published_time" content="${m.published}"`);
+      const blocks = [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/g)].map((b) => JSON.parse(b[1]));
+      expect(blocks).toContainEqual(expect.objectContaining({ '@type': 'BlogPosting', datePublished: m.published, url: `${SITE_URL}${m.path}` }));
+    }
+    for (const m of ROUTE_META.filter((m) => m.type !== 'article')) expect(applyMetaToHtml(indexHtml, m)).not.toContain('BlogPosting');
+  });
+
+  it('keeps the not-found page out of search results, and only that page', () => {
+    const notFound = applyMetaToHtml(indexHtml, notFoundMeta('/404'));
+    expect(notFound).toContain('<meta name="robots" content="noindex" />');
+    expect(notFound).not.toContain('rel="canonical"');
+    for (const m of ROUTE_META) expect(applyMetaToHtml(indexHtml, m)).not.toContain('noindex');
+  });
+
+  it('describes the social card for people who cannot see it, and colours the browser chrome', () => {
+    for (const m of ROUTE_META) {
+      const html = applyMetaToHtml(indexHtml, m);
+      expect(html).toMatch(/<meta property="og:image:alt" content="[^"]+"/);
+      expect(html).toMatch(/<meta name="theme-color" content="#[0-9A-Fa-f]{6}"/);
+    }
   });
 
   it('escapes text so a quote in a summary cannot break the HTML', () => {
