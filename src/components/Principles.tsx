@@ -13,10 +13,18 @@ const Principles: React.FC = () => (
             <h3 className="text-h3">{p.title}</h3>
             <p className="mt-2 text-muted-foreground">{p.claim}</p>
           </div>
-          <ul className="grid list-disc gap-2 pl-5 text-small text-muted-foreground marker:text-primary">
-            {p.seen.map((s) => (
-              <li key={s}>{s}</li>
-            ))}
+          {/* the evidence, each with where it comes from ("Zoho: …") as a small label above it */}
+          <ul className="grid gap-4">
+            {p.seen.map((s) => {
+              const at = s.indexOf(': ');
+              return (
+                <li key={s}>
+                  {at > 0 && <span className="zen-label block text-muted-foreground">{s.slice(0, at)}</span>}
+                  {/* after its label, the evidence reads as its own sentence */}
+                  <span className="mt-1 block">{at > 0 ? s.charAt(at + 2).toUpperCase() + s.slice(at + 3) : s}</span>
+                </li>
+              );
+            })}
           </ul>
         </article>
       ))}

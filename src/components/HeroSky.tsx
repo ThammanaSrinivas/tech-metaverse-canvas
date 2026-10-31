@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Pause, Play } from 'lucide-react';
 import { useBrandTheme } from '@/theme/runtime';
 import { toRgb } from '@/theme/color';
 import { useStarsEnabled } from '@/lib/stars';
@@ -8,6 +9,11 @@ import { useStarsEnabled } from '@/lib/stars';
  * camera that sits inside them, so they read as a deep starfield. Same geometry as the
  * old three.js scene (radii 4–8 / 6–12 / 8–16, camera at z=8, fov 75) but projected by
  * hand onto a 2D canvas, so the first screen doesn't pay for three.js.
+ *
+ * With `bornFrom`, the sky starts empty and is born from that element (the title's full stop) the
+ * first time the band is well in view: points appear in order of their distance from it, one, two,
+ * four… then all of them within BIRTH seconds. It moves on its own, so it has a Pause control
+ * (WCAG 2.2.2); under reduced motion it is drawn whole and starts paused.
  */
 interface Shell {
   pts: Float32Array; // x,y,z triples
@@ -39,8 +45,19 @@ function makeShell(count: number, rMin: number, rSpan: number, hiShare = 0) {
 
 const rgb = (hex: string) => toRgb(hex).join(',');
 
-const HeroSky: React.FC = () => {
+/** Seconds from the first point to a full sky; each point fades in over FADE. */
+const BIRTH = 2.4;
+const FADE = 0.3;
+
+const HeroSky: React.FC<{ bornFrom?: React.RefObject<HTMLElement> }> = ({ bornFrom }) => {
   const ref = useRef<HTMLCanvasElement>(null);
+  const [paused, setPaused] = useState(() => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const pausedRef = useRef(paused);
+  const kick = useRef<() => void>(() => {});
+  useEffect(() => {
+    pausedRef.current = paused;
+    kick.current();
+  }, [paused]);
   // Shell colours follow the palette: bright neutral, primary, secondary, a few highlighter points.
   const { sky } = useBrandTheme();
   const [bright, primary, secondary, highlight] = sky;
@@ -74,6 +91,12 @@ const HeroSky: React.FC = () => {
     let visible = true;
     let raf = 0;
     let last = performance.now();
+    // Birth: `clock` only runs while playing, so Pause freezes the birth too. Until it starts
+    // (pending), nothing is drawn; `born[i]` is each point's birth time on that clock.
+    let clock = 0;
+    let pending = !!bornFrom && !reduce;
+    // without a birth (no origin, or reduced motion) every point is already there, fully faded in
+    const borns = shells.map((s) => new Float32Array(s.pts.length / 3).fill(-FADE));
 
     const resize = () => {
       w = host.clientWidth;
@@ -86,7 +109,8 @@ const HeroSky: React.FC = () => {
       focal = h / 2 / Math.tan(FOV / 2);
     };
 
-    const drawShell = (s: Shell) => {
+    /** Calls `at(i, px, py, size, alpha)` for every point of `s` that lands on screen. */
+    const project = (s: Shell, at: (i: number, px: number, py: number, size: number, alpha: number) => void) => {
       const [rx, ry, rz] = s.rot;
       // Combined rotation: spin (x, then y, then z), then the group's fixed tilt, then pointer look.
       const cx = Math.cos(rx), sx = Math.sin(rx);
@@ -113,19 +137,46 @@ const HeroSky: React.FC = () => {
         // Cap near points (they'd balloon into squares) and fade the very closest ones out.
         const size = Math.min(2.2, Math.max(0.7, (s.size * focal) / depth));
         const near = depth < 2.5 ? (depth - 0.2) / 2.3 : 1;
-        ctx.globalAlpha = Math.min(1, 1.5 / Math.sqrt(depth)) * 0.75 * near;
+        at(i, px, py, size, Math.min(1, 1.5 / Math.sqrt(depth)) * 0.75 * near);
+      }
+    };
+
+    const drawShell = (s: Shell, born: Float32Array) => {
+      project(s, (i, px, py, size, alpha) => {
+        const age = clock - born[i];
+        if (age <= 0) return;
+        ctx.globalAlpha = age < FADE ? (alpha * age) / FADE : alpha;
         if (s.hi?.[i]) {
           ctx.fillStyle = hiColor;
           ctx.fillRect(px - size / 2, py - size / 2, size, size);
           ctx.fillStyle = `rgb(${s.color})`;
         } else ctx.fillRect(px - size / 2, py - size / 2, size, size);
-      }
+      });
+    };
+
+    /** Schedule every point's birth by its distance on screen from the origin element. */
+    const beginBirth = () => {
+      const o = bornFrom?.current?.getBoundingClientRect();
+      const r = host.getBoundingClientRect();
+      const ox = o ? o.left + o.width / 2 - r.left : w / 2;
+      const oy = o ? o.top + o.height / 2 - r.top : h / 2;
+      const all: { s: number; i: number; d: number }[] = [];
+      shells.forEach((s, si) => {
+        borns[si].fill(BIRTH + FADE); // off-screen points simply arrive with the last ones
+        project(s, (i, px, py) => all.push({ s: si, i, d: Math.hypot(px - ox, py - oy) }));
+      });
+      all.sort((a, b) => a.d - b.d);
+      // the k-th nearest point is born at BIRTH·(k/N)^(1/3): one, two, four… then a sky
+      all.forEach((p, k) => (borns[p.s][p.i] = clock + BIRTH * Math.cbrt(k / all.length)));
+      pending = false;
     };
 
     const frame = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      if (!reduce) {
+      const playing = !pausedRef.current;
+      if (playing) {
+        clock += dt;
         for (const s of shells) {
           s.rot[0] += s.spin[0] * dt;
           s.rot[1] += s.spin[1] * dt;
@@ -135,18 +186,20 @@ const HeroSky: React.FC = () => {
         look.y += (look.ty - look.y) * Math.min(1, dt * 2.5);
       }
       ctx.clearRect(0, 0, w, h);
-      for (const s of shells) {
-        ctx.fillStyle = `rgb(${s.color})`;
-        drawShell(s);
-      }
+      if (!pending)
+        shells.forEach((s, si) => {
+          ctx.fillStyle = `rgb(${s.color})`;
+          drawShell(s, borns[si]);
+        });
       ctx.globalAlpha = 1;
-      if (!reduce && visible && !document.hidden) raf = requestAnimationFrame(frame);
+      if (playing && visible && !document.hidden) raf = requestAnimationFrame(frame);
     };
     const restart = () => {
       cancelAnimationFrame(raf);
       last = performance.now();
       raf = requestAnimationFrame(frame);
     };
+    kick.current = restart;
 
     const onMove = (e: PointerEvent) => {
       const r = host.getBoundingClientRect();
@@ -158,10 +211,15 @@ const HeroSky: React.FC = () => {
       restart();
     });
     ro.observe(host);
-    const io = new IntersectionObserver(([e]) => {
-      visible = e.isIntersecting;
-      if (visible) restart();
-    });
+    const io = new IntersectionObserver(
+      ([e]) => {
+        visible = e.isIntersecting;
+        // the birth waits until the band is well in view, so it is seen from its first point
+        if (pending && e.intersectionRatio >= 0.35) beginBirth();
+        if (visible) restart();
+      },
+      { threshold: [0, 0.35] }
+    );
     io.observe(canvas);
     window.addEventListener('pointermove', onMove, { passive: true });
     document.addEventListener('visibilitychange', restart);
@@ -170,15 +228,29 @@ const HeroSky: React.FC = () => {
 
     return () => {
       cancelAnimationFrame(raf);
+      kick.current = () => {};
       ro.disconnect();
       io.disconnect();
       window.removeEventListener('pointermove', onMove);
       document.removeEventListener('visibilitychange', restart);
     };
-  }, [bright, primary, secondary, highlight, on]);
+  }, [bright, primary, secondary, highlight, on, bornFrom]);
 
   if (!on) return null;
-  return <canvas ref={ref} className="pointer-events-none absolute inset-0" aria-hidden />;
+  return (
+    <>
+      <canvas ref={ref} className="pointer-events-none absolute inset-0" aria-hidden />
+      <button
+        type="button"
+        onClick={() => setPaused((p) => !p)}
+        className="absolute bottom-5 right-5 z-10 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-small text-muted-foreground transition-colors hover:text-foreground active:scale-[.98]"
+      >
+        {paused ? <Play aria-hidden className="h-3.5 w-3.5" /> : <Pause aria-hidden className="h-3.5 w-3.5" />}
+        {paused ? 'Play' : 'Pause'}
+        <span className="sr-only"> the night sky</span>
+      </button>
+    </>
+  );
 };
 
 export default HeroSky;

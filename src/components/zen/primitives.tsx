@@ -1,5 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion, useScroll, useSpring } from 'framer-motion';
+import { Check, Copy } from 'lucide-react';
+import { LINKS, PROFILE } from '@/data/profile';
 import Starfield from '@/components/Starfield';
 import { useBrandTheme } from '@/theme/runtime';
 import { SYSTEM, ZENMODE_COLORS } from '@/theme/palettes';
@@ -35,23 +37,50 @@ export const ZenMark: React.FC<{ size?: number; className?: string; title?: stri
   </svg>
 );
 
-/** Personal "TS" monogram: palette primary tile, best-contrast letters. Follows the live palette. */
-export const Monogram: React.FC<{ size?: number; className?: string; title?: string }> = ({
+/**
+ * Personal "TS" monogram: palette primary tile, best-contrast letters. Follows the live palette.
+ * An empty `title` marks it decorative (a link next to it already names it). Each change of `pop`
+ * makes the dot land again, in time with the hero's full stop.
+ */
+export const Monogram: React.FC<{ size?: number; className?: string; title?: string; pop?: number }> = ({
   size = 32,
   className,
   title = 'Thammana Srinivas',
+  pop = 0,
 }) => {
   const { monoTile, monoInk, monoDot } = useBrandTheme();
+  const label = title ? { role: 'img', 'aria-label': title } : { 'aria-hidden': true };
   return (
-    <svg width={size} height={size} viewBox="0 0 1024 1024" className={className} role="img" aria-label={title}>
+    <svg width={size} height={size} viewBox="0 0 1024 1024" className={className} {...label}>
       <rect width={1024} height={1024} rx={230} fill={monoTile} />
       <path d={MONOGRAM_PATH} fill={monoInk} />
-      <circle {...MONOGRAM_DOT} fill={monoDot} />
+      <circle key={pop} {...MONOGRAM_DOT} fill={monoDot} className={`zen-mono-dot ${pop ? 'is-popping' : ''}`} />
     </svg>
   );
 };
 
-const EASE = [0.22, 1, 0.36, 1] as const;
+/** The site's one easing for anything that enters or responds. */
+// eslint-disable-next-line react-refresh/only-export-components -- shared motion constant
+export const EASE = [0.22, 1, 0.36, 1] as const;
+
+/**
+ * The logo's orange dot, used as a full stop: things get finished. With `land`, it drops in after
+ * `delay` seconds, a little past full size and back. Purely decorative: the sentence it ends is
+ * complete without it.
+ */
+export const FullStop = React.forwardRef<HTMLSpanElement, { land?: boolean; delay?: number; className?: string }>(
+  ({ land = false, delay = 0, className = '' }, ref) => (
+    <span ref={ref} aria-hidden className={`relative ml-[0.04em] inline-block h-[0.15em] w-[0.15em] ${className}`}>
+      <motion.span
+        className="absolute inset-0 rounded-full bg-highlight"
+        initial={land ? { scale: 0 } : false}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', stiffness: 600, damping: 30, delay }}
+      />
+    </span>
+  )
+);
+FullStop.displayName = 'FullStop';
 
 /** Parent variants for MaskWords: words rise one after another. */
 // eslint-disable-next-line react-refresh/only-export-components -- the stagger these primitives animate with
@@ -139,6 +168,31 @@ export const Marker: React.FC<{ children: React.ReactNode; delay?: number }> = (
   );
 };
 
+/** Copies my email in one tap; falls back to opening the mail app where the clipboard is blocked. */
+export const CopyEmail: React.FC = () => {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(PROFILE.email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      window.location.href = LINKS.email;
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      aria-label={copied ? 'Email address copied' : 'Copy email address'}
+      className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-small text-muted-foreground transition-colors hover:text-foreground active:scale-[.98]"
+    >
+      {copied ? <Check aria-hidden className="h-3.5 w-3.5 text-primary" /> : <Copy aria-hidden className="h-3.5 w-3.5" />}
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  );
+};
+
 /** Top of every inner page: the title, and one line on what the page is for. */
 export const PageHeader: React.FC<{ title: string; lead: string; aside?: React.ReactNode; children?: React.ReactNode }> = ({
   title,
@@ -172,19 +226,40 @@ export const Chapter: React.FC<{ id: string; label: string; children: React.Reac
   label,
   children,
   className = '',
-}) => (
-  <section id={id} className={`mx-auto w-full max-w-[1120px] scroll-mt-20 px-5 py-12 md:py-16 ${className}`}>
-    <div className="grid gap-6 border-t pt-6 md:grid-cols-[200px_minmax(0,1fr)] md:gap-10 md:pt-8">
-      <div>
-        <h2 className="flex items-center gap-2.5 text-small font-semibold md:sticky md:top-24">
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary" />
-          {label}
-        </h2>
+}) => {
+  // Structure draws, content is simply there: the hairline rules itself in from the left the first
+  // time the chapter comes into view, and the margin's dot lands at its end. Static under reduced motion.
+  const reduce = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const seen = useInView(ref, { once: true, margin: '0px 0px -12% 0px' });
+  const drawn = reduce || seen;
+  return (
+    <section id={id} className={`mx-auto w-full max-w-[1120px] scroll-mt-20 px-5 py-12 md:py-16 ${className}`}>
+      <div ref={ref} className="relative grid gap-6 pt-6 md:grid-cols-[200px_minmax(0,1fr)] md:gap-10 md:pt-8">
+        <motion.span
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-px origin-left bg-border"
+          initial={reduce ? false : { scaleX: 0 }}
+          animate={{ scaleX: drawn ? 1 : 0 }}
+          transition={{ duration: 0.9, ease: EASE }}
+        />
+        <div>
+          <h2 className="flex items-center gap-2.5 text-small font-semibold md:sticky md:top-24">
+            <motion.span
+              aria-hidden
+              className="h-1.5 w-1.5 rounded-full bg-primary"
+              initial={reduce ? false : { scale: 0 }}
+              animate={{ scale: drawn ? 1 : 0 }}
+              transition={{ type: 'spring', stiffness: 600, damping: 30, delay: 0.35 }}
+            />
+            {label}
+          </h2>
+        </div>
+        <div className="min-w-0">{children}</div>
       </div>
-      <div className="min-w-0">{children}</div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 /** A section's heading, and optionally one plain line under it. No numbers, rules or animation. */
 export const SectionHeader: React.FC<{ title: string; kicker?: string }> = ({ title, kicker }) => (
@@ -196,14 +271,19 @@ export const SectionHeader: React.FC<{ title: string; kicker?: string }> = ({ ti
   </div>
 );
 
-/** Thin reading progress bar pinned under the nav, in the palette highlighter. */
+/**
+ * Thin reading progress bar pinned to the top, for long reads only (articles). In the primary, not
+ * the highlighter: orange is kept for the logo's dot and the page's one marked phrase.
+ */
 export const ScrollProgress: React.FC = () => {
   const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, { stiffness: 140, damping: 30, restDelta: 0.001 });
-  return <motion.div className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-highlight" style={{ scaleX }} aria-hidden />;
+  const eased = useSpring(scrollYProgress, { stiffness: 140, damping: 30, restDelta: 0.001 });
+  // under reduced motion it follows the scroll exactly, with no spring after it
+  const scaleX = useReducedMotion() ? scrollYProgress : eased;
+  return <motion.div className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-primary" style={{ scaleX }} aria-hidden />;
 };
 
-/** Fade-and-rise on first view; static when the user prefers reduced motion. */
+/** A short, quiet settle on first view (10px, under half a second); static under reduced motion. */
 export const Reveal: React.FC<{ children: React.ReactNode; delay?: number; className?: string }> = ({
   children,
   delay = 0,
@@ -214,10 +294,10 @@ export const Reveal: React.FC<{ children: React.ReactNode; delay?: number; class
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.45, delay, ease: EASE }}
     >
       {children}
     </motion.div>

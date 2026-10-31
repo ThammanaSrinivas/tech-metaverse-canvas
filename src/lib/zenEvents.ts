@@ -1,6 +1,7 @@
 // Tiny window-event bus so the nav, command palette and zen shell can open
 // the shell or the coding duel without threading callbacks through the tree.
-export type ZenEvent = 'shell' | 'duel';
+// 'dot': the hero's full stop just landed; the header logo's dot lands with it.
+export type ZenEvent = 'shell' | 'duel' | 'dot';
 
 const name = (e: ZenEvent) => `zen:${e}`;
 

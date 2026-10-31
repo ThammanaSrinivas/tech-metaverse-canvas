@@ -9,7 +9,8 @@ import { createServer, type Plugin, type ResolvedConfig } from 'vite';
  *
  * Files are written as dist/<path>.html (dist/work.html, dist/writing/<slug>.html), which Firebase
  * serves at /work and /writing/<slug> with `cleanUrls`. The body is unchanged: the app still
- * renders in the browser exactly as before. Unknown URLs still fall back to index.html (home).
+ * renders in the browser exactly as before. Unknown URLs get dist/404.html: the app (which shows
+ * its not-found page) with the not-found meta and `noindex`, served with a real 404 status.
  */
 export function prerender(): Plugin {
   let config: ResolvedConfig;
@@ -34,7 +35,7 @@ export function prerender(): Plugin {
         optimizeDeps: { noDiscovery: true, include: [] },
       });
       try {
-        const { ROUTE_META, applyMetaToHtml } = (await server.ssrLoadModule('/src/site/meta.ts')) as typeof import('../src/site/meta');
+        const { ROUTE_META, applyMetaToHtml, notFoundMeta } = (await server.ssrLoadModule('/src/site/meta.ts')) as typeof import('../src/site/meta');
         const outDir = path.resolve(config.root, config.build.outDir);
         const shell = fs.readFileSync(path.join(outDir, 'index.html'), 'utf8');
         for (const m of ROUTE_META) {
@@ -42,7 +43,8 @@ export function prerender(): Plugin {
           fs.mkdirSync(path.dirname(file), { recursive: true });
           fs.writeFileSync(file, applyMetaToHtml(shell, m));
         }
-        config.logger.info(`prerender: ${ROUTE_META.length} pages with their own title, description and social card`);
+        fs.writeFileSync(path.join(outDir, '404.html'), applyMetaToHtml(shell, notFoundMeta('/404')));
+        config.logger.info(`prerender: ${ROUTE_META.length} pages with their own title, description and social card, plus 404.html`);
       } finally {
         await server.close();
       }

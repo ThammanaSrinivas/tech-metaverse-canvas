@@ -25,35 +25,36 @@ export const LINKS = {
   resumeDownload: RESUME_DOWNLOAD_URL,
 } as const;
 
-/** Full years since my first engineering role (Zoho, Jan 2022): computed, so the copy never goes stale. */
-export const YEARS_BUILDING = Math.floor((Date.now() - Date.UTC(2022, 0, 1)) / (365.25 * 864e5));
-
 export const PROFILE = {
   name: 'Thammana Srinivas',
   shortName: 'Srinivas',
   tagline: 'Software engineer. Building a calmer phone.',
-  /** Who and where, for the home page's <title> and link previews. */
-  headline: 'Software Engineer at PayPal, building ZenMode OS',
+  /** Who and where, for the home page's <title> and link previews. Leads with the day job: it is what a recruiter pasting the link needs. */
+  headline: 'Software Engineer at PayPal, building backend platforms',
   /** The one line under my name on the home page. */
   line: 'I build systems that stay simple at scale.',
   /**
-   * The home page copy, with inline [links](/path). `intro` is the hero's one sentence; `zoho`
-   * sits beside the live scheduler model and carries the page's one highlighter.
+   * The home page copy, with inline [links](/path). `intro` is the hero's one sentence (what I do
+   * now, not how long I've done it: the dates are on /work); `zoho` sits beside the live scheduler
+   * model and carries the page's one highlighter.
    */
   bio: {
-    intro: `Software engineer at [PayPal](/work) with ${YEARS_BUILDING}+ years of building backend platforms: multi-tenancy, cloud migration, distributed schedulers. Co-founder of [ZenMode OS](/zenmode).`,
+    intro: 'Software engineer at [PayPal](/work) on its case-management platform: multi-tenancy, moving workloads from on-prem to GCP, and a pipeline that turns GCP logs into pull requests. On my own time I build [ZenMode OS](/zenmode), which I co-founded.',
     zoho: {
       before: 'Before PayPal, at Zoho, I designed [the job scheduler behind Catalyst](/writing/scheduling-10m-cron-jobs), Zoho’s serverless platform. It took cron jobs from once an hour to every minute, for every user, and ',
-      mark: 'one if-condition cut its Kafka traffic from 7,000 messages a cycle to 32',
+      mark: 'in a burst, one if-condition cut its Kafka traffic from 7,000 messages a cycle to 32',
       after: '.',
     },
   },
-  intro:
-    'I build cloud platforms by day and a calmer phone by night. At PayPal I work on multi-tenant platforms and cloud migration. On my own time I build ZenMode OS, an open-source Android launcher that helps people scroll less, together.',
+  /** The home page's search snippet and link-preview text (and ~/about.md): the work first, within the ~155 characters a search result shows. */
+  intro: 'Software engineer at PayPal: multi-tenancy, on-prem to GCP, and logs-to-pull-request automation. At Zoho I designed the job scheduler behind Catalyst.',
+  /** On /about, under how to reach me: what I'm glad to talk about (no "open to work": I'm employed). */
+  talk: 'Email is the quickest way to reach me. I’m always glad to talk about backend platforms, distributed systems and tools that make engineers faster.',
   email: 'srinivas@thammanasrinivas.com',
   location: 'Chennai, India',
-  /** Headshot (cropped like the LinkedIn photo), shown round on /about and in search results. */
+  /** Headshot (cropped like the LinkedIn photo): search results use the full one, the pages a 320px copy. */
   portrait: '/about/srinivas.webp',
+  portraitSmall: '/about/srinivas-320.webp',
 };
 
 export interface Job {
@@ -142,42 +143,42 @@ export const JOBS: Job[] = [
     id: 'paypal',
     company: 'PayPal',
     role: 'Software Engineer 2',
-    period: 'May 2025 — Present',
+    period: 'May 2025 – Present',
     current: true,
     story: [
-      'I work on the Simplified Case Management (SCM) platform. I implemented multi-tenancy across it and built the SCM-Commons onboarding that cut new-tenant onboarding time by 40%. I took a mission-critical notification API up three levels on the Richardson Maturity Model without a single breaking change for its consumers, and moved data and workloads from on-prem to GCP, including onboarding a SaaS-native solution through RAMP.',
-      'Most recently I built a [knowledge base and cloud skill mapper](https://www.linkedin.com/feed/update/urn:li:activity:7496050634371178496/) that many teams now use for cloud migration and cloud feature development. With it, an engineer fixes 5–6 bugs a day, a feature is often a single prompt, and juniors get up to speed on the team much faster.',
-      'I also ran a Bigtable proof of concept, benchmarking 500K+ records with secondary indexes. It showed Bigtable didn’t fit our relational model, which saved a costly redesign. And I build LLM-powered tools that replace manual SOPs: a code-review agent, a parallel git-worktree feature processor and an integration-test agent.',
+      '**Multi-tenancy and the move to GCP.** I work on the Simplified Case Management (SCM) platform. I implemented multi-tenancy across it and built the SCM-Commons onboarding that cut new-tenant onboarding time by 40%. I took a mission-critical notification API up three levels on the Richardson Maturity Model without a single breaking change for its consumers, and moved data and workloads from on-prem to GCP, including onboarding a SaaS-native solution through RAMP.',
+      '**From logs to pull requests.** Most recently I built the Proactive Log Resolver (PLR), a pipeline that reads our GCP logs, diagnoses what went wrong, opens a pull request and alerts the reviewers. Once a reviewer approves, the release runs on its own, and every day the team gets a summary of the last 24 hours.',
+      '**Tools for engineers.** I also built a [knowledge base and cloud skill mapper](https://www.linkedin.com/feed/update/urn:li:activity:7496050634371178496/) that many teams now use for cloud migration and cloud feature development. With it, an engineer fixes 5–6 bugs a day, a feature is often a single prompt, and juniors get up to speed on the team much faster. I also build LLM-powered tools that replace manual SOPs: a code-review agent, a parallel git-worktree feature processor and an integration-test agent.',
+      '**Saying no with data.** I ran a Bigtable proof of concept, benchmarking 500K+ records with secondary indexes. It showed Bigtable didn’t fit our relational model, which saved a costly redesign.',
     ],
   },
   {
     id: 'zoho',
     company: 'Zoho',
     role: 'Member of Technical Staff',
-    period: 'Jan 2022 — Apr 2025',
+    period: 'Jan 2022 – Apr 2025',
     current: false,
     story: [
-      'I worked on Catalyst, Zoho’s serverless platform. I designed its distributed job scheduler on Kafka and Redis: it took the shortest cron interval from an hour to a minute for every user, handled 10M+ jobs a day, and brought job dispatch latency from 50 ms to 5 ms by optimising cold starts.',
-      'I also built a HIPAA-compliant audit-log service in a month, which unblocked the European release and grew revenue by 17%; an adapter between Catalyst and Zoho Cron for custom cron expressions that reached 35% adoption in three months; and error alerting by feature context that cut issue resolution time by 30–40%. As a project trainee I added environment variables for functions, which addressed 60% of user tickets, and Node.js 16 support with 12% faster cold starts.',
+      '**The job scheduler.** I worked on Catalyst, Zoho’s serverless platform. I designed its distributed job scheduler on Kafka and Redis and drove it through to production: it took the shortest cron interval from an hour to a minute for every user, handled 10M+ jobs a day, and brought job dispatch latency from 50 ms to 5 ms by optimising cold starts.',
+      '**Around the platform.** I also built a HIPAA-compliant audit-log service in a month, which unblocked the European release and grew revenue by 17%; an adapter between Catalyst and Zoho Cron for custom cron expressions that reached 35% adoption in three months; and error alerting by feature context that cut issue resolution time by 30–40%. As a project trainee I added environment variables for functions, which addressed 60% of user tickets, and Node.js 16 support with 12% faster cold starts.',
     ],
     writeup: 'scheduling-10m-cron-jobs',
-    earlier: 'Project Trainee Jan–May 2022 · Summer Intern May–Jun 2021',
+    earlier: 'Joined as a Project Trainee (Jan–May 2022), after a summer internship (May–Jun 2021)',
   },
 ];
 
-/** The latest thing I shipped at PayPal, for the home page (its numbers live on /work). */
+/** The latest thing I shipped at PayPal, for the home page: one line; the full story lives on /work. */
 export const RECENT = {
-  meta: 'PayPal · Aug 2026',
-  title: 'Knowledge base + cloud skill mapper',
-  body: 'Used by many teams at PayPal for cloud migration and cloud feature development. Bug fixes got dramatically faster, features often take a single prompt, and juniors onboard faster.',
-  post: 'https://www.linkedin.com/feed/update/urn:li:activity:7496050634371178496/',
+  meta: 'PayPal · Most recent',
+  title: 'Proactive Log Resolver',
+  body: 'A pipeline from GCP logs to pull requests, with reviewers in the loop.',
 } as const;
 
 /** From the résumé. */
 export const EDUCATION = {
   degree: 'B.E. in Computer Science and Engineering',
   school: 'Anna University, Chennai',
-  period: '2018 — 2022',
+  period: '2018–2022',
   grade: 'CGPA 9.18',
   prize: 'Won the AICTE Chhatra Vishwakarma Hackathon with a mental-health and psychosocial support app.',
   prizeUrl: 'https://drive.google.com/file/d/1pBWq6m5oIzMCK_uzAKlXQQR1xRPm2v84/view',
@@ -187,8 +188,9 @@ export const TOOLBOX: { group: string; items: string[] }[] = [
   { group: 'Systems', items: ['Distributed systems', 'Multi-tenancy', 'Cloud migration', 'Serverless', 'System design'] },
   { group: 'Backend', items: ['Java', 'Spring Boot', 'Golang', 'Kafka', 'Redis', 'PostgreSQL'] },
   { group: 'Cloud', items: ['GCP', 'Bigtable', 'Docker', 'Kubernetes'] },
+  { group: 'AI', items: ['LLM agents', 'RAG', 'MCP', 'Python'] },
   { group: 'Android', items: ['Kotlin', 'Jetpack Compose', 'Firebase', 'Cloud Functions'] },
-  { group: 'AI + Web', items: ['LLM agents', 'RAG', 'MCP', 'TypeScript', 'React', 'Node.js', 'Python'] },
+  { group: 'Web', items: ['TypeScript', 'React', 'Node.js'] },
 ];
 
 export interface LabProject {
@@ -227,48 +229,77 @@ export const formatDate = (iso: string) => {
 
 export const ZENMODE = {
   pitch: 'ZenMode OS turns your home screen into a calm space built around intent. It doesn’t lock you out. It adds a small pause at the moments you tend to lose time, and makes keeping your screen-time promise something you do together with friends.',
+  /** The shell's one-line award. On /zenmode the same result is the FOSS Hack milestone, shown once. */
   award: 'Top ~10% of ~780 at FOSS Hack 2026',
   /** One line for the home page. */
   teaser: 'Quiet the noise, together: an Android launcher that adds a small pause at the moments you tend to lose time.',
+  /** The product screenshot at the top of /zenmode (1094×647, and 640w and 800w copies for phones). */
+  hero: {
+    src: '/zenmode-hero.webp',
+    srcset: '/zenmode-hero-640.webp 640w, /zenmode-hero-800.webp 800w, /zenmode-hero.webp 1094w',
+    sizes: '(min-width: 768px) 840px, 100vw',
+    alt: 'A phone running ZenMode OS: Zen Score 7/10, a 13-day streak, gold invested, and a ZenCircle comparing friends’ screen time.',
+  },
+  /** Where else to find it; Google Play is the page's one button. `source` sits under the links. */
+  links: [
+    { label: 'Source on GitHub', href: LINKS.zenmode },
+    { label: 'Product Hunt', href: LINKS.producthunt },
+    { label: 'zenmodeos.com', href: LINKS.zenmodeSite },
+  ],
+  source: 'Open source under GPLv3, written in Kotlin and Jetpack Compose.',
+  /** Who built what, under the features on /zenmode. (How it is built is a principle on /work: each fact once.) */
+  built: 'Kamalraaj Senthilkumar shaped what ZenMode is; I built most of how it works.',
+  /**
+   * Traction on /zenmode: one sentence, each public number once; `mark` carries the page's one
+   * highlighter. `stats` below holds the same numbers for the shell: keep the two in step.
+   */
+  traction: {
+    before: 'On Google Play it has 1K+ installs and a 4.6★ rating from 24 reviews; on launch day it placed ',
+    mark: '#14 of 711 on Product Hunt',
+    after: ', and #1 in its Open Source topic.',
+  },
   // Public numbers only (Play listing, Product Hunt leaderboard). Internal installs/DAU stay in zenmode-brain.
   stats: [
     { value: '4.6', unit: '★', label: 'Play Store rating', sub: '24 reviews' },
     { value: '1K', unit: '+', label: 'installs', sub: 'Google Play' },
     { value: '14', prefix: '#', unit: '', label: 'of 711 on Product Hunt', sub: 'launch day · 26 Sep 2026' },
-    { value: '7', prefix: '#', unit: '', label: 'most discussed', sub: '16 comments · top 1% of the day' },
   ] as { value: string; prefix?: string; unit: string; label: string; sub: string }[],
   features: [
-    { name: 'Zen Score', stat: '07/10', desc: 'Your day, out of 10', icon: 'score' },
-    { name: 'Streaks', stat: '13 DAYS', desc: 'Promises kept', icon: 'streak' },
-    { name: 'ZenCircle', stat: '2 OF 5', desc: 'Accountability with friends', icon: 'circle' },
-    { name: 'Gold Invest', stat: '+ GOLD', desc: 'Time saved becomes gold', icon: 'gold' },
+    { name: 'Zen Score', desc: 'Your day, out of 10', icon: 'score' },
+    { name: 'Streaks', desc: 'Promises kept', icon: 'streak' },
+    { name: 'ZenCircle', desc: 'Accountability with friends', icon: 'circle' },
+    { name: 'Gold Invest', desc: 'Time saved becomes gold', icon: 'gold' },
   ] as const,
-  /** Milestones, from the LinkedIn posts. Shown on /zenmode, in the /beyond timeline and ~/zenmode/launch.md. */
+  /**
+   * Milestones, from the LinkedIn posts. Shown on /zenmode (newest first), in ~/zenmode/launch.md
+   * and the shell's journey. Numbers that live in `traction` stay out of these.
+   */
   milestones: [
     {
       date: '2026-09-26',
       kind: 'Launch day · IndiaFOSS',
       title: 'We launched ZenMode OS',
-      body: 'Your phone isn’t the problem. The loop is. We launched on Product Hunt while spending the day at IndiaFOSS. Kamal shaped what ZenMode is; I built most of how it works.',
-      points: ['Open source, GPLv3', '1,100+ early installs', '24 comments'],
+      body: 'Your phone isn’t the problem. The loop is. We launched on Product Hunt while spending the day at IndiaFOSS.',
+      points: ['Open source, GPLv3'],
       post: 'https://www.linkedin.com/posts/thammanasrinivas_producthunt-indiafoss-opensource-ugcPost-7509503115826528256-2ypw/',
     },
     {
       date: '2026-09-26',
       featured: true,
       kind: 'Product Hunt launch',
-      title: '#14 of 711 on launch day',
-      body: 'Two people, one launch weekend, and a community that tried it and told us the truth. Built and launched with my co-founder, Kamalraaj Senthilkumar.',
-      points: ['#1 in the Open Source topic', '#7 of 711 by comments, top 1%', 'Top 1.97% of launches'],
-      image: '/zenmode/ph-launch-card.webp',
-      alt: 'ZenMode OS Product Hunt stat card: #14 of 711 daily rank, #1 in the Open Source topic, top 1% by comments.',
+      title: 'Launch day on Product Hunt',
+      body: 'Two people, one launch weekend, and a community that tried it and told us the truth.',
+      points: ['#1 in the Open Source topic'],
+      // shown at up to 176px: a 400px copy of the 1080px card
+      image: '/zenmode/ph-launch-card-400.webp',
+      alt: 'The ZenMode OS Product Hunt card for 26 Sep 2026: “Thank you for showing up.”, with its daily rank, #14 of 711, and #1 in the Open Source topic.',
       post: 'https://www.linkedin.com/feed/update/urn:li:activity:7510153630390595584/',
     },
     {
       date: '2026-04-22',
       kind: 'FOSS Hack 2026 · IIT Madras',
       title: 'Top ~10% of ~780 projects',
-      body: 'FOSS Hack 2026, at IIT Madras in Chennai: ZenMode OS placed in the top ~10% of roughly 780 submissions.',
+      body: 'FOSS Hack 2026, at IIT Madras in Chennai.',
       points: [],
       post: 'https://www.linkedin.com/feed/update/urn:li:activity:7452726557782982656/',
     },
@@ -276,7 +307,7 @@ export const ZENMODE = {
       date: '2026-09-27',
       kind: 'IndiaFOSS',
       title: 'Kailash Nadh offered to help',
-      body: 'At IndiaFOSS we met Kailash Nadh, CTO of Zerodha, again. He found the idea behind ZenMode interesting and offered to help us with the Kite API, which powers our Gold Invest feature.',
+      body: 'At IndiaFOSS, Zerodha’s CTO found the idea behind ZenMode interesting and offered to help with the Kite API, which powers Gold Invest.',
       points: [],
       post: 'https://www.linkedin.com/feed/update/urn:li:activity:7509812328322719744/',
     },

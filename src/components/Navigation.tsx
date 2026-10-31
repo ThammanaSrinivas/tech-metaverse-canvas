@@ -1,16 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Link, NavLink } from '@/components/zen/Link';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { ArrowUpRight, FileText, Menu, Search, Terminal, X } from 'lucide-react';
+import { ArrowRight, FileText, Menu, Search, Terminal, X } from 'lucide-react';
 import { LINKS, PROFILE } from '@/data/profile';
 import { NAV_PAGES } from '@/site/pages';
 import { Monogram } from '@/components/zen/primitives';
-import CommandPalette from './CommandPalette';
+// the palette (cmdk + a dialog) loads on first use: ⌘K / Ctrl K, or the Search button
+const CommandPalette = lazy(() => import('./CommandPalette'));
 import { MENU_MOTION, STILL } from './overlayMotion';
 import SoundToggle from './SoundToggle';
 import { sound } from '@/lib/sound';
-import { emitZen } from '@/lib/zenEvents';
+import { emitZen, onZen } from '@/lib/zenEvents';
 
 /**
  * Phone menu: a floating card that drops down under the bar, over a dimmed page. The page stays
@@ -78,9 +79,12 @@ const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; pathname: string
                     <>
                       <span className={`flex-1 font-display text-lead ${isActive ? '' : 'text-foreground/85'}`}>{label}</span>
                       {isActive ? (
-                        <span className="h-2 w-2 rounded-full bg-highlight" aria-label="current page" />
+                        <>
+                          <span aria-hidden className="h-2 w-2 rounded-full bg-primary" />
+                          <span className="sr-only">(current page)</span>
+                        </>
                       ) : (
-                        <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                        <ArrowRight aria-hidden className="h-4 w-4 text-muted-foreground" />
                       )}
                     </>
                   )}
@@ -106,13 +110,16 @@ const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; pathname: string
             onClick={onClose}
             className="flex h-11 items-center justify-center gap-2 rounded-full bg-primary font-semibold text-primary-foreground"
           >
-            <FileText className="h-4 w-4" /> Resume
+            <FileText className="h-4 w-4" /> Résumé
           </a>
         </div>
       </motion.div>
     </>
   );
 };
+
+/** The palette's shortcut as this keyboard writes it. */
+const SHORTCUT = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? '⌘K' : 'Ctrl K';
 
 /**
  * Top bar. Over an ink top (anything marked data-ink-top) it stays transparent and light-on-dark;
@@ -136,6 +143,26 @@ const Navigation: React.FC = () => {
     setMenuAt((at) => (at === pathname ? null : pathname));
   };
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [paletteLoaded, setPaletteLoaded] = useState(false);
+  const openPalette = () => {
+    setPaletteLoaded(true);
+    setPaletteOpen(true);
+  };
+  // stands in for the palette's own shortcut until it has loaded
+  useEffect(() => {
+    if (paletteLoaded) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.key !== 'k' || document.querySelector('[data-zen-modal]')) return;
+      e.preventDefault();
+      setPaletteLoaded(true);
+      setPaletteOpen(true);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [paletteLoaded]);
+  // the logo's dot lands again when the hero's full stop does
+  const [pop, setPop] = useState(0);
+  useEffect(() => onZen('dot', () => setPop((n) => n + 1)), []);
 
   useEffect(() => {
     setMenuAt(null);
@@ -174,7 +201,7 @@ const Navigation: React.FC = () => {
         >
         <nav className="mx-auto flex h-14 max-w-[1120px] items-center gap-6 px-5 md:h-16" aria-label="Main">
           <Link to="/" className="group flex items-center gap-2.5" aria-label={`${PROFILE.name}, home`}>
-            <Monogram size={30} title="" className="transition-transform duration-300 group-hover:-rotate-6" />
+            <Monogram size={30} title="" pop={pop} />
             <span className="font-display text-lg">{PROFILE.shortName}</span>
           </Link>
 
@@ -185,7 +212,7 @@ const Navigation: React.FC = () => {
                   to={path}
                   className={({ isActive }) =>
                     `relative block px-3 py-2 text-sm transition-colors ${
-                      isActive ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground'
+                      isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
                     }`
                   }
                 >
@@ -195,7 +222,7 @@ const Navigation: React.FC = () => {
                       {isActive && (
                         <motion.span
                           layoutId="nav-mark"
-                          className="absolute inset-x-3 -bottom-0.5 h-[3px] rounded-full bg-highlight"
+                          className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-foreground"
                           transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                         />
                       )}
@@ -207,14 +234,14 @@ const Navigation: React.FC = () => {
           </ul>
 
           <div className="ml-auto flex items-center gap-2 lg:ml-2">
+            {/* named by what it shows ("Search"), so voice control's "click Search" finds it */}
             <button
-              onClick={() => setPaletteOpen(true)}
-              className="hidden items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:flex"
-              aria-label="Open command palette"
+              onClick={openPalette}
+              className="hidden items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground active:scale-[.98] sm:flex"
             >
-              <Search className="h-3.5 w-3.5" />
+              <Search aria-hidden className="h-3.5 w-3.5" />
               <span>Search</span>
-              <kbd className="font-mono text-[10px] tracking-wider">⌘K</kbd>
+              <kbd className="font-mono text-[10px] tracking-wider">{SHORTCUT}</kbd>
             </button>
             <SoundToggle className="lg:h-9 lg:w-9" />
             <button
@@ -238,7 +265,11 @@ const Navigation: React.FC = () => {
       <AnimatePresence key={pathname}>
         {menuOpen && <MobileMenu onClose={closeMenu} ink={!solid} pathname={pathname} />}
       </AnimatePresence>
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      {paletteLoaded && (
+        <Suspense fallback={null}>
+          <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+        </Suspense>
+      )}
     </>
   );
 };

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { ArrowUpRight, Check, Copy, Download } from 'lucide-react';
+import React from 'react';
+import { ArrowUpRight, Download } from 'lucide-react';
 import { BEYOND, LINKS, PROFILE, SPEAKING } from '@/data/profile';
-import { Chapter, Marker } from '@/components/zen/primitives';
+import { Chapter, CopyEmail, Marker } from '@/components/zen/primitives';
 
 /** The one story with a photo: the Toastmasters win. The page's single highlighter is on it. */
 const Speaking: React.FC = () => (
@@ -12,7 +12,9 @@ const Speaking: React.FC = () => (
         alt={SPEAKING.alt}
         width={320}
         height={400}
-        loading="lazy"
+        // first thing under the header on a phone: it is the page's largest paint, so no lazy load
+        // (lowercase, spread: React 18's types don't know the attribute yet)
+        {...{ fetchpriority: 'high' }}
         className="w-full max-w-[320px] rounded-[20px] border object-cover"
       />
       <div className="max-w-[60ch]">
@@ -49,23 +51,13 @@ const handleOf = (url: string) => url.replace(/^https?:\/\/(www\.)?/, '').replac
 
 /** How to reach me. Email first: it is the quickest, and it can be copied in one tap. */
 const Contact: React.FC = () => {
-  const [copied, setCopied] = useState(false);
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(PROFILE.email);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {
-      window.location.href = LINKS.email;
-    }
-  };
   const rows = [
     { label: 'LinkedIn', href: LINKS.linkedin, value: handleOf(LINKS.linkedin) },
     { label: 'GitHub', href: LINKS.github, value: handleOf(LINKS.github) },
   ];
   return (
     <Chapter id="contact" label="Get in touch">
-      <p className="max-w-[60ch] text-lead">Email is the quickest way to reach me.</p>
+      <p className="max-w-[60ch] text-lead">{PROFILE.talk}</p>
       <dl className="mt-6 divide-y border-y">
         <div className="grid gap-1 py-4 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)] md:items-center md:gap-8">
           <dt className="font-semibold">Email</dt>
@@ -73,15 +65,7 @@ const Contact: React.FC = () => {
             <a href={LINKS.email} className="zen-link">
               {PROFILE.email}
             </a>
-            <button
-              type="button"
-              onClick={copy}
-              aria-label="Copy email address"
-              className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-small text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
-              {copied ? 'Copied' : 'Copy'}
-            </button>
+            <CopyEmail />
           </dd>
         </div>
         {rows.map((r) => (

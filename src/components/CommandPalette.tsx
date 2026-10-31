@@ -71,7 +71,9 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ open: controlledOpen, o
         <CommandSeparator />
 
         <CommandGroup heading="Play">
-          <CommandItem onSelect={() => run(() => emitZen('shell'))}>
+          {/* after the palette has given focus back (Radix does it a task later), so the shell
+              remembers the right place to return to when it closes */}
+          <CommandItem onSelect={() => run(() => setTimeout(() => setTimeout(() => emitZen('shell'))))}>
             <Terminal className="mr-2 h-4 w-4 text-primary" />
             <span>Open zen shell</span>
             <kbd className="ml-auto font-mono text-[10px] text-muted-foreground">`</kbd>

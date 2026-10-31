@@ -7,14 +7,50 @@ import { postFor } from '@/content/writing';
 import { plain } from '@/lib/rich';
 import { LinkedText } from '@/components/zen/primitives';
 
+/** "**Lead-in.** The rest": the lead-in opens the paragraph in semibold, for readers who skim. */
+const splitLead = (para: string) => {
+  const m = para.match(/^\*\*(.+?)\*\*\s+/);
+  return m ? { lead: m[1], text: para.slice(m[0].length) } : { lead: null, text: para };
+};
+
+const LAND = { type: 'spring', stiffness: 600, damping: 30 } as const;
+
+/** One paragraph of a role, opening with its lead-in. (No marks on the rail: dots there mean dated events.) */
+const Para: React.FC<{ para: string }> = ({ para }) => {
+  const { lead, text } = splitLead(para);
+  return (
+    <p>
+      {lead && <span className="font-semibold">{lead} </span>}
+      <LinkedText text={text} />
+    </p>
+  );
+};
+
+/** "May 2025 – Present" on two lines, the end under the start. */
+const Period: React.FC<{ period: string }> = ({ period }) => {
+  const [from, to] = period.split(' – ');
+  return (
+    <p className="font-mono text-small tabular-nums text-muted-foreground md:sticky md:top-24 md:self-start md:pt-2">
+      {to ? (
+        <>
+          {from} –<br />
+          {to}
+        </>
+      ) : (
+        period
+      )}
+    </p>
+  );
+};
+
 /**
- * A role: dates in the margin, the story in prose. Its node on the timeline fills as you arrive.
- * The rail's indent (40px) + date column (160px) = the Chapter margin (200px), so the story lines
- * up with every chapter's content below it.
+ * A role: dates in the margin (they stay in view while you read it), the story in prose. Its node
+ * on the timeline fills as you arrive. The rail's indent (40px) + date column (160px) = the Chapter
+ * margin (200px), so the story lines up with every chapter's content below it.
  */
 const Role: React.FC<{ j: Job }> = ({ j }) => {
   const ref = useRef<HTMLElement>(null);
-  const reached = useInView(ref, { once: true, margin: '0px 0px -45% 0px' });
+  const reached = useInView(ref, { once: true, margin: '100000px 0px -45% 0px' });
   const reduce = useReducedMotion();
   const post = j.writeup ? postFor(j.writeup) : undefined;
   return (
@@ -25,18 +61,16 @@ const Role: React.FC<{ j: Job }> = ({ j }) => {
           className={`h-1.5 w-1.5 rounded-full ${j.current ? 'bg-highlight' : 'bg-primary'}`}
           initial={reduce ? false : { scale: 0 }}
           animate={{ scale: reduce || reached ? 1 : 0 }}
-          transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+          transition={LAND}
         />
       </span>
-      <p className="font-mono text-small text-muted-foreground md:pt-2">{j.period}</p>
-      <div className="max-w-[68ch]">
+      <Period period={j.period} />
+      <div className="max-w-[62ch]">
         <h2 className="text-h2">{j.company}</h2>
         <p className="mt-1 text-muted-foreground">{j.role}</p>
-        <div className="mt-5 grid gap-4">
+        <div className="mt-6 grid gap-5 md:text-lead">
           {j.story.map((para) => (
-            <p key={para.slice(0, 24)}>
-              <LinkedText text={para} />
-            </p>
+            <Para key={para.slice(0, 24)} para={para} />
           ))}
         </div>
         {post && (

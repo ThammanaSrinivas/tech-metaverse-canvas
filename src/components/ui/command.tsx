@@ -38,6 +38,12 @@ interface CommandDialogProps extends DialogProps {
  */
 const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
   const still = useReducedMotion() ? STILL : {}
+  // Opened by a shortcut or a button that isn't a Radix trigger, so Radix has nowhere to return
+  // focus to: remember what had it (before Radix moves focus in) and give it back on close.
+  const returnTo = React.useRef<HTMLElement | null>(null)
+  React.useLayoutEffect(() => {
+    if (props.open) returnTo.current = document.activeElement as HTMLElement | null
+  }, [props.open])
   return (
     <Dialog {...props}>
       <AnimatePresence>
@@ -54,6 +60,10 @@ const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
       <DialogPrimitive.Content
         className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] overflow-hidden shadow-2xl duration-200 data-[state=open]:animate-in data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] motion-reduce:animate-none sm:rounded-lg"
         aria-describedby={undefined}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault()
+          returnTo.current?.focus({ preventScroll: true })
+        }}
       >
         {/* screen readers announce the dialog by name; sighted users see the search field */}
         <DialogTitle className="sr-only">Command palette</DialogTitle>

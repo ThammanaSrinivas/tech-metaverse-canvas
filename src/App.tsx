@@ -1,5 +1,3 @@
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, Navigate, RouterProvider, type RouteObject } from "react-router-dom";
 import Layout from "@/components/Layout";
 import Home from "./pages/Home";
@@ -7,8 +5,6 @@ import NotFound from "./pages/NotFound";
 import PageError from "./pages/PageError";
 import { PAGES, REDIRECTS } from "@/site/pages";
 import { CHILD_LOADERS, LOADERS, lazyRoute } from "@/site/routes";
-
-const queryClient = new QueryClient();
 
 // Data router (rather than <BrowserRouter>): it supports view transitions between pages, and its
 // route `lazy` loads a page's chunk before switching, so the old page stays until the new one is ready.
@@ -38,12 +34,6 @@ const routes: RouteObject[] = [
 
 const router = createBrowserRouter(routes, { future: { v7_relativeSplatPath: true } });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <RouterProvider router={router} future={{ v7_startTransition: true }} />
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => <RouterProvider router={router} future={{ v7_startTransition: true }} />;
 
 export default App;

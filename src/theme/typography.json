@@ -97,7 +97,7 @@
       { "name": "Perfect Fourth", "ratio": 1.333 }
     ],
     "roles": {
-      "display": { "step": 7, "max": 96, "mobileMax": 46, "leading": 1.0, "tracking": "-0.035em" },
+      "display": { "step": 8.75, "max": 120, "mobileMax": 54, "leading": 0.92, "tracking": "-0.045em" },
       "title": { "step": 5.5, "max": 64, "mobileMax": 38, "leading": 1.05, "tracking": "-0.03em" },
       "h1": { "step": 4, "leading": 1.1, "tracking": "-0.025em" },
       "h2": { "step": 3, "leading": 1.15, "tracking": "-0.02em" },

@@ -1,27 +1,28 @@
 import { useLocation } from 'react-router-dom';
 import { Link } from '@/components/zen/Link';
-import { ArrowRight } from 'lucide-react';
-import { PAGES } from '@/site/pages';
+import { NAV_PAGES } from '@/site/pages';
 import { usePageMeta } from '@/lib/usePageMeta';
 import { notFoundMeta } from '@/site/meta';
 
+/** A wrong address, answered the way the shell would: the command, the error, then `ls ~`. */
 const NotFound = () => {
   const { pathname } = useLocation();
   usePageMeta(notFoundMeta(pathname));
   return (
     <section className="mx-auto w-full max-w-[1120px] px-5 pb-24 pt-40">
-      <p className="zen-label text-muted-foreground">404</p>
-      <h1 className="mt-5 text-title">
-        <span className="font-mono text-primary">cd {pathname}</span>
-        <br />
-        no such directory.
-      </h1>
-      <p className="mt-5 max-w-xl text-lead text-muted-foreground">Try one of these instead:</p>
-      <ul className="mt-8 flex flex-wrap gap-2">
-        {[{ path: '/', label: 'Home' }, ...PAGES].map((p) => (
-          <li key={p.path}>
-            <Link to={p.path} className="zen-pill transition-colors hover:border-primary hover:text-primary">
-              {p.label} <ArrowRight className="h-3 w-3" />
+      {/* any-break: a long unknown address must wrap, not push the page sideways on a phone */}
+      <p className="font-mono text-h3 text-muted-foreground [overflow-wrap:anywhere]">
+        <span className="text-primary">$</span> cd {pathname}
+      </p>
+      <h1 className="mt-4 text-title">No such directory.</h1>
+      <p className="mt-10 font-mono text-muted-foreground">
+        <span className="text-primary">$</span> ls ~
+      </p>
+      <ul className="mt-3 flex flex-wrap gap-x-8 gap-y-3 font-mono text-lead">
+        {[{ id: 'home', path: '/', label: '~' }, ...NAV_PAGES].map((p) => (
+          <li key={p.id}>
+            <Link to={p.path} className="zen-link">
+              {p.path === '/' ? '~' : `${p.path.slice(1)}/`}
             </Link>
           </li>
         ))}
