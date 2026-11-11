@@ -4,6 +4,7 @@ import { Link } from '@/components/zen/Link';
 import { CopyEmail } from '@/components/zen/primitives';
 import { LINKS, PROFILE } from '@/data/profile';
 import { NAV_PAGES } from '@/site/pages';
+import { useClientValue, useHydrating } from '@/lib/hydration';
 
 const ELSEWHERE = [
   { label: 'LinkedIn', href: LINKS.linkedin },
@@ -17,15 +18,26 @@ const CLOCK = new Intl.DateTimeFormat('en-IN', {
   minute: '2-digit',
 });
 
-/** What time it is where I am, so a message from another time zone knows when I'll see it. */
+/**
+ * What time it is where I am, so a message from another time zone knows when I'll see it. Only the
+ * browser knows the time: the page's HTML (built once) leaves it out, and it appears once live.
+ */
 const LocalTime: React.FC = () => {
+  const hydrating = useHydrating();
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 30_000);
     return () => window.clearInterval(id);
   }, []);
-  return <time dateTime={now.toISOString()}>{CLOCK.format(now)} IST</time>;
+  if (hydrating) return null;
+  return (
+    <>
+      , <time dateTime={now.toISOString()}>{CLOCK.format(now)} IST</time>
+    </>
+  );
 };
+
+const thisYear = () => new Date().getFullYear();
 
 /**
  * The sign-off, on the chapter grid: the email large (one tap copies it), the pages, the rest. On
@@ -33,6 +45,8 @@ const LocalTime: React.FC = () => {
  */
 const Footer: React.FC = () => {
   const showEmail = useLocation().pathname !== '/about';
+  // the HTML carries the year it was built in; a page built last December still says this year once live
+  const year = useClientValue(thisYear, __BUILD_YEAR__);
   return (
     <footer className="mx-auto w-full max-w-[1120px] px-5 pb-12 pt-10">
       <div className="grid gap-6 border-t pt-8 md:grid-cols-[200px_minmax(0,1fr)] md:gap-10">
@@ -68,7 +82,8 @@ const Footer: React.FC = () => {
       </div>
       <p className="mt-10 flex flex-wrap justify-between gap-2 text-small text-muted-foreground">
         <span>
-          © {new Date().getFullYear()} · {PROFILE.location.split(',')[0]}, <LocalTime />
+          © {year} · {PROFILE.location.split(',')[0]}
+          <LocalTime />
         </span>
         <span className="hidden md:inline">
           press <kbd>`</kbd> for the shell

@@ -1,11 +1,12 @@
 import React, { useRef } from 'react';
-import { motion, useInView, useReducedMotion, useScroll, useSpring } from 'framer-motion';
+import { motion, useInView, useScroll, useSpring } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Link } from '@/components/zen/Link';
 import { JOBS, type Job } from '@/data/profile';
 import { postFor } from '@/content/writing';
 import { plain } from '@/lib/rich';
 import { LinkedText } from '@/components/zen/primitives';
+import { useReducedMotion } from '@/lib/hydration';
 
 /** "**Lead-in.** The rest": the lead-in opens the paragraph in semibold, for readers who skim. */
 const splitLead = (para: string) => {
@@ -61,7 +62,7 @@ const Role: React.FC<{ j: Job }> = ({ j }) => {
           className={`h-1.5 w-1.5 rounded-full ${j.current ? 'bg-highlight' : 'bg-primary'}`}
           initial={reduce ? false : { scale: 0 }}
           animate={{ scale: reduce || reached ? 1 : 0 }}
-          transition={LAND}
+          transition={reduce ? { duration: 0 } : LAND}
         />
       </span>
       <Period period={j.period} />

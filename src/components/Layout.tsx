@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -8,6 +8,7 @@ import { whenIdle } from '@/lib/idle';
 import { labEnabled } from '@/theme/runtime';
 import { preloadPages } from '@/site/routes';
 import { sound } from '@/lib/sound';
+import { useBrowserLayoutEffect } from '@/lib/hydration';
 
 const CodingDuel = lazy(() => import('@/components/CodingDuel'));
 // The shell is not on the first screen's critical path: it loads on first use (or when idle).
@@ -75,7 +76,7 @@ function useScrollOnNavigate() {
     return () => window.removeEventListener('scroll', save);
   }, []);
   // Layout effect: reset before the new page is painted, so it never shows at the old offset.
-  useLayoutEffect(() => {
+  useBrowserLayoutEffect(() => {
     keyRef.current = key; // before any scroll below, so it is saved against the new entry
     // retries stop when the reader moves on: a late retry must not yank the next page around
     let timer = 0;
@@ -113,7 +114,16 @@ function useScrollOnNavigate() {
 /** Shared chrome for every page: nav, footer, shell, cursor, lab. */
 const Layout: React.FC = () => {
   const [duelOpen, setDuelOpen] = useState(false);
-  useEffect(() => onZen('duel', () => setDuelOpen(true)), []);
+  // like the shell, the duel loads on first use: not on every page, nor in its HTML
+  const [duelWanted, setDuelWanted] = useState(false);
+  useEffect(
+    () =>
+      onZen('duel', () => {
+        setDuelWanted(true);
+        setDuelOpen(true);
+      }),
+    []
+  );
   useEffect(preloadPages, []);
   useScrollOnNavigate();
   usePageSound();
@@ -145,7 +155,7 @@ const Layout: React.FC = () => {
       <ZenCursor />
       <Suspense fallback={null}>
         {shellWanted && <ZenShell startOpen />}
-        <CodingDuel isOpen={duelOpen} onClose={() => setDuelOpen(false)} />
+        {duelWanted && <CodingDuel isOpen={duelOpen} onClose={() => setDuelOpen(false)} />}
         {PalettePanel && <PalettePanel />}
       </Suspense>
     </div>

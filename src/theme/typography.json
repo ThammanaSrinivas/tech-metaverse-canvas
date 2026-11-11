@@ -11,6 +11,10 @@
     { "family": "Geist", "file": "/fonts/Geist-Variable.ttf", "weight": "100 900" },
     { "family": "Departure Mono", "file": "/fonts/DepartureMono-Regular.otf", "weight": "400" }
   ],
+  "core": {
+    "_about": "The characters this site writes in: ASCII, plus the punctuation and symbols its copy uses (and the bullet lists draw). Each font of the active set also ships cut down to just these (scripts/subset-fonts.mjs → <name>.core.woff2, ~35% smaller), declared with unicode-range beside the full file, so a page fetches the full file only if it uses a character outside this range. Add a character here (and rerun npm run fonts:subset) when copy starts using it often.",
+    "range": "U+0020-007E, U+00A0, U+00A9, U+00B7, U+00D7, U+00E9, U+2013-2014, U+2018-2019, U+201C-201D, U+2022, U+2026, U+2190-2195, U+2197, U+2212, U+2248, U+2605"
+  },
   "fallbacks": { "display": "system-ui, sans-serif", "accent": "Georgia, serif", "sans": "system-ui, -apple-system, \"Segoe UI\", sans-serif", "mono": "ui-monospace, SFMono-Regular, Menlo, monospace" },
   "zenmode": { "display": "Clash Display", "sans": "Geist", "mono": "Departure Mono", "weight": 500 },
   "sets": [

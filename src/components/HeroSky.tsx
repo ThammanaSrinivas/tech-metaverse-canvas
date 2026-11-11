@@ -3,6 +3,7 @@ import { Pause, Play } from 'lucide-react';
 import { useBrandTheme } from '@/theme/runtime';
 import { toRgb } from '@/theme/color';
 import { useStarsEnabled } from '@/lib/stars';
+import { useReducedMotion } from '@/lib/hydration';
 
 /**
  * The original hero, in the palette's colours: three shells of points slowly rotating around a
@@ -51,7 +52,12 @@ const FADE = 0.3;
 
 const HeroSky: React.FC<{ bornFrom?: React.RefObject<HTMLElement> }> = ({ bornFrom }) => {
   const ref = useRef<HTMLCanvasElement>(null);
-  const [paused, setPaused] = useState(() => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // under reduced motion it starts paused (known once the page is live: the HTML says Pause)
+  const reduce = useReducedMotion();
+  const [paused, setPaused] = useState(reduce);
+  useEffect(() => {
+    if (reduce) setPaused(true);
+  }, [reduce]);
   const pausedRef = useRef(paused);
   const kick = useRef<() => void>(() => {});
   useEffect(() => {

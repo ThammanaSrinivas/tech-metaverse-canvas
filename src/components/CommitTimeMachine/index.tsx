@@ -51,7 +51,8 @@ const CommitTimeMachine: React.FC = () => {
   const [isExploring, setIsExploring] = useState(false);
   const [progress, setProgress] = useState(0);
   const [autoplay, setAutoplay] = useState(false);
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
+  // measured once live (the page's HTML is the same for every screen); nothing it decides shows before the commits arrive
+  const [isMobile, setIsMobile] = useState(false);
 
   const queryClient = useQueryClient();
   // The section is always a dark band: nodes use the palette's dark-scope accent, the
@@ -67,6 +68,7 @@ const CommitTimeMachine: React.FC = () => {
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 640);
+    onResize();
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);

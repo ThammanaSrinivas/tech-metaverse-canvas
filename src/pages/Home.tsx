@@ -1,13 +1,13 @@
 import React, { Suspense, useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, ArrowUpRight, Mail } from 'lucide-react';
 import { Link } from '@/components/zen/Link';
-import { Chapter, EASE, FullStop, LinkedText, MaskWords, Marker, Reveal, Rich, maskStagger } from '@/components/zen/primitives';
+import { Chapter, DOT_AT, FullStop, LinkedText, MaskWords, Marker, Reveal, Rich, WORD_STAGGER } from '@/components/zen/primitives';
 import { DIAGRAMS } from '@/components/diagrams';
 import HeroSky from '@/components/HeroSky';
 import PostList from '@/components/PostList';
 import { POSTS, minutesOf, postFor } from '@/content/writing';
 import { LINKS, PROFILE, RECENT, SKY, SPEAKING, ZENMODE } from '@/data/profile';
+import { prefersReducedMotion, useFromServer } from '@/lib/hydration';
 import { usePageMeta } from '@/lib/usePageMeta';
 import { emitZen } from '@/lib/zenEvents';
 import { HOME_META } from '@/site/meta';
@@ -24,40 +24,39 @@ const MORE_POSTS = POSTS.filter((p) => p !== SCHEDULER);
 
 /** The hero's entrance plays once per visit, not on every return to the home page. */
 let heroPlayed = false;
-/** When the full stop lands: after "Thammana", then "Srinivas", have risen (the logo's T, S, then the dot). */
-const DOT_AT = 0.62;
 
 /**
  * The first screen: the name on two lines like a title page, the line, one sentence, and a way to
- * reach me. The name and the line rise, then the orange full stop (the logo's dot) lands last, and
- * the header logo's dot lands with it. The sentence and the links are there from the start. Nothing
- * loops afterwards. Static under reduced motion.
+ * reach me. The name and the line rise, then the orange full stop (the logo's dot) lands last
+ * (DOT_AT: after "Thammana", then "Srinivas", have risen: the logo's T, S, then the dot), and the
+ * header logo's dot lands with it. The sentence and the links are there from the start. Nothing
+ * loops afterwards. The entrance is CSS, so on a first visit it plays from the page's HTML, before
+ * the app has loaded; under reduced motion it is static (index.css).
  */
 const Hero: React.FC = () => {
-  const reduce = useReducedMotion();
-  const [play] = useState(() => !reduce && !heroPlayed);
+  const [play] = useState(() => !heroPlayed);
+  // in the page's HTML the header's dot lands by itself (Navigation); after a link, it needs the event
+  const fromServer = useFromServer();
   useEffect(() => {
     heroPlayed = true;
-    if (!play) return;
+    if (!play || fromServer || prefersReducedMotion()) return;
     const id = window.setTimeout(() => emitZen('dot'), DOT_AT * 1000);
     return () => window.clearTimeout(id);
-  }, [play]);
+  }, [play, fromServer]);
   const [first, ...rest] = PROFILE.name.split(' ');
-  const enter = (delay: number) =>
-    play ? { initial: { y: '110%' }, animate: { y: 0 }, transition: { duration: 0.75, delay, ease: EASE } } : {};
   return (
     // a little shorter than the screen, so the first chapter's hairline peeks: there is more below
     <section className="mx-auto flex min-h-[88svh] w-full max-w-[1120px] flex-col justify-end px-5 pb-[10svh] pt-28">
-      <motion.h1 className="-ml-[0.04em] text-display" variants={maskStagger} initial={play ? 'hidden' : false} animate="show">
-        <MaskWords text={first} />
+      <h1 className="-ml-[0.04em] text-display">
+        <MaskWords text={first} rise={play} />
         <br />
-        <MaskWords text={rest.join(' ')} />
+        <MaskWords text={rest.join(' ')} rise={play} delay={WORD_STAGGER} />
         <FullStop land={play} delay={DOT_AT} />
-      </motion.h1>
+      </h1>
       <p className="mt-7 max-w-[24ch] overflow-hidden pb-[0.08em] font-display text-h2 font-medium">
-        <motion.span className="block" {...enter(0.18)}>
+        <span className={`block ${play ? 'zen-rise' : ''}`} style={play ? { animationDelay: '0.18s' } : undefined}>
           {PROFILE.line}
-        </motion.span>
+        </span>
       </p>
       {/* the sentence a recruiter needs, and the ways to reach me, are there from the first frame */}
       <p className="mt-6 max-w-[54ch] text-lead text-muted-foreground">

@@ -19,8 +19,9 @@ npm run dev              # dev server on port 8080 (shows the dev-only brand lab
 npm run build            # ALL tests + coverage, then vite build + prerender (fails on any test failure)
 npm run lint             # ESLint (--max-warnings 0) + brand lint
 npm run lint:brand       # colour/font literals outside the token files fail
-npm run preview          # serve dist/ (serves work.html at /work, like Firebase)
+npm run preview          # serve dist/ like Firebase: work.html at /work, 404.html (status 404) for the rest
 npm run snapshot:commits # refresh public/gh-snapshot.json (Time Machine fallback)
+npm run fonts:subset     # recut public/fonts/*.core.woff2 after changing a font or typography.json "core"
 npx vitest run src/site  # one folder / file
 ```
 
@@ -38,7 +39,11 @@ another account is the default, else it fails with "Failed to get Firebase proje
   Never PayPal/Google blue.
 - **Type: Builder set** (`src/theme/typography.json`, modular scale ratio 1.25): Bricolage Grotesque
   700 for display, Instrument Serif italic as the accent voice (write `*word*`; `src/lib/rich.ts`),
-  Manrope for body, Space Mono for numbers in data. All vendored in `public/fonts`.
+  Manrope for body, Space Mono for numbers in data. All vendored in `public/fonts`. Each face of
+  the active set also has a `.core.woff2` cut to the characters the site writes in (`core.range`
+  in typography.json; `npm run fonts:subset` writes the cuts and `src/theme/fontSubsets.json`),
+  declared beside the full file with `unicode-range`: pages fetch about a third less font, and the
+  full file only for a character outside the core. A new symbol in copy goes into `core.range`.
 - **Logo:** the "platform T" monogram (T carrying an S, orange dot), `src/components/zen/monogramPath.ts`.
 - **Layout feel: editorial, not a template.** The owner found the earlier site "vibe coded"; the
   fix was subtraction. Paper, type and hairlines; roles in prose with numbers inline; lists, not
@@ -90,7 +95,7 @@ another account is the default, else it fails with "Failed to get Firebase proje
 `src/App.tsx`), routes generated from the page registry, each page a lazy chunk.
 
 - **Pages:** registered once in `src/site/pages.ts` (SOURCE OF TRUTH; each page also implements its
-  zen-shell directory; `draft` = dev-only; `nested` = `/:slug` children; `nav: false` = routed but
+  zen-shell directory; `draft` = dev-only; `nested` = `/<slug>` children, one route per entry (`CHILDREN` in routes.tsx); `nav: false` = routed but
   not in the menu) and mapped to components in `src/site/routes.tsx`. Nav, mobile menu, footer,
   ⌘K palette, routes, "Next" links, sitemap test, page meta and the shell's filesystem all derive
   from it. Menu: Work · Writing · ZenMode · About; Time Machine is `nav: false` (linked from
@@ -114,8 +119,12 @@ another account is the default, else it fails with "Failed to get Firebase proje
 - **Writing:** `src/content/writing/index.ts` (SOURCE OF TRUTH) lists articles (Markdown next to it,
   at `/writing/<slug>`) and external posts (open in a new tab). Drafts are dropped from production
   builds entirely (`import.meta.env.DEV || !DRAFT_X`, keep each flag a literal).
-  Markdown renders in `src/components/Markdown.tsx`; a fenced ```` ```diagram <id> ```` block mounts a
-  live diagram from `src/components/diagrams/index.ts` (lazy).
+  The Markdown is compiled at build time (`import tree from './x.md?tree'`, the Vite plugin
+  `scripts/markdownTree.ts`: remark + GFM → a compact tree, heading ids from `outline()` in
+  `src/lib/markdown.ts`), so no Markdown parser ships; `src/components/Markdown.tsx` draws the tree
+  with the site's components. Each article is its own route (`CHILDREN` in `src/site/routes.tsx`)
+  that loads the page chunk and its tree before switching. A fenced ```` ```diagram <id> ```` block
+  mounts a live diagram from `src/components/diagrams/index.ts` (lazy).
 - **Brand tokens (three files):** `colors.json`, `typography.json`, `brand.json` in `src/theme/`.
   `tokens.ts` derives `:root` / `.dark` / `.zen` tokens with every text pairing pushed to WCAG AA,
   measured *as painted* (`asEmitted`: after the HSL rounding the CSS vars apply). `runtime.ts` injects
@@ -142,9 +151,27 @@ another account is the default, else it fails with "Failed to get Firebase proje
 - **`src/site/meta.ts` is the SOURCE OF TRUTH for every URL's title, description, canonical and
   social card.** Runtime: `usePageMeta(pageMeta(page) | articleMeta(post) | HOME_META | notFoundMeta(path))`.
   Build: the Vite plugin `scripts/prerender.ts` writes `dist/<path>.html` per URL in `ROUTE_META`
-  with that meta baked into `<head>`, because LinkedIn / WhatsApp / Slack / X never run JS. The body
-  is still client-rendered. `applyMetaToHtml` throws if `index.html` loses one of its tags: keep the
-  tag shapes in `index.html` as they are.
+  with that meta baked into `<head>`, because LinkedIn / WhatsApp / Slack / X never run JS.
+  `applyMetaToHtml` throws if `index.html` loses one of its tags: keep the tag shapes in
+  `index.html` as they are.
+- **Every page ships rendered** (server-side rendering at build time). After the client build, the
+  plugin runs a Vite SSR build of `src/entry-server.tsx` (same config and transforms) and renders
+  each URL with React Router's static handler and `renderToPipeableStream`, waiting for every lazy
+  chunk (`onAllReady`), into `<div id="root">`. It also writes the brand's `<style>` blocks
+  (`brandStyles()` in runtime.ts: fonts, palette, type scale) and a preload per font the page uses
+  (display and body always, accent and mono where the content uses them). No inline script: the CSP
+  allows none (`hydrate={false}`). `src/main.tsx` loads the route's lazy chunks, then
+  `hydrateRoot`s; `404.html` (`data-not-found`, rendered for /404, served for every unknown
+  address) is rendered over with `createRoot`. Crawlers that don't run JS read whole pages, and the
+  first paint no longer waits for the app.
+- **Hydration rules** (a mismatch makes React 18 throw the page away, and attributes it can't
+  match, like an inline opacity, stay wrong): a component's first render must not read `window`,
+  `matchMedia`, `localStorage`, the clock or randomness. Use `src/lib/hydration.ts`:
+  `useReducedMotion` (never framer-motion's, which answers during hydration), `useHydrating`,
+  `useClientValue(client, server)`, `useFromServer`; storage through `useSyncExternalStore` with a
+  server snapshot (`lib/stars.ts`, `lib/sound`). Randomness and canvas work stay in effects. Check
+  with a development-React build: `NODE_ENV=development npx vite build --outDir dist-dev`, then
+  `npx vite preview --outDir dist-dev` and watch the console.
 - **Firebase must serve those files:** `firebase.json` is gitignored (local only) and needs
   `"cleanUrls": true`, `"trailingSlash": false`, the `redirects` above, NO catch-all rewrite
   (every route is a prerendered file; unknown URLs get `dist/404.html`, the app with the not-found
@@ -200,7 +227,11 @@ another account is the default, else it fails with "Failed to get Firebase proje
   paused with a Play button (see `AdmissionControl.tsx`, `HeroSky.tsx`).
 - **Motion system: structure draws, content is there.** One easing, `EASE` from primitives.tsx.
   `Chapter` hairlines rule themselves in once and the margin dot lands; `Reveal` is a quiet 10px,
-  0.45s settle, at most one per block; dots and nodes land with one spring (600/30). Every number
+  0.45s settle, at most one per block; dots and nodes land with one spring (600/30). Entrances on
+  arrival go through `useArrival` (primitives.tsx): a page's HTML shows everything in place; once
+  live, what is still below the screen steps back and arrives as on any other page. Title
+  entrances (`MaskWords rise`, the hero's line, `FullStop land`, the header dot's `land`) are CSS
+  (`.zen-rise`, `.zen-land` in index.css), so they play from the HTML's first paint. Every number
   shown is real at every frame (no count-ups, no lerping through values that never happened).
   Nothing replays on scrolling back. Content a reader needs is never hidden waiting for an
   animation. On /work the dates stay in view beside their role; the rail carries only dated events

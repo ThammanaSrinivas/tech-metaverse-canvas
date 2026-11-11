@@ -5,13 +5,14 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, FileText, Menu, Search, Terminal, X } from 'lucide-react';
 import { LINKS, PROFILE } from '@/data/profile';
 import { NAV_PAGES } from '@/site/pages';
-import { Monogram } from '@/components/zen/primitives';
+import { DOT_AT, Monogram } from '@/components/zen/primitives';
 // the palette (cmdk + a dialog) loads on first use: ⌘K / Ctrl K, or the Search button
 const CommandPalette = lazy(() => import('./CommandPalette'));
 import { MENU_MOTION, STILL } from './overlayMotion';
 import SoundToggle from './SoundToggle';
 import { sound } from '@/lib/sound';
 import { emitZen, onZen } from '@/lib/zenEvents';
+import { useClientValue, useFromServer } from '@/lib/hydration';
 
 /**
  * Phone menu: a floating card that drops down under the bar, over a dimmed page. The page stays
@@ -118,8 +119,8 @@ const MobileMenu: React.FC<{ onClose: () => void; ink: boolean; pathname: string
   );
 };
 
-/** The palette's shortcut as this keyboard writes it. */
-const SHORTCUT = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? '⌘K' : 'Ctrl K';
+/** The palette's shortcut as this keyboard writes it (the page's HTML says Ctrl K until it is live). */
+const shortcut = () => (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? '⌘K' : 'Ctrl K');
 
 /**
  * Top bar. Over an ink top (anything marked data-ink-top) it stays transparent and light-on-dark;
@@ -160,9 +161,19 @@ const Navigation: React.FC = () => {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [paletteLoaded]);
-  // the logo's dot lands again when the hero's full stop does
+  // the logo's dot lands again when the hero's full stop does: from the home page's HTML itself
+  // (CSS, in step with the hero's), or on the hero's event after a link
   const [pop, setPop] = useState(0);
   useEffect(() => onZen('dot', () => setPop((n) => n + 1)), []);
+  const fromServer = useFromServer();
+  const [landsWithHero, setLandsWithHero] = useState(() => fromServer && pathname === '/');
+  useEffect(() => {
+    if (!landsWithHero) return;
+    // then it is an ordinary dot again: the hover's pop needs the animation free
+    const id = window.setTimeout(() => setLandsWithHero(false), (DOT_AT + 0.6) * 1000);
+    return () => window.clearTimeout(id);
+  }, [landsWithHero]);
+  const keys = useClientValue(shortcut, 'Ctrl K');
 
   useEffect(() => {
     setMenuAt(null);
@@ -201,7 +212,7 @@ const Navigation: React.FC = () => {
         >
         <nav className="mx-auto flex h-14 max-w-[1120px] items-center gap-6 px-5 md:h-16" aria-label="Main">
           <Link to="/" className="group flex items-center gap-2.5" aria-label={`${PROFILE.name}, home`}>
-            <Monogram size={30} title="" pop={pop} />
+            <Monogram size={30} title="" pop={pop} land={landsWithHero ? DOT_AT : undefined} />
             <span className="font-display text-lg">{PROFILE.shortName}</span>
           </Link>
 
@@ -241,7 +252,7 @@ const Navigation: React.FC = () => {
             >
               <Search aria-hidden className="h-3.5 w-3.5" />
               <span>Search</span>
-              <kbd className="font-mono text-[10px] tracking-wider">{SHORTCUT}</kbd>
+              <kbd className="font-mono text-[10px] tracking-wider">{keys}</kbd>
             </button>
             <SoundToggle className="lg:h-9 lg:w-9" />
             <button

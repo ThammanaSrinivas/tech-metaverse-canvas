@@ -196,10 +196,34 @@
   /* The logo's dot lands: once in time with the hero's full stop, and again on hover. */
   .zen-mono-dot { transform-box: fill-box; transform-origin: center; }
   .zen-mono-dot.is-popping, .group:hover .zen-mono-dot { animation: zen-dot-pop 520ms cubic-bezier(0.22, 1, 0.36, 1); }
+  /* the home page's first landing, from its HTML: hidden until its delay, then the same pop */
+  .zen-mono-dot.is-landing { animation: zen-dot-pop 520ms cubic-bezier(0.22, 1, 0.36, 1) both; }
   @keyframes zen-dot-pop {
     0% { transform: scale(0); }
     60% { transform: scale(1.25); }
     100% { transform: scale(1); }
+  }
+
+  /*
+   * Title entrances (MaskWords, the hero's line, FullStop), in CSS so a page's HTML plays them from
+   * its first paint, before the app has loaded. Each element sets its own animation-delay. A word
+   * rises out of its clipped line box; the full stop lands like a spring (600/30): a little past
+   * full size and back. Static under reduced motion (below: the delays alone would hold them hidden).
+   */
+  .zen-rise { animation: zen-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  @keyframes zen-rise {
+    from { transform: translateY(110%); }
+    to { transform: none; }
+  }
+  .zen-land { animation: zen-land 0.45s linear both; }
+  @keyframes zen-land {
+    0% { transform: scale(0); animation-timing-function: cubic-bezier(0.3, 0.6, 0.5, 1); }
+    45% { transform: scale(1.09); animation-timing-function: ease-in-out; }
+    75% { transform: scale(0.98); animation-timing-function: ease-in-out; }
+    100% { transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .zen-rise, .zen-land, .zen-mono-dot.is-landing { animation: none; }
   }
 }
 

@@ -1,26 +1,27 @@
-import React from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import React, { useRef } from 'react';
+import { motion } from 'framer-motion';
 import { ArrowUpRight, Play } from 'lucide-react';
 import { LINKS, ZENMODE } from '@/data/profile';
-import { Chapter, Marker } from '@/components/zen/primitives';
+import { Chapter, Marker, useArrival } from '@/components/zen/primitives';
 
 type IconKind = (typeof ZENMODE.features)[number]['icon'];
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 // Small glyphs in the site's primary. Two play their idea once as they scroll in (the score ring
-// fills, the circle gathers); the flame and the coin are still. All static under reduced motion.
+// fills, the circle gathers; useArrival); the flame and the coin are still. All static under reduced motion.
 const FeatureIcon: React.FC<{ kind: IconKind }> = ({ kind }) => {
-  const reduce = useReducedMotion();
-  const view = { once: true, margin: '-40px' } as const;
+  const ref = useRef<SVGSVGElement>(null);
+  const { arrived, from, instant } = useArrival(ref, '-40px');
+  const go = <T extends object>(t: T) => (instant ? { duration: 0 } : t);
   if (kind === 'score')
     return (
-      <svg width="28" height="28" viewBox="0 0 40 40" aria-hidden>
+      <svg ref={ref} width="28" height="28" viewBox="0 0 40 40" aria-hidden>
         <circle cx="20" cy="20" r="15" fill="none" className="stroke-border" strokeWidth="5" />
         <motion.circle cx="20" cy="20" r="15" fill="none" className="stroke-primary" strokeWidth="5" strokeLinecap="round"
           transform="rotate(-90 20 20)"
-          initial={{ pathLength: reduce ? 0.7 : 0 }} whileInView={reduce ? undefined : { pathLength: 0.7 }} viewport={view}
-          transition={{ duration: 1.4, ease: EASE }} />
+          initial={{ pathLength: from ? 0 : 0.7 }} animate={{ pathLength: arrived ? 0.7 : 0 }}
+          transition={go({ duration: 1.4, ease: EASE })} />
       </svg>
     );
   if (kind === 'streak')
@@ -31,16 +32,19 @@ const FeatureIcon: React.FC<{ kind: IconKind }> = ({ kind }) => {
     );
   if (kind === 'circle')
     return (
-      <svg width="28" height="28" viewBox="0 0 40 40" aria-hidden className="fill-primary">
+      <svg ref={ref} width="28" height="28" viewBox="0 0 40 40" aria-hidden className="fill-primary">
         {[
           { cx: 12, cy: 25, o: 0.55, from: [-8, 6] },
           { cx: 28, cy: 25, o: 0.8, from: [8, 6] },
           { cx: 20, cy: 13, o: 1, from: [0, -8] },
-        ].map((c, i) => (
-          <motion.circle key={i} cx={c.cx} cy={c.cy} r="9" opacity={c.o}
-            initial={reduce ? false : { x: c.from[0], y: c.from[1], scale: 0.4 }} whileInView={reduce ? undefined : { x: 0, y: 0, scale: 1 }}
-            viewport={view} transition={{ duration: 0.7, delay: 0.1 * i, ease: EASE }} />
-        ))}
+        ].map((c, i) => {
+          const apart = { x: c.from[0], y: c.from[1], scale: 0.4 };
+          return (
+            <motion.circle key={i} cx={c.cx} cy={c.cy} r="9" opacity={c.o}
+              initial={from ? apart : false} animate={arrived ? { x: 0, y: 0, scale: 1 } : apart}
+              transition={go({ duration: 0.7, delay: 0.1 * i, ease: EASE })} />
+          );
+        })}
       </svg>
     );
   return (

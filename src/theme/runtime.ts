@@ -8,7 +8,7 @@
 //   ?r=1.333                     start from a type-scale ratio
 //   ?p=EDEBE6-403B33-94C7B6-D6E1C7-FE5D26   a custom palette: light-dark-primary-secondary-highlight
 import { useEffect, useState } from 'react';
-import { ACTIVE_PALETTE, ACTIVE_RATIO, ACTIVE_TYPE, FONT_FACES, FONT_FALLBACKS, PALETTES, TYPE_SCALE, TYPOGRAPHY, ZENMODE_TYPE, findPalette, findTheme, findType, type Palette, type TypeScale, type Typography } from './palettes';
+import { ACTIVE_PALETTE, ACTIVE_RATIO, ACTIVE_TYPE, FONT_CORE_RANGE, FONT_FACES, FONT_FALLBACKS, PALETTES, TYPE_SCALE, TYPOGRAPHY, ZENMODE_TYPE, findPalette, findTheme, findType, type Palette, type TypeScale, type Typography } from './palettes';
 import { deriveTheme, themeCss, type Theme } from './tokens';
 import { isHex, normalizeHex } from './color';
 import { MONOGRAM_DOT, MONOGRAM_PATH } from '@/components/zen/monogramPath';
@@ -70,12 +70,37 @@ const FALLBACK = FONT_FALLBACKS;
 
 const FORMAT: Record<string, string> = { woff2: 'woff2', woff: 'woff', ttf: 'truetype', otf: 'opentype' };
 
-/** @font-face for every vendored font in typography.json (no font file is named anywhere else). */
+/**
+ * @font-face for every vendored font in typography.json (no font file is named anywhere else). A
+ * face with a core cut is declared twice, split by unicode-range: the core file for the site's
+ * usual characters, the full file for the rest (fetched only if a page uses one of those).
+ */
 export function fontFacesCss() {
-  return FONT_FACES.map((f) => {
-    const ext = f.file.split('.').pop() ?? '';
-    return `@font-face {\n  font-family: "${f.family}";\n  src: url("${f.file}") format("${FORMAT[ext] ?? ext}");\n  font-weight: ${f.weight};\n  font-style: ${f.style ?? 'normal'};\n  font-display: swap;\n}`;
-  }).join('\n');
+  const files = FONT_FACES.flatMap((f) =>
+    f.core ? [{ ...f, range: f.rest }, { ...f, file: f.core, range: FONT_CORE_RANGE }] : [{ ...f, range: undefined }]
+  );
+  return files
+    .map((f) => {
+      const ext = f.file.split('.').pop() ?? '';
+      const range = f.range ? `\n  unicode-range: ${f.range};` : '';
+      return `@font-face {\n  font-family: "${f.family}";\n  src: url("${f.file}") format("${FORMAT[ext] ?? ext}");\n  font-weight: ${f.weight};\n  font-style: ${f.style ?? 'normal'};\n  font-display: swap;${range}\n}`;
+    })
+    .join('\n');
+}
+
+/**
+ * The file to preload for one voice of the active typography: its regular face (the one that
+ * covers weight 400), cut to the core where there is a cut.
+ */
+export function fontFileFor(role: 'display' | 'accent' | 'sans' | 'mono') {
+  const family = role === 'accent' ? currentType.accent ?? currentType.display : currentType[role];
+  const faces = FONT_FACES.filter((f) => f.family === family);
+  const covers400 = (f: (typeof faces)[number]) => {
+    const [lo, hi = lo] = f.weight.split(' ').map(Number);
+    return lo <= 400 && 400 <= hi;
+  };
+  const face = faces.find(covers400) ?? faces[0];
+  return face && (face.core ?? face.file);
 }
 
 /** The ZenMode OS fonts inside the .zen scope. */
@@ -184,6 +209,18 @@ export function applyCombo(name: string, persist = false) {
   applyPalette(findPalette(combo.palette) ?? current.palette, persist);
   applyType(findType(combo.type) ?? currentType, persist);
 }
+
+/**
+ * The brand's <style> blocks, as initPalette writes them: fonts, palette, type, scale. The build
+ * writes the same blocks into every page's HTML (scripts/prerender.ts), so its first paint is
+ * already on brand; initPalette then finds them in place.
+ */
+export const brandStyles = (): [id: string, css: string][] => [
+  ['font-faces', fontFacesCss()],
+  ['palette-tokens', themeCss(current)],
+  ['type-tokens', typeCss(currentType)],
+  ['scale-tokens', scaleCss(TYPE_SCALE, currentRatio, currentType)],
+];
 
 /**
  * Starting brand: URL params first (?p / ?palette / ?type / ?theme), then (lab only) the last

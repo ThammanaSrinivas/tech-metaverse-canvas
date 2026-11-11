@@ -11,6 +11,7 @@
 // The ZenMode section keeps the ZenMode OS brand (.zen scope), from the same two files.
 import colors from './colors.json';
 import typography from './typography.json';
+import fontSubsets from './fontSubsets.json';
 import brand from './brand.json';
 
 export interface Palette {
@@ -96,9 +97,16 @@ export interface FontFace {
   /** A weight or a variable range, e.g. "400" or "200 800". */
   weight: string;
   style?: 'italic' | 'normal';
+  /** The same face cut to the core characters (FONT_CORE_RANGE), if it has one (fontSubsets.json). */
+  core?: string;
+  /** unicode-range of the characters only the full file has. */
+  rest?: string;
 }
+const SUBSETS: Record<string, { core: string; rest: string }> = fontSubsets as never;
 /** Every vendored font file; @font-face rules are generated from these (runtime.ts). */
-export const FONT_FACES: FontFace[] = typography.faces as FontFace[];
+export const FONT_FACES: FontFace[] = (typography.faces as FontFace[]).map((f) => ({ ...f, ...SUBSETS[f.file] }));
+/** The characters the site writes in (typography.json "core"): what a face's core file holds. */
+export const FONT_CORE_RANGE: string = typography.core.range;
 
 /** Generic families appended after each brand font, per role. */
 export const FONT_FALLBACKS: { display: string; accent: string; sans: string; mono: string } = typography.fallbacks;
