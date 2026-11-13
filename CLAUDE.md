@@ -61,7 +61,9 @@ another account is the default, else it fails with "Failed to get Firebase proje
   drawables converted into `public/zenmode/app/`, colours in `colors.json` `zenmode.phone`, readings
   in `ZENMODE.phone`), and as the reader scrolls the camera leans in to each feature while its card
   lights; the cards are buttons. Only Clash Display and Departure Mono load for it: every text in
-  the phone sets `font-display` or `font-mono`, so Geist (169 KB) never does. The phone shows only
+  the phone sets `font-display` or `font-mono`, so Geist (169 KB) never does. A glyph Clash lacks
+  (the pause's 💚) must be `font-mono`: the display stack falls back to Geist, and the browser
+  fetches it just to look (caught on the live site, Nov 2026). The phone shows only
   what the public, open-source Android app shows: nothing from ZenMode's private design documents
   goes on this public site.
   Under the phone, "Unlock the phone" plays the app's pause (`DelayedUnlockActivity` +

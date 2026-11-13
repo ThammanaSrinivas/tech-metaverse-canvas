@@ -204,7 +204,10 @@ const PauseScreen: React.FC<PhonePause & { instant: boolean }> = ({ skips, onSki
         {PAUSE.advice[0]}
         <span style={{ color: happy }}>{PAUSE.advice[1]}</span>
         {PAUSE.advice[2]}
-        <span style={{ fontSize: u(12) }}>💚</span>
+        {/* in the mono stack: the display stack falls back to Geist, which the browser would fetch (169 KB) just to look for this glyph */}
+        <span className="font-mono" style={{ fontSize: u(12) }}>
+          💚
+        </span>
       </span>
 
       {/* the ring fills with the seconds waited; the number counts what is left */}
