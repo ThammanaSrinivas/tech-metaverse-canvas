@@ -72,6 +72,11 @@ another account is the default, else it fails with "Failed to get Firebase proje
   It is the unlock pause, not a pause before opening an app: the public code has no such screen,
   so don't describe it as one. While it runs the same button skips it (keyboard and screen-reader
   path); its sounds answer the visitor's taps only.
+  At rest on wide screens the phone stands turned about 14° with a body behind its face, and leans
+  a few degrees toward a mouse pointer (`useTilt` in ZenPhone.tsx; the owner approved it from a
+  preview prototype, Nov 2026; 8° was too little to see). It squares up whenever the camera or
+  the pause takes over, so one thing moves at a time, and stays square under 1024px and under
+  reduced motion. The page's HTML has it square; it settles once seen.
   **One grid, chapters:** below each page's header, every section is a `Chapter` (primitives.tsx):
   a hairline on top, its name in a 200px left margin (sticky on wide screens, with the logo's dot),
   content beside it. Work's dates use the same margin (rail 40px + dates 160px), so every content
@@ -307,6 +312,11 @@ another account is the default, else it fails with "Failed to get Firebase proje
   styles, or what the tap does).
 - Targets: Lighthouse accessibility, best practices and SEO at 100, performance 90+. Don't preload
   the three.js scene; idle preload skips data-saver / 2G.
+
+## Branches
+
+Trunk-based: work on `main` only (the owner's rule, Nov 2026). No feature branches unless asked.
+Changes still go to the preview channel first and to the live site only on the owner's word.
 
 ## Tests and TypeScript
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useInView, useMotionValue, useSpring } from 'framer-motion';
 import { EyeOff, Search } from 'lucide-react';
 import { ZENMODE } from '@/data/profile';
 import { ZENMODE_COLORS } from '@/theme/palettes';
@@ -21,6 +21,11 @@ export type PhoneFocus = 'score' | 'streak' | 'circle' | 'gold' | null;
  * flame burns taller, the two cards draw together, light crosses the coin. `instant` (reduced
  * motion) cuts straight to the framing, with no ideas played. `pause` lays the app's pause screen
  * over Home (PauseScreen below), as unlocking the phone with the pause on does.
+ *
+ * At rest (no framing, no pause) on a wide screen the phone stands at a slight angle, like the one
+ * in the app's own screenshot, and leans a few degrees toward the pointer (useTilt). It has a
+ * body: a few layers behind the face, so the turned side shows as an edge and not a flat skew.
+ * The moment the camera or the pause takes over it squares up, so only one thing moves at a time.
  */
 const W = 360;
 const H = 780;
@@ -252,6 +257,52 @@ const PauseScreen: React.FC<PhonePause & { instant: boolean }> = ({ skips, onSki
   );
 };
 
+/** The resting pose, and how far the pointer can lean it (degrees). Kept small: the screen has to stay readable. */
+const REST = { x: 5, y: -14 };
+const LEAN = { x: 3, y: 5 };
+/** How thick the body reads: layers behind the face, this many px apart. */
+const BODY = [3, 6, 9, 12];
+/** Settles without a bounce, like the app's own containers. */
+const SETTLE = { stiffness: 110, damping: 22, mass: 1 };
+
+/**
+ * The phone's turn about its two axes. Square (0, 0) in the page's HTML and until it has been
+ * seen; then, while `on`, the resting pose plus a lean toward a mouse pointer. Square on screens
+ * under 1024px (the phone shares them with the cards and is small), under reduced motion, and
+ * whenever `on` is false. Everything here runs in effects, so the first render matches the HTML.
+ */
+function useTilt(ref: React.RefObject<HTMLElement>, on: boolean) {
+  const rotateX = useSpring(useMotionValue(0), SETTLE);
+  const rotateY = useSpring(useMotionValue(0), SETTLE);
+  const seen = useInView(ref, { once: true, amount: 0.35 });
+  useEffect(() => {
+    const wide = window.matchMedia('(min-width: 1024px)');
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const pose = (nx = 0, ny = 0) => {
+      const tilted = on && seen && wide.matches && !still.matches;
+      rotateX.set(tilted ? REST.x - ny * LEAN.x : 0);
+      rotateY.set(tilted ? REST.y + nx * LEAN.y : 0);
+    };
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse' || !ref.current) return;
+      const r = ref.current.getBoundingClientRect();
+      const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+      pose(clamp((e.clientX - (r.left + r.width / 2)) / (window.innerWidth / 2)), clamp((e.clientY - (r.top + r.height / 2)) / (window.innerHeight / 2)));
+    };
+    const settle = () => pose();
+    settle();
+    window.addEventListener('pointermove', onMove, { passive: true });
+    wide.addEventListener('change', settle);
+    still.addEventListener('change', settle);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      wide.removeEventListener('change', settle);
+      still.removeEventListener('change', settle);
+    };
+  }, [on, seen, ref, rotateX, rotateY]);
+  return { rotateX, rotateY };
+}
+
 const ZenPhone: React.FC<{ focus: PhoneFocus; instant?: boolean; pause?: PhonePause | null; className?: string }> = ({
   focus,
   instant = false,
@@ -262,169 +313,178 @@ const ZenPhone: React.FC<{ focus: PhoneFocus; instant?: boolean; pause?: PhonePa
   // the regions not in focus step back, so the eye goes where the camera went
   const quiet = (id: Exclude<PhoneFocus, null>) => ({ opacity: focus && focus !== id ? 0.2 : 1 });
   const lean = (on: boolean, to: object, from: object) => (instant ? from : on ? to : from);
+  const stage = useRef<HTMLDivElement>(null);
+  const tilt = useTilt(stage, !focus && !pause && !instant);
 
   return (
-    <div
-      role="img"
-      aria-label={PHONE.alt}
-      className={`zen relative shrink-0 rounded-[14%/6.5%] p-[2.6%] shadow-xl ${className}`}
-      style={{ background: STONE[950] }}
-    >
-      <div
-        className="relative aspect-[360/780] w-full overflow-hidden rounded-[11.5%/5.3%]"
-        style={{ containerType: 'inline-size', background: `linear-gradient(180deg, ${C.wash.edge} 0%, ${C.wash.core} 46%, ${C.wash.edge} 100%)` }}
+    // the stage gives the turn its depth; the phone itself turns inside it
+    <div ref={stage} className={`shrink-0 ${className}`} style={{ perspective: '1400px' }}>
+      <motion.div
+        role="img"
+        aria-label={PHONE.alt}
+        className="zen relative rounded-[14%/6.5%] p-[2.6%] shadow-xl"
+        style={{ background: STONE[950], transformStyle: 'preserve-3d', ...tilt }}
       >
-        <motion.div
-          className="absolute inset-0"
-          style={{ originX: 0, originY: 0 }}
-          initial={false}
-          animate={camera(focus)}
-          transition={t}
+        {/* the body: layers behind the face, lighter than it, so the turned side reads as an edge */}
+        {BODY.map((z) => (
+          <span key={z} aria-hidden className="absolute inset-0 rounded-[14%/6.5%]" style={{ background: STONE[700], transform: `translateZ(${-z}px)` }} />
+        ))}
+        <div
+          className="relative aspect-[360/780] w-full overflow-hidden rounded-[11.5%/5.3%]"
+          style={{ containerType: 'inline-size', background: `linear-gradient(180deg, ${C.wash.edge} 0%, ${C.wash.core} 46%, ${C.wash.edge} 100%)` }}
         >
-          {/* Zen Score: the gradient mark, as tall as the two lines beside it */}
-          <motion.div className="absolute flex items-center" style={{ left: u(20), top: u(53), gap: u(6) }} animate={quiet('score')} transition={t}>
-            <motion.img
-              src="/zenmode/app/mark.webp"
-              alt=""
-              width={96}
-              height={96}
-              loading="lazy"
-              decoding="async"
-              style={{ width: u(33), height: u(33) }}
-              initial={false}
-              animate={lean(focus === 'score', { rotate: 90 }, { rotate: 0 })}
-              transition={instant ? NOW : { duration: 0.64, ease: EASE, delay: 0.35 }}
-            />
-            <span className="flex flex-col" style={{ gap: u(3) }}>
-              <span className="font-display font-medium" style={label}>
-                Zen Score
-              </span>
-              <span className="flex items-end">
-                <span
-                  className="font-display font-medium"
-                  style={{ ...value, backgroundImage: `linear-gradient(90deg, ${C.score.from}, ${C.score.to})`, backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}
-                >
-                  {PHONE.score.value}
-                </span>
-                <span className="font-display font-medium" style={{ ...label, color: STONE[600] }}>
-                  {PHONE.score.max}
-                </span>
-              </span>
-            </span>
-          </motion.div>
-
-          {/* Streaks: the flame, burning as tall as its two lines */}
-          <motion.div className="absolute flex items-center" style={{ right: u(20), top: u(53), gap: u(6) }} animate={quiet('streak')} transition={t}>
-            <motion.img
-              src="/zenmode/app/flame.svg"
-              alt=""
-              width={33}
-              height={33}
-              loading="lazy"
-              decoding="async"
-              style={{ width: u(33), height: u(33), originY: 1 }}
-              initial={false}
-              animate={lean(focus === 'streak', { scaleY: 1.16, scaleX: 1.04 }, { scaleY: 1, scaleX: 1 })}
-              transition={instant ? NOW : { duration: 0.64, ease: EASE, delay: 0.35 }}
-            />
-            <StreakLines />
-          </motion.div>
-
-          {/* Gold Invested: a rule along the top edge that thins to nothing down the sides */}
-          <motion.div className="absolute inset-x-0 flex justify-center" style={{ top: u(100) }} animate={quiet('gold')} transition={t}>
-            <span
-              className="flex items-center rounded-full border-t border-primary"
-              style={{ height: u(48), paddingInline: u(13), gap: u(8) }}
-            >
-              <span className="relative overflow-hidden rounded-full" style={{ width: u(38), height: u(38) }}>
-                <img src="/zenmode/app/coin.svg" alt="" width={38} height={38} loading="lazy" decoding="async" className="h-full w-full" />
-                {focus === 'gold' && !instant && (
-                  <motion.span
-                    className="absolute inset-y-0 w-1/3 -skew-x-12 bg-card opacity-70"
-                    initial={{ x: '-150%' }}
-                    animate={{ x: '350%' }}
-                    transition={{ duration: 0.9, ease: EASE, delay: 0.55 }}
-                  />
-                )}
-              </span>
-              <span className="flex flex-col" style={{ gap: u(2) }}>
-                <span className="flex items-center font-display font-medium" style={{ fontSize: u(9), lineHeight: 1, letterSpacing: '0.04em', color: C.goldLabel, gap: u(6) }}>
-                  GOLD INVESTED
-                  <EyeOff aria-hidden style={{ width: u(11), height: u(11) }} />
-                </span>
-                {/* hidden, as the eye toggle leaves it: the app's own mask for the amount */}
-                <span className="font-mono" style={{ fontSize: u(17), lineHeight: 1.1, color: C.goldAmount, letterSpacing: '-0.05em' }}>
-                  ₹••••••
-                </span>
-              </span>
-            </span>
-          </motion.div>
-
-          {/* The circle: my card and my buddy's, face on top, the day's screen time under it */}
-          <motion.div className="absolute flex justify-between" style={{ left: u(20), right: u(20), top: u(176) }} animate={quiet('circle')} transition={t}>
-            {PHONE.cards.map((card, i) => {
-              const fill = C[card.mood];
-              return (
-                <motion.span
-                  key={card.label}
-                  className="flex flex-col items-center overflow-hidden"
-                  style={{ width: u(152), height: u(152), borderRadius: u(22), background: `linear-gradient(180deg, ${fill.face} 0%, ${fill.body} 100%)` }}
-                  initial={false}
-                  animate={lean(focus === 'circle', { x: i ? '-3%' : '3%' }, { x: '0%' })}
-                  transition={instant ? NOW : { duration: 0.64, ease: EASE, delay: 0.35 }}
-                >
-                  <img
-                    src={`/zenmode/app/face-${card.mood}.svg`}
-                    alt=""
-                    width={165}
-                    height={89}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full"
-                    style={{ aspectRatio: '165 / 89' }}
-                  />
-                  <span className="font-display font-medium" style={{ fontSize: u(11), lineHeight: 1, marginTop: u(8) }}>
-                    {card.label}
-                  </span>
-                  <span className="flex items-baseline font-mono" style={{ marginTop: u(6), gap: u(2) }}>
-                    <span style={{ fontSize: u(26), lineHeight: 1 }}>{card.hours}</span>
-                    <span style={{ fontSize: u(11) }}>h</span>
-                    <span style={{ fontSize: u(26), lineHeight: 1, marginLeft: u(4) }}>{card.minutes}</span>
-                    <span style={{ fontSize: u(11) }}>m</span>
-                  </span>
-                </motion.span>
-              );
-            })}
-          </motion.div>
-
-          {/* the apps, unnamed, and the search pill: what the launcher is for, kept quiet */}
-          <motion.div className="absolute" style={{ left: u(20), right: u(20), top: u(370) }} animate={{ opacity: focus ? 0.2 : 1 }} transition={t}>
-            <span className="grid grid-cols-4" style={{ rowGap: u(18), columnGap: u(40) }}>
-              {Array.from({ length: 8 }, (_, i) => (
-                <span key={i} className="aspect-square border bg-card opacity-60" style={{ borderRadius: u(14) }} />
-              ))}
-            </span>
-          </motion.div>
           <motion.div
-            className="absolute flex items-center border bg-card opacity-80"
-            style={{ left: u(20), right: u(20), top: u(704), height: u(44), borderRadius: u(22), paddingInline: u(16) }}
-            animate={{ opacity: focus ? 0.2 : 0.8 }}
+            className="absolute inset-0"
+            style={{ originX: 0, originY: 0 }}
+            initial={false}
+            animate={camera(focus)}
             transition={t}
           >
-            <Search aria-hidden className="text-muted-foreground" style={{ width: u(16), height: u(16) }} />
+            {/* Zen Score: the gradient mark, as tall as the two lines beside it */}
+            <motion.div className="absolute flex items-center" style={{ left: u(20), top: u(53), gap: u(6) }} animate={quiet('score')} transition={t}>
+              <motion.img
+                src="/zenmode/app/mark.webp"
+                alt=""
+                width={96}
+                height={96}
+                loading="lazy"
+                decoding="async"
+                style={{ width: u(33), height: u(33) }}
+                initial={false}
+                animate={lean(focus === 'score', { rotate: 90 }, { rotate: 0 })}
+                transition={instant ? NOW : { duration: 0.64, ease: EASE, delay: 0.35 }}
+              />
+              <span className="flex flex-col" style={{ gap: u(3) }}>
+                <span className="font-display font-medium" style={label}>
+                  Zen Score
+                </span>
+                <span className="flex items-end">
+                  <span
+                    className="font-display font-medium"
+                    style={{ ...value, backgroundImage: `linear-gradient(90deg, ${C.score.from}, ${C.score.to})`, backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}
+                  >
+                    {PHONE.score.value}
+                  </span>
+                  <span className="font-display font-medium" style={{ ...label, color: STONE[600] }}>
+                    {PHONE.score.max}
+                  </span>
+                </span>
+              </span>
+            </motion.div>
+
+            {/* Streaks: the flame, burning as tall as its two lines */}
+            <motion.div className="absolute flex items-center" style={{ right: u(20), top: u(53), gap: u(6) }} animate={quiet('streak')} transition={t}>
+              <motion.img
+                src="/zenmode/app/flame.svg"
+                alt=""
+                width={33}
+                height={33}
+                loading="lazy"
+                decoding="async"
+                style={{ width: u(33), height: u(33), originY: 1 }}
+                initial={false}
+                animate={lean(focus === 'streak', { scaleY: 1.16, scaleX: 1.04 }, { scaleY: 1, scaleX: 1 })}
+                transition={instant ? NOW : { duration: 0.64, ease: EASE, delay: 0.35 }}
+              />
+              <StreakLines />
+            </motion.div>
+
+            {/* Gold Invested: a rule along the top edge that thins to nothing down the sides */}
+            <motion.div className="absolute inset-x-0 flex justify-center" style={{ top: u(100) }} animate={quiet('gold')} transition={t}>
+              <span
+                className="flex items-center rounded-full border-t border-primary"
+                style={{ height: u(48), paddingInline: u(13), gap: u(8) }}
+              >
+                <span className="relative overflow-hidden rounded-full" style={{ width: u(38), height: u(38) }}>
+                  <img src="/zenmode/app/coin.svg" alt="" width={38} height={38} loading="lazy" decoding="async" className="h-full w-full" />
+                  {focus === 'gold' && !instant && (
+                    <motion.span
+                      className="absolute inset-y-0 w-1/3 -skew-x-12 bg-card opacity-70"
+                      initial={{ x: '-150%' }}
+                      animate={{ x: '350%' }}
+                      transition={{ duration: 0.9, ease: EASE, delay: 0.55 }}
+                    />
+                  )}
+                </span>
+                <span className="flex flex-col" style={{ gap: u(2) }}>
+                  <span className="flex items-center font-display font-medium" style={{ fontSize: u(9), lineHeight: 1, letterSpacing: '0.04em', color: C.goldLabel, gap: u(6) }}>
+                    GOLD INVESTED
+                    <EyeOff aria-hidden style={{ width: u(11), height: u(11) }} />
+                  </span>
+                  {/* hidden, as the eye toggle leaves it: the app's own mask for the amount */}
+                  <span className="font-mono" style={{ fontSize: u(17), lineHeight: 1.1, color: C.goldAmount, letterSpacing: '-0.05em' }}>
+                    ₹••••••
+                  </span>
+                </span>
+              </span>
+            </motion.div>
+
+            {/* The circle: my card and my buddy's, face on top, the day's screen time under it */}
+            <motion.div className="absolute flex justify-between" style={{ left: u(20), right: u(20), top: u(176) }} animate={quiet('circle')} transition={t}>
+              {PHONE.cards.map((card, i) => {
+                const fill = C[card.mood];
+                return (
+                  <motion.span
+                    key={card.label}
+                    className="flex flex-col items-center overflow-hidden"
+                    style={{ width: u(152), height: u(152), borderRadius: u(22), background: `linear-gradient(180deg, ${fill.face} 0%, ${fill.body} 100%)` }}
+                    initial={false}
+                    animate={lean(focus === 'circle', { x: i ? '-3%' : '3%' }, { x: '0%' })}
+                    transition={instant ? NOW : { duration: 0.64, ease: EASE, delay: 0.35 }}
+                  >
+                    <img
+                      src={`/zenmode/app/face-${card.mood}.svg`}
+                      alt=""
+                      width={165}
+                      height={89}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full"
+                      style={{ aspectRatio: '165 / 89' }}
+                    />
+                    <span className="font-display font-medium" style={{ fontSize: u(11), lineHeight: 1, marginTop: u(8) }}>
+                      {card.label}
+                    </span>
+                    <span className="flex items-baseline font-mono" style={{ marginTop: u(6), gap: u(2) }}>
+                      <span style={{ fontSize: u(26), lineHeight: 1 }}>{card.hours}</span>
+                      <span style={{ fontSize: u(11) }}>h</span>
+                      <span style={{ fontSize: u(26), lineHeight: 1, marginLeft: u(4) }}>{card.minutes}</span>
+                      <span style={{ fontSize: u(11) }}>m</span>
+                    </span>
+                  </motion.span>
+                );
+              })}
+            </motion.div>
+
+            {/* the apps, unnamed, and the search pill: what the launcher is for, kept quiet */}
+            <motion.div className="absolute" style={{ left: u(20), right: u(20), top: u(370) }} animate={{ opacity: focus ? 0.2 : 1 }} transition={t}>
+              <span className="grid grid-cols-4" style={{ rowGap: u(18), columnGap: u(40) }}>
+                {Array.from({ length: 8 }, (_, i) => (
+                  <span key={i} className="aspect-square border bg-card opacity-60" style={{ borderRadius: u(14) }} />
+                ))}
+              </span>
+            </motion.div>
+            <motion.div
+              className="absolute flex items-center border bg-card opacity-80"
+              style={{ left: u(20), right: u(20), top: u(704), height: u(44), borderRadius: u(22), paddingInline: u(16) }}
+              animate={{ opacity: focus ? 0.2 : 0.8 }}
+              transition={t}
+            >
+              <Search aria-hidden className="text-muted-foreground" style={{ width: u(16), height: u(16) }} />
+            </motion.div>
           </motion.div>
-        </motion.div>
 
-        {/* unlocked with the pause on: it covers Home, wherever the camera is */}
-        <AnimatePresence>{pause && <PauseScreen key="pause" {...pause} instant={instant} />}</AnimatePresence>
+          {/* unlocked with the pause on: it covers Home, wherever the camera is */}
+          <AnimatePresence>{pause && <PauseScreen key="pause" {...pause} instant={instant} />}</AnimatePresence>
 
-        {/* the camera's punch hole stays on the glass while the screen moves under it */}
-        <span
-          aria-hidden
-          className="absolute left-1/2 -translate-x-1/2 rounded-full"
-          style={{ top: u(14), width: u(11), height: u(11), background: STONE[950] }}
-        />
-      </div>
+          {/* the camera's punch hole stays on the glass while the screen moves under it */}
+          <span
+            aria-hidden
+            className="absolute left-1/2 -translate-x-1/2 rounded-full"
+            style={{ top: u(14), width: u(11), height: u(11), background: STONE[950] }}
+          />
+        </div>
+      </motion.div>
     </div>
   );
 };
