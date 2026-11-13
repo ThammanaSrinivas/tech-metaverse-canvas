@@ -6,8 +6,8 @@ import { applyMetaToDocument, type Meta } from '@/site/meta';
  * they point. The values come from src/site/meta.ts, which the build also bakes into each page's
  * HTML for link previews; this keeps the document in step as you navigate.
  */
-export function usePageMeta({ path, title, description, image, type }: Meta) {
+export function usePageMeta({ path, title, description, image, type, noindex }: Meta) {
   useEffect(() => {
-    applyMetaToDocument({ path, title, description, image, type });
-  }, [path, title, description, image, type]);
+    applyMetaToDocument({ path, title, description, image, type, noindex });
+  }, [path, title, description, image, type, noindex]);
 }

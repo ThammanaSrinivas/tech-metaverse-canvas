@@ -19,8 +19,9 @@ npm run dev              # dev server on port 8080 (shows the dev-only brand lab
 npm run build            # ALL tests + coverage, then vite build + prerender (fails on any test failure)
 npm run lint             # ESLint (--max-warnings 0) + brand lint
 npm run lint:brand       # colour/font literals outside the token files fail
-npm run preview          # serve dist/ (serves work.html at /work, like Firebase)
+npm run preview          # serve dist/ like Firebase: work.html at /work, 404.html (status 404) for the rest
 npm run snapshot:commits # refresh public/gh-snapshot.json (Time Machine fallback)
+npm run fonts:subset     # recut public/fonts/*.core.woff2 after changing a font or typography.json "core"
 npx vitest run src/site  # one folder / file
 ```
 
@@ -38,7 +39,11 @@ another account is the default, else it fails with "Failed to get Firebase proje
   Never PayPal/Google blue.
 - **Type: Builder set** (`src/theme/typography.json`, modular scale ratio 1.25): Bricolage Grotesque
   700 for display, Instrument Serif italic as the accent voice (write `*word*`; `src/lib/rich.ts`),
-  Manrope for body, Space Mono for numbers in data. All vendored in `public/fonts`.
+  Manrope for body, Space Mono for numbers in data. All vendored in `public/fonts`. Each face of
+  the active set also has a `.core.woff2` cut to the characters the site writes in (`core.range`
+  in typography.json; `npm run fonts:subset` writes the cuts and `src/theme/fontSubsets.json`),
+  declared beside the full file with `unicode-range`: pages fetch about a third less font, and the
+  full file only for a character outside the core. A new symbol in copy goes into `core.range`.
 - **Logo:** the "platform T" monogram (T carrying an S, orange dot), `src/components/zen/monogramPath.ts`.
 - **Layout feel: editorial, not a template.** The owner found the earlier site "vibe coded"; the
   fix was subtraction. Paper, type and hairlines; roles in prose with numbers inline; lists, not
@@ -47,6 +52,24 @@ another account is the default, else it fails with "Failed to get Firebase proje
   shell button, or the italic accent word on every heading (only article titles and the home sky
   band). One
   highlighter per page. Each fact or number appears once on the site, in its best place.
+  **One exception, the owner's call (Nov 2026):** /zenmode shows its features and its public numbers
+  as cards (four feature cards, four stat cards, as in the GitHub profile README), not as rows and
+  a sentence. Figures stay as they are (no count-ups); the Gold Invest card is that page's one
+  touch of orange, so /zenmode has no `Marker`. Cards stay on /zenmode only.
+  Its "How it works" is a pinned walkthrough (the owner picked it from the X-post ideas, Nov 2026):
+  `ZenPhone.tsx` draws the Android home screen from the app's own components and art (the
+  drawables converted into `public/zenmode/app/`, colours in `colors.json` `zenmode.phone`, readings
+  in `ZENMODE.phone`), and as the reader scrolls the camera leans in to each feature while its card
+  lights; the cards are buttons. Only Clash Display and Departure Mono load for it: every text in
+  the phone sets `font-display` or `font-mono`, so Geist (169 KB) never does. The phone shows only
+  what the public, open-source Android app shows: nothing from ZenMode's private design documents
+  goes on this public site.
+  Under the phone, "Unlock the phone" plays the app's pause (`DelayedUnlockActivity` +
+  `ResistenceScreen`): with the pause on, every unlock waits 7 real seconds (7 skips a day), so the
+  screen wakes from black, the shuriken turns, the ring fills and the count runs 7 → 1, then Home.
+  It is the unlock pause, not a pause before opening an app: the public code has no such screen,
+  so don't describe it as one. While it runs the same button skips it (keyboard and screen-reader
+  path); its sounds answer the visitor's taps only.
   **One grid, chapters:** below each page's header, every section is a `Chapter` (primitives.tsx):
   a hairline on top, its name in a 200px left margin (sticky on wide screens, with the logo's dot),
   content beside it. Work's dates use the same margin (rail 40px + dates 160px), so every content
@@ -90,13 +113,19 @@ another account is the default, else it fails with "Failed to get Firebase proje
 `src/App.tsx`), routes generated from the page registry, each page a lazy chunk.
 
 - **Pages:** registered once in `src/site/pages.ts` (SOURCE OF TRUTH; each page also implements its
-  zen-shell directory; `draft` = dev-only; `nested` = `/:slug` children; `nav: false` = routed but
+  zen-shell directory; `draft` = dev-only; `nested` = `/<slug>` children, one route per entry (`CHILDREN` in routes.tsx); `nav: false` = routed but
   not in the menu) and mapped to components in `src/site/routes.tsx`. Nav, mobile menu, footer,
   ⌘K palette, routes, "Next" links, sitemap test, page meta and the shell's filesystem all derive
   from it. Menu: Work · Writing · ZenMode · About; Time Machine is `nav: false` (linked from
   Work's side projects); plus home and 404. Home, one job per section: a full-screen light hero
   with only the name on two lines (orange full stop = the logo dot, `FullStop`), one line, one
   sentence and Email/Résumé/LinkedIn (the owner asked for a hero with less in it; keep it that way).
+  On wide screens (1024px up) the portrait stands at the lower right, its foot level with the
+  links (`PROFILE.portraitHero`, a 4:5 cut; `Picture media`, so smaller screens never fetch it):
+  the owner picked it from a three-way mock (as it was / portrait / the logo as a 3D drawing,
+  Nov 2026) after asking about entry pages and 3D heroes. It is placed over the layout, so the
+  name and text did not move. That is the hero's one picture: no entry gate, no rendered 3D
+  object, no second graphic. A larger original would sharpen it (the source is 480px).
   Its entrance plays once per visit: the name and the line rise, the full stop lands last and the
   header logo's dot lands with it (`emitZen('dot')`); the sentence and links are there from the
   first frame; nothing loops; "Selected work": the scheduler
@@ -104,8 +133,10 @@ another account is the default, else it fails with "Failed to get Firebase proje
   paragraph with the page's one highlighter, then the live model full width; copy in `PROFILE.bio`, inline
   `[label](/path)` links via `LinkedText`), then the latest PayPal work (`RECENT`); the star sky as
   a full-screen dark band ("Every system starts as a dot", `SKY`): its title ends in a `FullStop`
-  and the sky is born from that dot, one point at a time, the first time the band is in view
-  (`HeroSky bornFrom`), with a Pause control; "Outside work" (ZenMode screenshot, Toastmasters
+  and the sky is born from that dot, one point at a time, once the dot is well on screen
+  (`HeroSky bornFrom`), with a Pause control. The band is pinned (280svh, `flight`) and its scroll
+  is spent in order: the first 40% pulls the birth along (the owner found it "weird" when the page
+  moved on while the sky was still being born), the rest flies the camera through the stars; "Outside work" (ZenMode screenshot, Toastmasters
   photo); "Writing" (everything but the featured write-up, shown once there are two or more). The
   live model draws in the dark palette inside `.dark`.
 - **Retired addresses** (`/beyond`, `/contact`, `/lab`, `/explore`): `REDIRECTS` in `pages.ts`
@@ -114,8 +145,12 @@ another account is the default, else it fails with "Failed to get Firebase proje
 - **Writing:** `src/content/writing/index.ts` (SOURCE OF TRUTH) lists articles (Markdown next to it,
   at `/writing/<slug>`) and external posts (open in a new tab). Drafts are dropped from production
   builds entirely (`import.meta.env.DEV || !DRAFT_X`, keep each flag a literal).
-  Markdown renders in `src/components/Markdown.tsx`; a fenced ```` ```diagram <id> ```` block mounts a
-  live diagram from `src/components/diagrams/index.ts` (lazy).
+  The Markdown is compiled at build time (`import tree from './x.md?tree'`, the Vite plugin
+  `scripts/markdownTree.ts`: remark + GFM → a compact tree, heading ids from `outline()` in
+  `src/lib/markdown.ts`), so no Markdown parser ships; `src/components/Markdown.tsx` draws the tree
+  with the site's components. Each article is its own route (`CHILDREN` in `src/site/routes.tsx`)
+  that loads the page chunk and its tree before switching. A fenced ```` ```diagram <id> ```` block
+  mounts a live diagram from `src/components/diagrams/index.ts` (lazy).
 - **Brand tokens (three files):** `colors.json`, `typography.json`, `brand.json` in `src/theme/`.
   `tokens.ts` derives `:root` / `.dark` / `.zen` tokens with every text pairing pushed to WCAG AA,
   measured *as painted* (`asEmitted`: after the HSL rounding the CSS vars apply). `runtime.ts` injects
@@ -128,6 +163,17 @@ another account is the default, else it fails with "Failed to get Firebase proje
   loaded on first use (Layout's `useShellWanted` and Navigation stand in for their shortcuts until
   then; the shell is also fetched when idle). The coding duel is only in the shell. **Event bus** `src/lib/zenEvents.ts`. **Cursor** `src/lib/zenCursor.ts`
   (port of zenmodeos.com's; `data-cursor`, `data-magnet`).
+- **Colophon** (/about, `Colophon` in `About.tsx`, rows in `COLOPHON` in profile.ts; the owner
+  picked the spec-sheet version, Nov 2026): one line per decision, styled like Also. Its numbers
+  are the build's own, so they can't go stale (`scripts/colophon.ts`): the test count from the last
+  full run (`test:coverage` writes `node_modules/.cache/vitest-results.json`) and the font cuts'
+  saving become `__TEST_COUNT__` / `__FONT_SAVING__` (vite.config.ts `define`); the home page's
+  first-visit weight is measured by the prerender after it writes index.html (Brotli, the page plus
+  what its own tags ask for, pictures that load with it included: the widest layout's worst case), set as `globalThis.__COLOPHON__` for the /about render and written to
+  `dist/colophon.json`; `src/lib/measured.ts` reads it back (the HTML's `data-first-visit` while
+  hydrating, the JSON after a client-side visit). Font and palette names come from the token files.
+  A missing value falls back to the row's `without` text; the dev server shows "measured when the
+  site is built" for the weight. Never write that the site was built by hand (a test checks).
 - **Commit Time Machine** (`src/components/CommitTimeMachine/`): lazy three.js. GitHub calls via
   `getJson` in `src/lib/github.ts` (sessionStorage cache, fallback `public/gh-snapshot.json`); commit
   details fetched only on click/Enter to save the 60 req/hour budget.
@@ -142,9 +188,27 @@ another account is the default, else it fails with "Failed to get Firebase proje
 - **`src/site/meta.ts` is the SOURCE OF TRUTH for every URL's title, description, canonical and
   social card.** Runtime: `usePageMeta(pageMeta(page) | articleMeta(post) | HOME_META | notFoundMeta(path))`.
   Build: the Vite plugin `scripts/prerender.ts` writes `dist/<path>.html` per URL in `ROUTE_META`
-  with that meta baked into `<head>`, because LinkedIn / WhatsApp / Slack / X never run JS. The body
-  is still client-rendered. `applyMetaToHtml` throws if `index.html` loses one of its tags: keep the
-  tag shapes in `index.html` as they are.
+  with that meta baked into `<head>`, because LinkedIn / WhatsApp / Slack / X never run JS.
+  `applyMetaToHtml` throws if `index.html` loses one of its tags: keep the tag shapes in
+  `index.html` as they are.
+- **Every page ships rendered** (server-side rendering at build time). After the client build, the
+  plugin runs a Vite SSR build of `src/entry-server.tsx` (same config and transforms) and renders
+  each URL with React Router's static handler and `renderToPipeableStream`, waiting for every lazy
+  chunk (`onAllReady`), into `<div id="root">`. It also writes the brand's `<style>` blocks
+  (`brandStyles()` in runtime.ts: fonts, palette, type scale) and a preload per font the page uses
+  (display and body always, accent and mono where the content uses them). No inline script: the CSP
+  allows none (`hydrate={false}`). `src/main.tsx` loads the route's lazy chunks, then
+  `hydrateRoot`s; `404.html` (`data-not-found`, rendered for /404, served for every unknown
+  address) is rendered over with `createRoot`. Crawlers that don't run JS read whole pages, and the
+  first paint no longer waits for the app.
+- **Hydration rules** (a mismatch makes React 18 throw the page away, and attributes it can't
+  match, like an inline opacity, stay wrong): a component's first render must not read `window`,
+  `matchMedia`, `localStorage`, the clock or randomness. Use `src/lib/hydration.ts`:
+  `useReducedMotion` (never framer-motion's, which answers during hydration), `useHydrating`,
+  `useClientValue(client, server)`, `useFromServer`; storage through `useSyncExternalStore` with a
+  server snapshot (`lib/stars.ts`, `lib/sound`). Randomness and canvas work stay in effects. Check
+  with a development-React build: `NODE_ENV=development npx vite build --outDir dist-dev`, then
+  `npx vite preview --outDir dist-dev` and watch the console.
 - **Firebase must serve those files:** `firebase.json` is gitignored (local only) and needs
   `"cleanUrls": true`, `"trailingSlash": false`, the `redirects` above, NO catch-all rewrite
   (every route is a prerendered file; unknown URLs get `dist/404.html`, the app with the not-found
@@ -200,7 +264,11 @@ another account is the default, else it fails with "Failed to get Firebase proje
   paused with a Play button (see `AdmissionControl.tsx`, `HeroSky.tsx`).
 - **Motion system: structure draws, content is there.** One easing, `EASE` from primitives.tsx.
   `Chapter` hairlines rule themselves in once and the margin dot lands; `Reveal` is a quiet 10px,
-  0.45s settle, at most one per block; dots and nodes land with one spring (600/30). Every number
+  0.45s settle, at most one per block; dots and nodes land with one spring (600/30). Entrances on
+  arrival go through `useArrival` (primitives.tsx): a page's HTML shows everything in place; once
+  live, what is still below the screen steps back and arrives as on any other page. Title
+  entrances (`MaskWords rise`, the hero's line, `FullStop land`, the header dot's `land`) are CSS
+  (`.zen-rise`, `.zen-land` in index.css), so they play from the HTML's first paint. Every number
   shown is real at every frame (no count-ups, no lerping through values that never happened).
   Nothing replays on scrolling back. Content a reader needs is never hidden waiting for an
   animation. On /work the dates stay in view beside their role; the rail carries only dated events

@@ -1,12 +1,13 @@
-import React, { useRef, useState } from 'react';
-import { motion, useInView, useReducedMotion, useScroll, useSpring } from 'framer-motion';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, useInView, useScroll, useSpring, type UseInViewOptions } from 'framer-motion';
 import { Check, Copy } from 'lucide-react';
 import { LINKS, PROFILE } from '@/data/profile';
 import Starfield from '@/components/Starfield';
 import { useBrandTheme } from '@/theme/runtime';
 import { SYSTEM, ZENMODE_COLORS } from '@/theme/palettes';
 import { MONOGRAM_DOT, MONOGRAM_PATH } from './monogramPath';
-import { parseLinks, parseRich } from '@/lib/rich';
+import { parseLinks, parseRich, plain } from '@/lib/rich';
+import { prefersReducedMotion, useFromServer, useReducedMotion } from '@/lib/hydration';
 import { Link } from './Link';
 
 // ZenMode mark on a 1024 grid, traced from the app icon. Rounded via stroke-linejoin.
@@ -40,21 +41,31 @@ export const ZenMark: React.FC<{ size?: number; className?: string; title?: stri
 /**
  * Personal "TS" monogram: palette primary tile, best-contrast letters. Follows the live palette.
  * An empty `title` marks it decorative (a link next to it already names it). Each change of `pop`
- * makes the dot land again, in time with the hero's full stop.
+ * makes the dot land again, in time with the hero's full stop. `land`: the dot starts hidden and
+ * lands that many seconds after the first paint (CSS, so it needs no script: the hero's own first
+ * landing, in the home page's HTML).
  */
-export const Monogram: React.FC<{ size?: number; className?: string; title?: string; pop?: number }> = ({
+export const Monogram: React.FC<{ size?: number; className?: string; title?: string; pop?: number; land?: number }> = ({
   size = 32,
   className,
   title = 'Thammana Srinivas',
   pop = 0,
+  land,
 }) => {
   const { monoTile, monoInk, monoDot } = useBrandTheme();
   const label = title ? { role: 'img', 'aria-label': title } : { 'aria-hidden': true };
+  const landing = !pop && land !== undefined;
   return (
     <svg width={size} height={size} viewBox="0 0 1024 1024" className={className} {...label}>
       <rect width={1024} height={1024} rx={230} fill={monoTile} />
       <path d={MONOGRAM_PATH} fill={monoInk} />
-      <circle key={pop} {...MONOGRAM_DOT} fill={monoDot} className={`zen-mono-dot ${pop ? 'is-popping' : ''}`} />
+      <circle
+        key={pop}
+        {...MONOGRAM_DOT}
+        fill={monoDot}
+        className={`zen-mono-dot ${pop ? 'is-popping' : landing ? 'is-landing' : ''}`}
+        style={landing ? { animationDelay: `${land}s` } : undefined}
+      />
     </svg>
   );
 };
@@ -63,36 +74,36 @@ export const Monogram: React.FC<{ size?: number; className?: string; title?: str
 // eslint-disable-next-line react-refresh/only-export-components -- shared motion constant
 export const EASE = [0.22, 1, 0.36, 1] as const;
 
+/** Seconds into the home page's entrance when its full stop lands (and the header logo's dot with it). */
+export const DOT_AT = 0.62;
+
 /**
  * The logo's orange dot, used as a full stop: things get finished. With `land`, it drops in after
  * `delay` seconds, a little past full size and back. Purely decorative: the sentence it ends is
- * complete without it.
+ * complete without it. CSS (index.css, .zen-land), so in a page's HTML it lands without a script.
  */
 export const FullStop = React.forwardRef<HTMLSpanElement, { land?: boolean; delay?: number; className?: string }>(
   ({ land = false, delay = 0, className = '' }, ref) => (
     <span ref={ref} aria-hidden className={`relative ml-[0.04em] inline-block h-[0.15em] w-[0.15em] ${className}`}>
-      <motion.span
-        className="absolute inset-0 rounded-full bg-highlight"
-        initial={land ? { scale: 0 } : false}
-        animate={{ scale: 1 }}
-        transition={{ type: 'spring', stiffness: 600, damping: 30, delay }}
+      <span
+        className={`absolute inset-0 rounded-full bg-highlight ${land ? 'zen-land' : ''}`}
+        style={land ? { animationDelay: `${delay}s` } : undefined}
       />
     </span>
   )
 );
 FullStop.displayName = 'FullStop';
 
-/** Parent variants for MaskWords: words rise one after another. */
-// eslint-disable-next-line react-refresh/only-export-components -- the stagger these primitives animate with
-export const maskStagger = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
-const wordRise = { hidden: { y: '105%' }, show: { y: 0, transition: { duration: 0.75, ease: EASE } } };
+/** Seconds between one word's rise and the next. */
+export const WORD_STAGGER = 0.06;
 
 /**
  * Each word rises out of its own clipped line box: an editorial headline reveal that stays calm
- * (no fade, no blur). Driven by the parent's hidden/show variants; with reduced motion the parent
- * starts at "show", so the text is simply there.
+ * (no fade, no blur). With `rise`, the words go up one after another, starting `delay` seconds in.
+ * CSS (index.css, .zen-rise) rather than framer-motion: in a page's HTML it plays from the first
+ * paint, before the app has loaded. Under reduced motion the text is simply there.
  */
-export const MaskWords: React.FC<{ text: string }> = ({ text }) => {
+export const MaskWords: React.FC<{ text: string; rise?: boolean; delay?: number }> = ({ text, rise = false, delay = 0 }) => {
   // `*word*` marks the accent voice (lib/rich.ts); split into words, keeping each word's voice.
   const words = parseRich(text).flatMap((seg) => seg.text.split(' ').filter(Boolean).map((w) => ({ w, accent: seg.accent })));
   return (
@@ -105,9 +116,12 @@ export const MaskWords: React.FC<{ text: string }> = ({ text }) => {
               accent ? '-mr-[0.14em] pr-[0.18em]' : 'pr-[0.04em]'
             }`}
           >
-            <motion.span variants={wordRise} className={`inline-block ${accent ? 'zen-accent' : ''}`}>
+            <span
+              className={`inline-block ${accent ? 'zen-accent' : ''} ${rise ? 'zen-rise' : ''}`}
+              style={rise ? { animationDelay: `${+(delay + i * WORD_STAGGER).toFixed(2)}s` } : undefined}
+            >
               {w}
-            </motion.span>
+            </span>
           </span>
           {i < words.length - 1 && ' '}
         </React.Fragment>
@@ -193,27 +207,61 @@ export const CopyEmail: React.FC = () => {
   );
 };
 
-/** Top of every inner page: the title, and one line on what the page is for. */
+/**
+ * Top of every inner page, set like a title page: the page's name at display size, ending in the
+ * logo's dot (it lands once the words have risen), then one line on what the page is for, which
+ * starts on the content column, where every chapter below starts.
+ */
 export const PageHeader: React.FC<{ title: string; lead: string; aside?: React.ReactNode; children?: React.ReactNode }> = ({
   title,
   lead,
   aside,
   children,
-}) => (
-  <header className="mx-auto w-full max-w-[1120px] px-5 pb-4 pt-32 md:pt-40">
-    {/* an aside (e.g. the portrait on /about) sits above the title on phones, to its right on wide screens */}
-    <div className={aside ? 'flex flex-col gap-6 md:flex-row md:items-center md:justify-between md:gap-10' : ''}>
-      <div>
-        <h1 className="max-w-4xl text-title">
-          <Rich text={title} />
+}) => {
+  const words = plain(title).split(' ').length;
+  return (
+    <header className="mx-auto w-full max-w-[1120px] px-5 pb-4 pt-28 md:pt-36">
+      {/* an aside (e.g. the portrait on /about) sits above the title on phones, to its right on wide screens */}
+      <div className={aside ? 'flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-10' : ''}>
+        <h1 className="-ml-[0.04em] text-display">
+          <MaskWords text={title} rise />
+          <FullStop land delay={+((words - 1) * WORD_STAGGER + 0.5).toFixed(2)} />
         </h1>
-        <p className="mt-5 max-w-2xl text-lead text-muted-foreground">{lead}</p>
+        {aside && <div className="order-first shrink-0 md:order-none">{aside}</div>}
       </div>
-      {aside && <div className="order-first shrink-0 md:order-none">{aside}</div>}
-    </div>
-    {children}
-  </header>
-);
+      <div className="mt-7 grid gap-6 md:mt-10 md:grid-cols-[200px_minmax(0,1fr)] md:gap-10">
+        <div aria-hidden className="hidden md:block" />
+        <div className="min-w-0">
+          <p className="max-w-[44ch] text-h3 leading-[1.4]">{lead}</p>
+          {children}
+        </div>
+      </div>
+    </header>
+  );
+};
+
+const JUMP = { duration: 0 } as const;
+
+/**
+ * An entrance that plays the first time an element scrolls into view. Content is never hidden in a
+ * page's HTML: what the server rendered starts out arrived. Once the page is live, anything still
+ * below the screen steps back (unseen) and arrives when the reader gets there, as on a page reached
+ * by a link. Static under reduced motion. `from`: mount hidden; `instant`: jump rather than animate
+ * (the step back happens off screen).
+ */
+// eslint-disable-next-line react-refresh/only-export-components -- the entrances' one rule, shared with the ZenMode glyphs
+export function useArrival(ref: React.RefObject<Element>, margin: UseInViewOptions['margin']) {
+  const fromServer = useFromServer();
+  const reduce = useReducedMotion();
+  const seen = useInView(ref, { once: true, margin });
+  const [below, setBelow] = useState(false);
+  useEffect(() => {
+    const top = ref.current?.getBoundingClientRect().top ?? 0;
+    if (fromServer && !prefersReducedMotion() && top > window.innerHeight) setBelow(true);
+  }, [fromServer, ref]);
+  const arrived = reduce || seen || (fromServer && !below);
+  return { arrived, from: !fromServer && !reduce, instant: !arrived };
+}
 
 /**
  * A chapter on the site's one grid: a hairline across the top, the chapter's name in a 200px
@@ -228,29 +276,27 @@ export const Chapter: React.FC<{ id: string; label: string; children: React.Reac
   className = '',
 }) => {
   // Structure draws, content is simply there: the hairline rules itself in from the left the first
-  // time the chapter comes into view, and the margin's dot lands at its end. Static under reduced motion.
-  const reduce = useReducedMotion();
+  // time the chapter comes into view, and the margin's dot lands at its end (useArrival).
   const ref = useRef<HTMLDivElement>(null);
-  const seen = useInView(ref, { once: true, margin: '0px 0px -12% 0px' });
-  const drawn = reduce || seen;
+  const { arrived, from, instant } = useArrival(ref, '0px 0px -12% 0px');
   return (
     <section id={id} className={`mx-auto w-full max-w-[1120px] scroll-mt-20 px-5 py-12 md:py-16 ${className}`}>
       <div ref={ref} className="relative grid gap-6 pt-6 md:grid-cols-[200px_minmax(0,1fr)] md:gap-10 md:pt-8">
         <motion.span
           aria-hidden
           className="absolute inset-x-0 top-0 h-px origin-left bg-border"
-          initial={reduce ? false : { scaleX: 0 }}
-          animate={{ scaleX: drawn ? 1 : 0 }}
-          transition={{ duration: 0.9, ease: EASE }}
+          initial={from ? { scaleX: 0 } : false}
+          animate={{ scaleX: arrived ? 1 : 0 }}
+          transition={instant ? JUMP : { duration: 0.9, ease: EASE }}
         />
         <div>
           <h2 className="flex items-center gap-2.5 text-small font-semibold md:sticky md:top-24">
             <motion.span
               aria-hidden
               className="h-1.5 w-1.5 rounded-full bg-primary"
-              initial={reduce ? false : { scale: 0 }}
-              animate={{ scale: drawn ? 1 : 0 }}
-              transition={{ type: 'spring', stiffness: 600, damping: 30, delay: 0.35 }}
+              initial={from ? { scale: 0 } : false}
+              animate={{ scale: arrived ? 1 : 0 }}
+              transition={instant ? JUMP : { type: 'spring', stiffness: 600, damping: 30, delay: 0.35 }}
             />
             {label}
           </h2>
@@ -283,24 +329,76 @@ export const ScrollProgress: React.FC = () => {
   return <motion.div className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-primary" style={{ scaleX }} aria-hidden />;
 };
 
+const HIDDEN = { opacity: 0, y: 10 } as const;
+const SHOWN = { opacity: 1, y: 0 } as const;
+
 /** A short, quiet settle on first view (10px, under half a second); static under reduced motion. */
 export const Reveal: React.FC<{ children: React.ReactNode; delay?: number; className?: string }> = ({
   children,
   delay = 0,
   className,
 }) => {
-  const reduce = useReducedMotion();
-  if (reduce) return <div className={className}>{children}</div>;
+  const ref = useRef<HTMLDivElement>(null);
+  const { arrived, from, instant } = useArrival(ref, '-60px');
   return (
     <motion.div
+      ref={ref}
       className={className}
-      initial={{ opacity: 0, y: 10 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.45, delay, ease: EASE }}
+      initial={from ? HIDDEN : false}
+      animate={arrived ? SHOWN : HIDDEN}
+      transition={instant ? JUMP : { duration: 0.45, delay, ease: EASE }}
     >
       {children}
     </motion.div>
+  );
+};
+
+const CURTAIN = { duration: 0.85, ease: EASE } as const;
+const SETTLE = { duration: 1.2, ease: EASE } as const;
+
+/**
+ * A photo or screenshot in its frame. The first time it comes into view the frame's own colour
+ * lifts off it like a sheet and the picture settles back to its size (transform only). A picture
+ * that was in the page's HTML is simply there; static under reduced motion. `frame` styles the
+ * box (its proportions), `className` the image. Inside a `group` link, the picture leans in on hover.
+ * `media`: the picture only exists on screens that match (the home hero's portrait, wide screens
+ * only); elsewhere the file is never fetched, which hiding it or `loading="lazy"` did not ensure.
+ */
+export const Picture: React.FC<React.ImgHTMLAttributes<HTMLImageElement> & { frame?: string; media?: string }> = ({
+  frame = '',
+  className = '',
+  alt,
+  media,
+  src,
+  ...img
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const { arrived, from, instant } = useArrival(ref, '0px 0px -10% 0px');
+  return (
+    <div ref={ref} className={`relative overflow-hidden rounded-[20px] border bg-secondary ${frame}`}>
+      <motion.div
+        className="h-full w-full"
+        initial={from ? { scale: 1.08 } : false}
+        animate={{ scale: arrived ? 1 : 1.08 }}
+        transition={instant ? JUMP : SETTLE}
+      >
+        {media ? (
+          <picture className="contents">
+            <source media={media} srcSet={src} />
+            <img alt={alt} {...img} className={`block w-full transition-transform duration-700 ease-out group-hover:scale-[1.03] ${className}`} />
+          </picture>
+        ) : (
+          <img alt={alt} src={src} {...img} className={`block w-full transition-transform duration-700 ease-out group-hover:scale-[1.03] ${className}`} />
+        )}
+      </motion.div>
+      <motion.span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 origin-top bg-secondary"
+        initial={from ? { scaleY: 1 } : false}
+        animate={{ scaleY: arrived ? 0 : 1 }}
+        transition={instant ? JUMP : CURTAIN}
+      />
+    </div>
   );
 };
 

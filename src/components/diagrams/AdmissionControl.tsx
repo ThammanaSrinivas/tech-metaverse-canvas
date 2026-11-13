@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useReducedMotion } from '@/lib/hydration';
 import { Pause, Play } from 'lucide-react';
 import { useBrandTheme } from '@/theme/runtime';
 import { mix } from '@/theme/color';
@@ -662,9 +663,10 @@ const AdmissionControl: React.FC<{ className?: string }> = ({ className = 'mt-8'
               : 'After: the scheduler publishes only while the pending queue holds less than ~10× what the workers can process. The queue stays short and the workers stay busy: 32 messages per cycle.'}
           </p>
         )}
+        {/* sized like resize() sizes it (36% of the width, 250–330px), so the page's HTML holds its place */}
         <canvas
           ref={canvasRef}
-          className={failed ? 'hidden' : 'block w-full'}
+          className={failed ? 'hidden' : 'block aspect-[100/36] max-h-[330px] min-h-[250px] w-full'}
           role="img"
           aria-label={
             mode === 'before'

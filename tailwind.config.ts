@@ -80,7 +80,7 @@ export default {
 			// Semantic type scale (text-display … text-label), generated from typography.json scale
 			// into --fs-/--lh-/--tr- vars by src/theme/runtime.ts scaleCss.
 			fontSize: Object.fromEntries(
-				['display', 'title', 'h1', 'h2', 'h3', 'lead', 'body', 'small', 'label'].map((r) => [
+				['poster', 'display', 'title', 'h1', 'h2', 'h3', 'lead', 'body', 'small', 'label'].map((r) => [
 					r,
 					[`var(--fs-${r})`, { lineHeight: `var(--lh-${r})`, letterSpacing: `var(--tr-${r})` }],
 				])

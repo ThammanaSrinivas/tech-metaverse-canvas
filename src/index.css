@@ -196,11 +196,74 @@
   /* The logo's dot lands: once in time with the hero's full stop, and again on hover. */
   .zen-mono-dot { transform-box: fill-box; transform-origin: center; }
   .zen-mono-dot.is-popping, .group:hover .zen-mono-dot { animation: zen-dot-pop 520ms cubic-bezier(0.22, 1, 0.36, 1); }
+  /* the home page's first landing, from its HTML: hidden until its delay, then the same pop */
+  .zen-mono-dot.is-landing { animation: zen-dot-pop 520ms cubic-bezier(0.22, 1, 0.36, 1) both; }
   @keyframes zen-dot-pop {
     0% { transform: scale(0); }
     60% { transform: scale(1.25); }
     100% { transform: scale(1); }
   }
+
+  /*
+   * Title entrances (MaskWords, the hero's line, FullStop), in CSS so a page's HTML plays them from
+   * its first paint, before the app has loaded. Each element sets its own animation-delay. A word
+   * rises out of its clipped line box; the full stop lands like a spring (600/30): a little past
+   * full size and back. Static under reduced motion (below: the delays alone would hold them hidden).
+   */
+  .zen-rise { animation: zen-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  @keyframes zen-rise {
+    from { transform: translateY(110%); }
+    to { transform: none; }
+  }
+  .zen-land { animation: zen-land 0.45s linear both; }
+  @keyframes zen-land {
+    0% { transform: scale(0); animation-timing-function: cubic-bezier(0.3, 0.6, 0.5, 1); }
+    45% { transform: scale(1.09); animation-timing-function: ease-in-out; }
+    75% { transform: scale(0.98); animation-timing-function: ease-in-out; }
+    100% { transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .zen-rise, .zen-land, .zen-mono-dot.is-landing { animation: none; }
+  }
+
+  /*
+   * The home hero's name, at poster size: the type scale's largest role, also held to the screen's
+   * width and height, so the two lines, the sentence and the links always fit one screen.
+   */
+  .zen-poster {
+    font-size: min(var(--fs-poster), 19vw, 18.5svh);
+    line-height: var(--lh-poster);
+    letter-spacing: var(--tr-poster);
+  }
+
+  /* An underline that rules itself in under a large link on hover or focus (the footer's email, "Next"). */
+  .zen-draw {
+    background: linear-gradient(hsl(var(--primary)), hsl(var(--primary))) no-repeat 0 100% / 0% 0.07em;
+    padding-bottom: 0.06em;
+    transition: background-size 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .zen-draw:hover, .zen-draw:focus-visible, .group:hover .zen-draw, .group:focus-visible .zen-draw {
+    background-size: 100% 0.07em;
+  }
+}
+
+/*
+ * Scroll-linked motion, where the browser can tie an animation to the scroll position itself (no
+ * script, nothing to get out of step): the home hero steps back as the page scrolls past it, like
+ * a title page being turned. Elsewhere, and under reduced motion, it simply scrolls away.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .zen-recede {
+      transform-origin: 0 100%;
+      animation: zen-recede linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 80svh;
+    }
+  }
+}
+@keyframes zen-recede {
+  to { transform: translateY(16svh) scale(0.94); opacity: 0; }
 }
 
 /*
@@ -219,6 +282,16 @@
   [data-site-header] { view-transition-name: site-header; }
   .zm-cur { view-transition-name: site-cursor; }
   [role='dialog'][data-zen-shell] { view-transition-name: site-shell-window; }
+  /* An article's title travels between the list and its page (PostList, Home, WritingPost set the
+     name on the one title being opened or left). */
+  ::view-transition-group(post-title) {
+    animation-duration: 520ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  ::view-transition-old(post-title),
+  ::view-transition-new(post-title) {
+    animation-duration: 260ms;
+  }
   ::view-transition-group(site-header),
   ::view-transition-group(site-cursor),
   ::view-transition-group(site-shell-window) {

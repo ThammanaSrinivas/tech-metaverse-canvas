@@ -1,15 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Link } from '@/components/zen/Link';
-import { motion, useReducedMotion } from 'framer-motion';
+import { Link, POST_TITLE } from '@/components/zen/Link';
 import { ArrowLeft, ArrowUpRight } from 'lucide-react';
-import Markdown, { outline, type Heading } from '@/components/Markdown';
-import { MaskWords, ScrollProgress, maskStagger } from '@/components/zen/primitives';
-import { postFor, readMinutes } from '@/content/writing';
+import Markdown from '@/components/Markdown';
+import { MaskWords, ScrollProgress } from '@/components/zen/primitives';
+import { readMinutes, type Article } from '@/content/writing';
 import { LINKS, PROFILE, formatDate } from '@/data/profile';
+import { useFromServer, useReducedMotion } from '@/lib/hydration';
+import { outline, type Heading, type MdNode } from '@/lib/markdown';
 import { usePageMeta } from '@/lib/usePageMeta';
-import { articleMeta, notFoundMeta } from '@/site/meta';
-import NotFound from './NotFound';
+import { articleMeta } from '@/site/meta';
 
 /** The site's one grid: a 200px margin, the content column beside it (same as every Chapter). */
 const GRID = 'grid gap-6 md:grid-cols-[200px_minmax(0,1fr)] md:gap-10';
@@ -114,14 +113,28 @@ const SignOff: React.FC = () => (
   </footer>
 );
 
-/** One article on the site's grid: contents in the margin, the text at a reading measure beside it. */
-const WritingPost: React.FC = () => {
-  const { slug } = useParams();
-  const post = postFor(slug);
-  const reduce = useReducedMotion();
-  const headings = useMemo(() => (post ? outline(post.body).filter((h) => h.depth === 2) : []), [post]);
-  usePageMeta(post ? articleMeta(post) : notFoundMeta(`/writing/${slug}`));
-  if (!post) return <NotFound />;
+/**
+ * Reached by a link, the title arrives from the list it was picked in (POST_TITLE); its words rise
+ * only in the page's own HTML. A component of its own: knowing which of the two it is re-renders
+ * once after hydration, and that must not reach the article's body (a diagram still loading there
+ * would be thrown away and drawn again).
+ */
+const Title: React.FC<{ text: string }> = ({ text }) => {
+  const fromServer = useFromServer();
+  return (
+    <h1 className="w-fit max-w-4xl text-title" style={POST_TITLE}>
+      <MaskWords text={text} rise={fromServer} />
+    </h1>
+  );
+};
+
+/**
+ * One article on the site's grid: contents in the margin, the text at a reading measure beside it.
+ * Its route (site/routes.tsx) hands it the post and its body, compiled at build time.
+ */
+const WritingPost: React.FC<{ post: Article; tree: MdNode[] }> = ({ post, tree }) => {
+  const headings = useMemo(() => outline(post.body).filter((h) => h.depth === 2), [post]);
+  usePageMeta(articleMeta(post));
 
   return (
     <article className="pb-16">
@@ -140,9 +153,7 @@ const WritingPost: React.FC = () => {
                 set to <code className="font-mono">false</code> in <code className="font-mono">src/content/writing/index.ts</code>.
               </p>
             )}
-            <motion.h1 className="max-w-4xl text-title" variants={maskStagger} initial={reduce ? false : 'hidden'} animate="show">
-              <MaskWords text={post.title} />
-            </motion.h1>
+            <Title text={post.title} />
             <p className="mt-5 max-w-[56ch] text-lead text-muted-foreground">{post.summary}</p>
             <p className="mt-6 font-mono text-small text-muted-foreground">
               <time dateTime={post.date}>{formatDate(post.date)}</time> · {readMinutes(post.body)} min read
@@ -155,7 +166,7 @@ const WritingPost: React.FC = () => {
         <div className={`${GRID} border-t pt-8 md:pt-10`}>
           {headings.length > 0 ? <Contents headings={headings} /> : <div aria-hidden className="hidden md:block" />}
           <div className="min-w-0">
-            <Markdown>{post.body}</Markdown>
+            <Markdown tree={tree} />
             <SignOff />
             <Link to="/writing" className="mt-10 inline-flex items-center gap-2 font-semibold text-primary">
               <ArrowLeft className="h-4 w-4" aria-hidden /> All writing

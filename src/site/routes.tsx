@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import type { PageId } from './pages';
 import { whenIdle } from '@/lib/idle';
+import { POSTS, type Article } from '@/content/writing';
 
 /**
  * Page id → chunk loader. Typed as a full Record, so a page added to pages.ts without a component
@@ -16,9 +17,20 @@ export const LOADERS: Record<PageId, Loader> = {
   'time-machine': () => import('@/pages/TimeMachinePage'),
 };
 
-/** Child routes of `nested` pages (`<path>/:slug`). */
-export const CHILD_LOADERS: Partial<Record<PageId, Loader>> = {
-  writing: () => import('@/pages/WritingPost'),
+/**
+ * Child routes of `nested` pages (`<path>/<slug>`), one per entry. Each loads everything it renders
+ * (the page's chunk and the article's compiled body) before the router switches pages. Any other
+ * address under the page is not found.
+ */
+export const CHILDREN: Partial<Record<PageId, { slug: string; load: Loader }[]>> = {
+  writing: POSTS.filter((p): p is Article => p.kind === 'article').map((post) => ({
+    slug: post.slug,
+    load: async () => {
+      const [{ default: WritingPost }, { default: tree }] = await Promise.all([import('@/pages/WritingPost'), post.tree()]);
+      const ArticlePage = () => <WritingPost post={post} tree={tree} />;
+      return { default: ArticlePage };
+    },
+  })),
 };
 
 /**

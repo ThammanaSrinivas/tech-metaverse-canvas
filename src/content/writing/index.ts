@@ -4,6 +4,7 @@
 // Drafts render only on localhost (dev builds) and never ship: not on the page, not in the shell,
 // not in the sitemap, not in the JS bundle. Set the post's DRAFT_* to false to publish.
 import scheduling10m from './scheduling-10m-cron-jobs.md?raw';
+import type { MdNode } from '@/lib/markdown';
 
 interface PostBase {
   slug: string;
@@ -17,7 +18,10 @@ export interface Article extends PostBase {
   kind: 'article';
   /** ISO yyyy-mm-dd */
   date: string;
+  /** The Markdown source (the shell's `cat`, read times, the contents list). */
   body: string;
+  /** The body compiled at build time (`.md?tree`), its own small chunk: what the page renders. */
+  tree: () => Promise<{ default: MdNode[] }>;
   /** Social card for link previews, 1200×630, under public/. Without one, the site's card is used. */
   image?: string;
 }
@@ -57,6 +61,7 @@ const ALL: Post[] = [
           tags: ['Distributed systems', 'Kafka', 'Leadership'],
           draft: DRAFT_SCHEDULING,
           body: scheduling10m,
+          tree: () => import('./scheduling-10m-cron-jobs.md?tree'),
           image: '/og/scheduling-10m-cron-jobs.png',
         },
       ]

@@ -1,13 +1,16 @@
 import React from 'react';
 import { ArrowUpRight, Download } from 'lucide-react';
-import { BEYOND, LINKS, PROFILE, SPEAKING } from '@/data/profile';
-import { Chapter, CopyEmail, Marker } from '@/components/zen/primitives';
+import { BEYOND, COLOPHON, LINKS, PROFILE, SPEAKING } from '@/data/profile';
+import { Chapter, CopyEmail, Marker, Picture } from '@/components/zen/primitives';
+import { FIRST_VISIT_ATTR, useFirstVisitWeight } from '@/lib/measured';
+import { ROUTE_META } from '@/site/meta';
+import { ACTIVE_PALETTE, ACTIVE_TYPE, findType } from '@/theme/palettes';
 
 /** The one story with a photo: the Toastmasters win. The page's single highlighter is on it. */
 const Speaking: React.FC = () => (
   <Chapter id="speaking" label="Speaking">
     <div className="grid gap-8 md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] md:gap-10">
-      <img
+      <Picture
         src={SPEAKING.photo}
         alt={SPEAKING.alt}
         width={320}
@@ -15,7 +18,8 @@ const Speaking: React.FC = () => (
         // first thing under the header on a phone: it is the page's largest paint, so no lazy load
         // (lowercase, spread: React 18's types don't know the attribute yet)
         {...{ fetchpriority: 'high' }}
-        className="w-full max-w-[320px] rounded-[20px] border object-cover"
+        frame="w-full max-w-[320px] self-start"
+        className="object-cover"
       />
       <div className="max-w-[60ch]">
         <p className="text-small text-muted-foreground">
@@ -48,6 +52,65 @@ const Also: React.FC = () => (
 );
 
 const handleOf = (url: string) => url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+
+/** A number in the colophon: data, so mono, in ink rather than the row's muted grey. */
+const Num: React.FC<{ children: React.ReactNode }> = ({ children }) => <span className="font-mono text-foreground">{children}</span>;
+
+/**
+ * What a first visit to the home page weighs, as the build measured it (src/lib/measured.ts). A
+ * leaf of its own: when the number arrives after a client-side visit, only this re-renders.
+ */
+const Weight: React.FC = () => {
+  const bytes = useFirstVisitWeight();
+  if (!bytes) return <>{COLOPHON.pending}</>;
+  return (
+    <span {...{ [FIRST_VISIT_ATTR]: bytes }} className="font-mono text-foreground">
+      {Math.round(bytes / 1000)} KB
+    </span>
+  );
+};
+
+/** "A, B, C and D" */
+const listed = (names: string[]) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0] ?? '');
+
+/**
+ * How the site is made, one line per decision, styled like Also. Every number is the build's own
+ * (scripts/colophon.ts): the pages it rendered, the home page's weight, how much the font cuts
+ * save, the tests the last full run passed. Names come from the token files, so they follow a
+ * change of fonts or palette.
+ */
+const Colophon: React.FC = () => {
+  const type = findType(ACTIVE_TYPE);
+  const fonts = type ? [...new Set([type.display, type.accent, type.sans, type.mono].filter(Boolean))] : [];
+  const values: Record<string, React.ReactNode | null> = {
+    pages: <Num>{ROUTE_META.length}</Num>,
+    weight: <Weight />,
+    fonts: listed(fonts),
+    fontSaving: __FONT_SAVING__ != null ? <Num>{__FONT_SAVING__}%</Num> : null,
+    palette: ACTIVE_PALETTE,
+    tests: __TEST_COUNT__ != null ? <Num>{__TEST_COUNT__}</Num> : null,
+    source: (
+      <a href={LINKS.siteSource} target="_blank" rel="noopener noreferrer" className="zen-link inline-flex items-center gap-1">
+        {handleOf(LINKS.siteSource)} <ArrowUpRight className="h-3.5 w-3.5" />
+      </a>
+    ),
+  };
+  // `{token}` → its value; a row with a value missing reads its `without` text instead
+  const fill = (text: string) => text.split(/\{(\w+)\}/).map((part, i) => (i % 2 ? <React.Fragment key={i}>{values[part]}</React.Fragment> : part));
+  const missing = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].some(([, k]) => values[k] == null);
+  return (
+    <Chapter id="colophon" label="Colophon">
+      <dl className="divide-y border-b [&>*:first-child]:pt-0">
+        {COLOPHON.rows.map((r) => (
+          <div key={r.term} className="grid gap-1 py-4 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)] md:gap-8">
+            <dt className="font-semibold">{r.term}</dt>
+            <dd className="text-muted-foreground">{fill(r.without && missing(r.text) ? r.without : r.text)}</dd>
+          </div>
+        ))}
+      </dl>
+    </Chapter>
+  );
+};
 
 /** How to reach me. Email first: it is the quickest, and it can be copied in one tap. */
 const Contact: React.FC = () => {
@@ -103,6 +166,7 @@ const About: React.FC = () => (
   <>
     <Speaking />
     <Also />
+    <Colophon />
     <Contact />
   </>
 );
