@@ -191,7 +191,8 @@ const HowItWorks: React.FC = () => {
               onClick={pausing ? skip : unlock}
               disabled={pausing && skips <= 0}
               aria-describedby="pause-note"
-              className="zen-link inline-flex items-center gap-1.5 text-small font-semibold disabled:no-underline disabled:opacity-60"
+              // turned, the phone's foot comes forward and lower: on wide screens the label stands clear of it
+              className="zen-link inline-flex items-center gap-1.5 text-small font-semibold disabled:no-underline disabled:opacity-60 lg:mt-3"
             >
               {pausing ? <SkipForward aria-hidden className="h-3.5 w-3.5" /> : <LockOpen aria-hidden className="h-3.5 w-3.5" />}
               {pausing ? (skips > 0 ? PAUSE.skipCta : PAUSE.noSkips) : PAUSE.cta}

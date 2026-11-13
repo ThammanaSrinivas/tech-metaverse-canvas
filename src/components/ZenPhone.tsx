@@ -4,6 +4,7 @@ import { EyeOff, Search } from 'lucide-react';
 import { ZENMODE } from '@/data/profile';
 import { ZENMODE_COLORS } from '@/theme/palettes';
 import { EASE } from '@/components/zen/primitives';
+import { tiltPose } from '@/lib/tilt';
 
 /** Which part of the home screen the camera leans in to: one per feature, or the whole screen. */
 export type PhoneFocus = 'score' | 'streak' | 'circle' | 'gold' | null;
@@ -257,37 +258,41 @@ const PauseScreen: React.FC<PhonePause & { instant: boolean }> = ({ skips, onSki
   );
 };
 
-/** The resting pose, and how far the pointer can lean it (degrees). Kept small: the screen has to stay readable. */
-const REST = { x: 5, y: -14 };
-const LEAN = { x: 3, y: 5 };
 /** How thick the body reads: layers behind the face, this many px apart. */
 const BODY = [3, 6, 9, 12];
 /** Settles without a bounce, like the app's own containers. */
 const SETTLE = { stiffness: 110, damping: 22, mass: 1 };
 
 /**
- * The phone's turn about its two axes. Square (0, 0) in the page's HTML and until it has been
- * seen; then, while `on`, the resting pose plus a lean toward a mouse pointer. Square on screens
- * under 1024px (the phone shares them with the cards and is small), under reduced motion, and
- * whenever `on` is false. Everything here runs in effects, so the first render matches the HTML.
+ * The phone's turn about its two axes, on springs. What the turn should be is `tiltPose`
+ * (lib/tilt.ts, tested there): square in the page's HTML and until it has been seen, under
+ * 1024px, under reduced motion and whenever `on` is false; otherwise the resting pose leaned
+ * toward a mouse pointer. Everything here runs in effects, so the first render matches the HTML.
  */
 function useTilt(ref: React.RefObject<HTMLElement>, on: boolean) {
   const rotateX = useSpring(useMotionValue(0), SETTLE);
   const rotateY = useSpring(useMotionValue(0), SETTLE);
   const seen = useInView(ref, { once: true, amount: 0.35 });
+  // where the pointer last was, so the phone turns back to face it after squaring up, not to a
+  // bare resting pose that jumps on the next mouse move
+  const pointer = useRef({ nx: 0, ny: 0 });
   useEffect(() => {
     const wide = window.matchMedia('(min-width: 1024px)');
     const still = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const pose = (nx = 0, ny = 0) => {
-      const tilted = on && seen && wide.matches && !still.matches;
-      rotateX.set(tilted ? REST.x - ny * LEAN.x : 0);
-      rotateY.set(tilted ? REST.y + nx * LEAN.y : 0);
+    const pose = () => {
+      const to = tiltPose({ on, seen, wide: wide.matches, still: still.matches, ...pointer.current });
+      rotateX.set(to.x);
+      rotateY.set(to.y);
     };
     const onMove = (e: PointerEvent) => {
       if (e.pointerType !== 'mouse' || !ref.current) return;
       const r = ref.current.getBoundingClientRect();
       const clamp = (v: number) => Math.max(-1, Math.min(1, v));
-      pose(clamp((e.clientX - (r.left + r.width / 2)) / (window.innerWidth / 2)), clamp((e.clientY - (r.top + r.height / 2)) / (window.innerHeight / 2)));
+      pointer.current = {
+        nx: clamp((e.clientX - (r.left + r.width / 2)) / (window.innerWidth / 2)),
+        ny: clamp((e.clientY - (r.top + r.height / 2)) / (window.innerHeight / 2)),
+      };
+      pose();
     };
     const settle = () => pose();
     settle();
