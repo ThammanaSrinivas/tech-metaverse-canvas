@@ -23,6 +23,8 @@ export const LINKS = {
   producthunt: 'https://www.producthunt.com/products/zenmode-os-android-launcher',
   resume: RESUME_URL,
   resumeDownload: RESUME_DOWNLOAD_URL,
+  /** This site's own source (public), for the colophon on /about. */
+  siteSource: 'https://github.com/ThammanaSrinivas/tech-metaverse-canvas',
 } as const;
 
 export const PROFILE = {
@@ -55,6 +57,8 @@ export const PROFILE = {
   /** Headshot (cropped like the LinkedIn photo): search results use the full one, the pages a 320px copy. */
   portrait: '/about/srinivas.webp',
   portraitSmall: '/about/srinivas-320.webp',
+  /** The same photo cut 4:5 (384 × 480) for the home hero on wide screens; no larger original is in the repo. */
+  portraitHero: '/about/srinivas-hero.webp',
 };
 
 export interface Job {
@@ -128,6 +132,34 @@ export const FIRST_POST: Milestone = {
   body: 'A post from TechXConf on networking and AI: the first time I shared what I was learning in public.',
   points: [],
   post: 'https://www.linkedin.com/feed/update/urn:li:share:7263876730933714944/',
+};
+
+/**
+ * The colophon on /about: how this site is made, one line per decision. A `{token}` is a value
+ * About.tsx fills in, most of them measured from the build so they stay true (scripts/colophon.ts):
+ * pages, weight, fonts, fontSaving, palette, tests, source. A row whose value isn't known (a dev
+ * server, a build without a test run) says `without` instead. Never claim the site was built by
+ * hand: it wasn't.
+ */
+export const COLOPHON = {
+  /** Where the page weight would go, until the build has measured it. */
+  pending: 'measured when the site is built',
+  rows: [
+    { term: 'Built with', text: 'React 18, TypeScript and Vite, on Firebase Hosting' },
+    { term: 'Rendered', text: 'Plain HTML before any JavaScript runs: {pages} pages and a 404, written at build time' },
+    { term: 'Weight', text: 'The home page’s first visit, compressed: {weight}. The rest loads as you go.' },
+    { term: 'Privacy', text: 'No analytics, no cookies, no trackers, no third-party scripts.' },
+    { term: 'Type', text: '{fonts}, cut down to the characters used here: {fontSaving} lighter', without: '{fonts}, cut down to the characters used here' },
+    { term: 'Colour', text: '{palette}. Every text pairing is tested to WCAG AA.' },
+    { term: 'Sound', text: 'Made in the browser with Web Audio, with no audio files. Off until you turn it on.' },
+    { term: 'Motion', text: 'Follows your system’s reduced-motion setting.' },
+    {
+      term: 'Tests',
+      text: '{tests} run on every build. One failure and it doesn’t ship.',
+      without: 'The whole suite runs on every build. One failure and it doesn’t ship.',
+    },
+    { term: 'Source', text: '{source}' },
+  ] as { term: string; text: string; without?: string }[],
 };
 
 /** Leadership and community, from LinkedIn: the signals beyond shipping code. */
@@ -240,6 +272,42 @@ export const ZENMODE = {
     sizes: '(min-width: 768px) 840px, 100vw',
     alt: 'A phone running ZenMode OS: Zen Score 7/10, a 13-day streak, gold invested, and a ZenCircle comparing friends’ screen time.',
   },
+  /**
+   * The phone that walks through the features on /zenmode: the Android home screen, drawn from the
+   * app's own components (the Zen Score and Streaks header, the Gold Invested pill, the circle's
+   * screen-time cards). Its readings are the sample day in `hero`'s screenshot, not live numbers;
+   * the gold amount stays hidden, as the app's eye toggle leaves it.
+   */
+  phone: {
+    alt: 'The ZenMode OS home screen: Zen Score 07/10 and a 13-day streak along the top, the Gold Invested pill with its amount hidden, and two screen-time cards, mine at 59 minutes and my buddy’s at 2 hours 43 minutes.',
+    score: { value: '07', max: '/10' },
+    streak: { value: '13', unit: 'days' },
+    cards: [
+      { label: 'My Screen Time', hours: '00', minutes: '59', mood: 'happy' },
+      { label: 'My Buddy’s Stats', hours: '02', minutes: '43', mood: 'neutral' },
+    ],
+    /**
+     * The pause, as the public app has it (DelayedUnlockActivity + ResistenceScreen): with it on,
+     * every unlock waits COUNTDOWN_SECONDS before the phone lets you in, with MAX_DAILY_SKIPS a
+     * day. The screen reads the same sample day: 59 minutes is a happy day (≤ 120), so the happy
+     * art and line; Mindfulness is (210 − 59) / 210 = 71%, which fills 8 of its 12 cells.
+     */
+    pause: {
+      cta: 'Unlock the phone',
+      skipCta: 'Skip & open',
+      noSkips: 'No skips left today',
+      note: 'With the pause on, every unlock waits 7 seconds before the phone lets you in. You get 7 skips a day.',
+      live: 'Unlocking. ZenMode OS pauses for 7 seconds before the phone lets you in.',
+      seconds: 7,
+      skips: 7,
+      screenTime: 'My Screen Time',
+      mindfulness: 'Mindfulness',
+      mindful: 8,
+      advice: ['You’re in ', 'zenmode', ' & being so mindful'],
+      skipLine: ['Only ', ' skip & open ', 'left for Today'],
+      noSkipLine: 'No skips left for Today',
+    },
+  } as const,
   /** Where else to find it; Google Play is the page's one button. `source` sits under the links. */
   links: [
     { label: 'Source on GitHub', href: LINKS.zenmode },
@@ -250,29 +318,25 @@ export const ZENMODE = {
   /** Who built what, under the features on /zenmode. (How it is built is a principle on /work: each fact once.) */
   built: 'Kamalraaj Senthilkumar shaped what ZenMode is; I built most of how it works.',
   /**
-   * Traction on /zenmode: one sentence, each public number once; `mark` carries the page's one
-   * highlighter. `stats` below holds the same numbers for the shell: keep the two in step.
+   * The public numbers, one card each on /zenmode (and one line each in the shell): Play listing and
+   * Product Hunt leaderboard only. Internal installs/DAU stay in zenmode-brain.
    */
-  traction: {
-    before: 'On Google Play it has 1K+ installs and a 4.6★ rating from 24 reviews; on launch day it placed ',
-    mark: '#14 of 711 on Product Hunt',
-    after: ', and #1 in its Open Source topic.',
-  },
-  // Public numbers only (Play listing, Product Hunt leaderboard). Internal installs/DAU stay in zenmode-brain.
   stats: [
     { value: '4.6', unit: '★', label: 'Play Store rating', sub: '24 reviews' },
     { value: '1K', unit: '+', label: 'installs', sub: 'Google Play' },
-    { value: '14', prefix: '#', unit: '', label: 'of 711 on Product Hunt', sub: 'launch day · 26 Sep 2026' },
+    { value: '14', prefix: '#', unit: '', label: 'of 711 on Product Hunt', sub: 'launch day · #1 in Open Source' },
+    { value: '7', prefix: '#', unit: '', label: 'most discussed', sub: 'top 1% of the day' },
   ] as { value: string; prefix?: string; unit: string; label: string; sub: string }[],
+  /** One card each on /zenmode. `stat` is the reading in the screenshot above them (a sample day, not a claim). */
   features: [
-    { name: 'Zen Score', desc: 'Your day, out of 10', icon: 'score' },
-    { name: 'Streaks', desc: 'Promises kept', icon: 'streak' },
-    { name: 'ZenCircle', desc: 'Accountability with friends', icon: 'circle' },
-    { name: 'Gold Invest', desc: 'Time saved becomes gold', icon: 'gold' },
+    { name: 'Zen Score', desc: 'Your day, out of 10', icon: 'score', stat: '07/10' },
+    { name: 'Streaks', desc: 'Promises kept', icon: 'streak', stat: '13 days' },
+    { name: 'ZenCircle', desc: 'Accountability with friends', icon: 'circle', stat: '2 of 5' },
+    { name: 'Gold Invest', desc: 'Time saved becomes gold', icon: 'gold', stat: '+ gold' },
   ] as const,
   /**
    * Milestones, from the LinkedIn posts. Shown on /zenmode (newest first), in ~/zenmode/launch.md
-   * and the shell's journey. Numbers that live in `traction` stay out of these.
+   * and the shell's journey. Numbers that live in `stats` stay out of these.
    */
   milestones: [
     {

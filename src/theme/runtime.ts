@@ -126,7 +126,7 @@ const px = (v: number) => `${+(v / 16).toFixed(4)}rem`;
 export function scaleCss(scale: TypeScale, ratio: number, t: Typography) {
   const phoneRatio = 1 + (ratio - 1) * 0.72;
   const lines = Object.entries(scale.roles).map(([role, r]) => {
-    const optical = ['display', 'title', 'h1', 'h2'].includes(role) ? t.displayScale ?? 1 : 1;
+    const optical = ['poster', 'display', 'title', 'h1', 'h2'].includes(role) ? t.displayScale ?? 1 : 1;
     const fit = (v: number, cap = Infinity) => Math.max(Math.min(v, cap), r.min ?? 0);
     const hi = fit(scale.base * ratio ** r.step * optical, r.max);
     const lo = Math.min(fit(scale.base * phoneRatio ** r.step * optical, r.mobileMax), hi);

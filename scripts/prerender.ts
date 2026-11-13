@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { build, type Plugin, type ResolvedConfig } from 'vite';
+import { firstVisitBytes } from './colophon';
 
 /**
  * After `vite build`: one HTML file per URL, the page itself rendered into it, so the first paint
@@ -14,6 +15,10 @@ import { build, type Plugin, type ResolvedConfig } from 'vite';
  *   - its own <title>, description, address and social card (src/site/meta.ts). Link previews
  *     (LinkedIn, WhatsApp, Slack, X) read only the HTML, so without this every shared link
  *     previewed as the home page.
+ *
+ * The home page is written first: what a first visit to it weighs (scripts/colophon.ts) is set as
+ * `globalThis.__COLOPHON__` for the pages rendered after it (the colophon on /about), and written
+ * to dist/colophon.json for a reader who reaches /about by a link (src/lib/measured.ts).
  *
  * The entry is built for Node first (a Vite SSR build with this same config, so the server's HTML
  * comes from the same code and transforms as the browser's), then run once per URL.
@@ -80,18 +85,29 @@ export function prerender(): Plugin {
           `${root}${body}</div>`
         );
 
-      for (const m of site.ROUTE_META) {
+      let weight = 0;
+      const homeFirst = [...site.ROUTE_META].sort((a, b) => Number(b.path === '/') - Number(a.path === '/'));
+      for (const m of homeFirst) {
         const file = path.join(outDir, m.path === '/' ? 'index.html' : `${m.path.slice(1)}.html`);
         fs.mkdirSync(path.dirname(file), { recursive: true });
-        fs.writeFileSync(file, page(m, await site.render(m.path)));
+        const html = page(m, await site.render(m.path));
+        fs.writeFileSync(file, html);
+        if (m.path === '/') {
+          weight = firstVisitBytes(outDir, html);
+          (globalThis as { __COLOPHON__?: Measured }).__COLOPHON__ = { weight };
+          fs.writeFileSync(path.join(outDir, 'colophon.json'), JSON.stringify({ weight }));
+        }
       }
       fs.writeFileSync(path.join(outDir, '404.html'), page(site.notFoundMeta('/404'), await site.render('/404'), '<div id="root" data-not-found>'));
       fs.rmSync(serverDir, { recursive: true, force: true });
       config.logger.info(`prerender: ${site.ROUTE_META.length} pages rendered with their own title, description and social card, plus 404.html`);
+      config.logger.info(`prerender: a first visit to the home page weighs ${Math.round(weight / 1000)} KB compressed (colophon.json)`);
     },
   };
 }
 
+/** What the prerender measures for the colophon (src/lib/measured.ts reads it back). */
+type Measured = { weight: number };
 /** A page's meta (src/site/meta.ts); the prerender only reads its path. */
 type Meta = { path: string };
 type FontRole = 'display' | 'accent' | 'sans' | 'mono';

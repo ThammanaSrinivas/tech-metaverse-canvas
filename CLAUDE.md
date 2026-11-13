@@ -52,6 +52,24 @@ another account is the default, else it fails with "Failed to get Firebase proje
   shell button, or the italic accent word on every heading (only article titles and the home sky
   band). One
   highlighter per page. Each fact or number appears once on the site, in its best place.
+  **One exception, the owner's call (Nov 2026):** /zenmode shows its features and its public numbers
+  as cards (four feature cards, four stat cards, as in the GitHub profile README), not as rows and
+  a sentence. Figures stay as they are (no count-ups); the Gold Invest card is that page's one
+  touch of orange, so /zenmode has no `Marker`. Cards stay on /zenmode only.
+  Its "How it works" is a pinned walkthrough (the owner picked it from the X-post ideas, Nov 2026):
+  `ZenPhone.tsx` draws the Android home screen from the app's own components and art (the
+  drawables converted into `public/zenmode/app/`, colours in `colors.json` `zenmode.phone`, readings
+  in `ZENMODE.phone`), and as the reader scrolls the camera leans in to each feature while its card
+  lights; the cards are buttons. Only Clash Display and Departure Mono load for it: every text in
+  the phone sets `font-display` or `font-mono`, so Geist (169 KB) never does. The phone shows only
+  what the public, open-source Android app shows: nothing from ZenMode's private design documents
+  goes on this public site.
+  Under the phone, "Unlock the phone" plays the app's pause (`DelayedUnlockActivity` +
+  `ResistenceScreen`): with the pause on, every unlock waits 7 real seconds (7 skips a day), so the
+  screen wakes from black, the shuriken turns, the ring fills and the count runs 7 → 1, then Home.
+  It is the unlock pause, not a pause before opening an app: the public code has no such screen,
+  so don't describe it as one. While it runs the same button skips it (keyboard and screen-reader
+  path); its sounds answer the visitor's taps only.
   **One grid, chapters:** below each page's header, every section is a `Chapter` (primitives.tsx):
   a hairline on top, its name in a 200px left margin (sticky on wide screens, with the logo's dot),
   content beside it. Work's dates use the same margin (rail 40px + dates 160px), so every content
@@ -102,6 +120,12 @@ another account is the default, else it fails with "Failed to get Firebase proje
   Work's side projects); plus home and 404. Home, one job per section: a full-screen light hero
   with only the name on two lines (orange full stop = the logo dot, `FullStop`), one line, one
   sentence and Email/Résumé/LinkedIn (the owner asked for a hero with less in it; keep it that way).
+  On wide screens (1024px up) the portrait stands at the lower right, its foot level with the
+  links (`PROFILE.portraitHero`, a 4:5 cut; `Picture media`, so smaller screens never fetch it):
+  the owner picked it from a three-way mock (as it was / portrait / the logo as a 3D drawing,
+  Nov 2026) after asking about entry pages and 3D heroes. It is placed over the layout, so the
+  name and text did not move. That is the hero's one picture: no entry gate, no rendered 3D
+  object, no second graphic. A larger original would sharpen it (the source is 480px).
   Its entrance plays once per visit: the name and the line rise, the full stop lands last and the
   header logo's dot lands with it (`emitZen('dot')`); the sentence and links are there from the
   first frame; nothing loops; "Selected work": the scheduler
@@ -109,8 +133,10 @@ another account is the default, else it fails with "Failed to get Firebase proje
   paragraph with the page's one highlighter, then the live model full width; copy in `PROFILE.bio`, inline
   `[label](/path)` links via `LinkedText`), then the latest PayPal work (`RECENT`); the star sky as
   a full-screen dark band ("Every system starts as a dot", `SKY`): its title ends in a `FullStop`
-  and the sky is born from that dot, one point at a time, the first time the band is in view
-  (`HeroSky bornFrom`), with a Pause control; "Outside work" (ZenMode screenshot, Toastmasters
+  and the sky is born from that dot, one point at a time, once the dot is well on screen
+  (`HeroSky bornFrom`), with a Pause control. The band is pinned (280svh, `flight`) and its scroll
+  is spent in order: the first 40% pulls the birth along (the owner found it "weird" when the page
+  moved on while the sky was still being born), the rest flies the camera through the stars; "Outside work" (ZenMode screenshot, Toastmasters
   photo); "Writing" (everything but the featured write-up, shown once there are two or more). The
   live model draws in the dark palette inside `.dark`.
 - **Retired addresses** (`/beyond`, `/contact`, `/lab`, `/explore`): `REDIRECTS` in `pages.ts`
@@ -137,6 +163,17 @@ another account is the default, else it fails with "Failed to get Firebase proje
   loaded on first use (Layout's `useShellWanted` and Navigation stand in for their shortcuts until
   then; the shell is also fetched when idle). The coding duel is only in the shell. **Event bus** `src/lib/zenEvents.ts`. **Cursor** `src/lib/zenCursor.ts`
   (port of zenmodeos.com's; `data-cursor`, `data-magnet`).
+- **Colophon** (/about, `Colophon` in `About.tsx`, rows in `COLOPHON` in profile.ts; the owner
+  picked the spec-sheet version, Nov 2026): one line per decision, styled like Also. Its numbers
+  are the build's own, so they can't go stale (`scripts/colophon.ts`): the test count from the last
+  full run (`test:coverage` writes `node_modules/.cache/vitest-results.json`) and the font cuts'
+  saving become `__TEST_COUNT__` / `__FONT_SAVING__` (vite.config.ts `define`); the home page's
+  first-visit weight is measured by the prerender after it writes index.html (Brotli, the page plus
+  what its own tags ask for, pictures that load with it included: the widest layout's worst case), set as `globalThis.__COLOPHON__` for the /about render and written to
+  `dist/colophon.json`; `src/lib/measured.ts` reads it back (the HTML's `data-first-visit` while
+  hydrating, the JSON after a client-side visit). Font and palette names come from the token files.
+  A missing value falls back to the row's `without` text; the dev server shows "measured when the
+  site is built" for the weight. Never write that the site was built by hand (a test checks).
 - **Commit Time Machine** (`src/components/CommitTimeMachine/`): lazy three.js. GitHub calls via
   `getJson` in `src/lib/github.ts` (sessionStorage cache, fallback `public/gh-snapshot.json`); commit
   details fetched only on click/Enter to save the 60 req/hour budget.

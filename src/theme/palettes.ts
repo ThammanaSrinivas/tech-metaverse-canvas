@@ -62,7 +62,7 @@ export interface TypeRole {
   tracking: string;
 }
 
-export type TypeRoleName = 'display' | 'title' | 'h1' | 'h2' | 'h3' | 'lead' | 'body' | 'small' | 'label';
+export type TypeRoleName = 'poster' | 'display' | 'title' | 'h1' | 'h2' | 'h3' | 'lead' | 'body' | 'small' | 'label';
 
 export interface TypeScale {
   base: number;

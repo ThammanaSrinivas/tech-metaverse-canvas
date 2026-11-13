@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from '@/components/zen/Link';
+import { Link, POST_TITLE } from '@/components/zen/Link';
 import { ArrowLeft, ArrowUpRight } from 'lucide-react';
 import Markdown from '@/components/Markdown';
 import { MaskWords, ScrollProgress } from '@/components/zen/primitives';
 import { readMinutes, type Article } from '@/content/writing';
 import { LINKS, PROFILE, formatDate } from '@/data/profile';
-import { useReducedMotion } from '@/lib/hydration';
+import { useFromServer, useReducedMotion } from '@/lib/hydration';
 import { outline, type Heading, type MdNode } from '@/lib/markdown';
 import { usePageMeta } from '@/lib/usePageMeta';
 import { articleMeta } from '@/site/meta';
@@ -114,6 +114,21 @@ const SignOff: React.FC = () => (
 );
 
 /**
+ * Reached by a link, the title arrives from the list it was picked in (POST_TITLE); its words rise
+ * only in the page's own HTML. A component of its own: knowing which of the two it is re-renders
+ * once after hydration, and that must not reach the article's body (a diagram still loading there
+ * would be thrown away and drawn again).
+ */
+const Title: React.FC<{ text: string }> = ({ text }) => {
+  const fromServer = useFromServer();
+  return (
+    <h1 className="w-fit max-w-4xl text-title" style={POST_TITLE}>
+      <MaskWords text={text} rise={fromServer} />
+    </h1>
+  );
+};
+
+/**
  * One article on the site's grid: contents in the margin, the text at a reading measure beside it.
  * Its route (site/routes.tsx) hands it the post and its body, compiled at build time.
  */
@@ -138,9 +153,7 @@ const WritingPost: React.FC<{ post: Article; tree: MdNode[] }> = ({ post, tree }
                 set to <code className="font-mono">false</code> in <code className="font-mono">src/content/writing/index.ts</code>.
               </p>
             )}
-            <h1 className="max-w-4xl text-title">
-              <MaskWords text={post.title} rise />
-            </h1>
+            <Title text={post.title} />
             <p className="mt-5 max-w-[56ch] text-lead text-muted-foreground">{post.summary}</p>
             <p className="mt-6 font-mono text-small text-muted-foreground">
               <time dateTime={post.date}>{formatDate(post.date)}</time> · {readMinutes(post.body)} min read

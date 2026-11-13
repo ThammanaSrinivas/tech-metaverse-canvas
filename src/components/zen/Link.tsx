@@ -28,3 +28,11 @@ export function useGo() {
   const navigate = useNavigate();
   return (to: string) => navigate(to, { viewTransition: true });
 }
+
+/**
+ * The view-transition name an article's title carries on its page, and on the one list entry being
+ * opened or left (`useViewTransitionState(path)`), so the title itself moves between the two. A
+ * name must be on one element at a time: never set it on every entry of a list.
+ */
+// eslint-disable-next-line react-refresh/only-export-components -- shared with the pages that hand a title over
+export const POST_TITLE: React.CSSProperties = { viewTransitionName: 'post-title' };

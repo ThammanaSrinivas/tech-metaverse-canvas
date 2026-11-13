@@ -40,7 +40,8 @@ const LocalTime: React.FC = () => {
 const thisYear = () => new Date().getFullYear();
 
 /**
- * The sign-off, on the chapter grid: the email large (one tap copies it), the pages, the rest. On
+ * The sign-off, on the chapter grid: the email at title size (an underline rules itself in on
+ * hover; one tap copies it), the pages, the rest. On
  * /about the email is the page's own last chapter, so the footer doesn't repeat it there.
  */
 const Footer: React.FC = () => {
@@ -50,7 +51,7 @@ const Footer: React.FC = () => {
   return (
     <footer className="mx-auto w-full max-w-[1120px] px-5 pb-12 pt-10">
       <div className="grid gap-6 border-t pt-8 md:grid-cols-[200px_minmax(0,1fr)] md:gap-10">
-        <p className="flex items-center gap-2.5 text-small font-semibold">
+        <p className="flex items-center gap-2.5 self-start text-small font-semibold md:pt-3">
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary" />
           {showEmail ? 'Say hello' : 'Elsewhere'}
         </p>
@@ -59,7 +60,7 @@ const Footer: React.FC = () => {
             <div className="mb-8 flex flex-wrap items-center gap-x-4 gap-y-3">
               <a
                 href={LINKS.email}
-                className="font-display text-h3 [overflow-wrap:anywhere] transition-colors hover:text-primary md:text-h2"
+                className="zen-draw font-display text-h3 [overflow-wrap:anywhere] md:text-h2 lg:text-title"
               >
                 {PROFILE.email}
               </a>

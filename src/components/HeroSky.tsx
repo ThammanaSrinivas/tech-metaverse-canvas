@@ -12,9 +12,18 @@ import { useReducedMotion } from '@/lib/hydration';
  * hand onto a 2D canvas, so the first screen doesn't pay for three.js.
  *
  * With `bornFrom`, the sky starts empty and is born from that element (the title's full stop) the
- * first time the band is well in view: points appear in order of their distance from it, one, two,
- * four… then all of them within BIRTH seconds. It moves on its own, so it has a Pause control
- * (WCAG 2.2.2); under reduced motion it is drawn whole and starts paused.
+ * first time that element is well on screen (never below the fold, where nobody would see it):
+ * points appear in order of their distance from it, one, two, four… then all of them within BIRTH
+ * seconds. It moves on its own, so it has a Pause control (WCAG 2.2.2); under reduced motion it is
+ * drawn whole and starts paused.
+ *
+ * With `flight` (a taller element the sky is pinned inside), the scroll through it is spent in
+ * order. First the birth: scrolling pulls it along (BIRTH_SHARE of the way finishes it, however
+ * little time has passed), so the page never moves on while the sky is still being born; the owner
+ * found that "weird" when the birth ran on time alone. Then the camera flies forward through the
+ * shells, FLIGHT units over whatever scroll is left. Points pass by at their real depths, and
+ * while the camera is moving fast each leaves a short trail. Paused, the camera holds still as
+ * well. A reader who arrives past the birth (a jump, or from the page below) finds the sky there.
  */
 interface Shell {
   pts: Float32Array; // x,y,z triples
@@ -28,6 +37,11 @@ interface Shell {
 
 const FOV = (75 * Math.PI) / 180;
 const CAM_Z = 8;
+/** How far the camera travels along z over a whole `flight`: from the shells' edge to just past their centre. */
+const FLIGHT = 9.5;
+/** Longest trail a point leaves, in px, and the exposure (seconds of travel) a trail stands for. */
+const TRAIL_MAX = 56;
+const EXPOSURE = 0.05;
 
 function makeShell(count: number, rMin: number, rSpan: number, hiShare = 0) {
   const pts = new Float32Array(count * 3);
@@ -49,8 +63,10 @@ const rgb = (hex: string) => toRgb(hex).join(',');
 /** Seconds from the first point to a full sky; each point fades in over FADE. */
 const BIRTH = 2.4;
 const FADE = 0.3;
+/** How far through a `flight` the scroll alone has finished the birth; the camera sets off from there. */
+const BIRTH_SHARE = 0.4;
 
-const HeroSky: React.FC<{ bornFrom?: React.RefObject<HTMLElement> }> = ({ bornFrom }) => {
+const HeroSky: React.FC<{ bornFrom?: React.RefObject<HTMLElement>; flight?: React.RefObject<HTMLElement> }> = ({ bornFrom, flight }) => {
   const ref = useRef<HTMLCanvasElement>(null);
   // under reduced motion it starts paused (known once the page is live: the HTML says Pause)
   const reduce = useReducedMotion();
@@ -93,14 +109,21 @@ const HeroSky: React.FC<{ bornFrom?: React.RefObject<HTMLElement> }> = ({ bornFr
     let w = 0;
     let h = 0;
     let focal = 0;
+    let camZ = CAM_Z; // moves forward with the scroll through `flight`
+    let fly = 0; // 0…1 through the flight, eased
+    let speed = 0; // camera speed along z, units/second
     const look = { x: 0, y: 0, tx: 0, ty: 0 }; // pointer parallax, eased
     let visible = true;
     let raf = 0;
     let last = performance.now();
-    // Birth: `clock` only runs while playing, so Pause freezes the birth too. Until it starts
-    // (pending), nothing is drawn; `born[i]` is each point's birth time on that clock.
+    // Birth: `clock` only runs while playing, so Pause freezes the birth too; scrolling pulls it
+    // forward. Until it starts (pending), nothing is drawn; `born[i]` is each point's birth time on
+    // that clock, `end` the time the last one is in, `whole` whether every point has begun.
     let clock = 0;
     let pending = !!bornFrom && !reduce;
+    let whole = !pending;
+    let end = 0;
+    let from = 0; // how far through the flight the birth had got: the camera sets off from there
     // without a birth (no origin, or reduced motion) every point is already there, fully faded in
     const borns = shells.map((s) => new Float32Array(s.pts.length / 3).fill(-FADE));
 
@@ -115,8 +138,8 @@ const HeroSky: React.FC<{ bornFrom?: React.RefObject<HTMLElement> }> = ({ bornFr
       focal = h / 2 / Math.tan(FOV / 2);
     };
 
-    /** Calls `at(i, px, py, size, alpha)` for every point of `s` that lands on screen. */
-    const project = (s: Shell, at: (i: number, px: number, py: number, size: number, alpha: number) => void) => {
+    /** Calls `at(i, px, py, size, alpha, depth)` for every point of `s` that lands on screen. */
+    const project = (s: Shell, at: (i: number, px: number, py: number, size: number, alpha: number, depth: number) => void) => {
       const [rx, ry, rz] = s.rot;
       // Combined rotation: spin (x, then y, then z), then the group's fixed tilt, then pointer look.
       const cx = Math.cos(rx), sx = Math.sin(rx);
@@ -135,7 +158,7 @@ const HeroSky: React.FC<{ bornFrom?: React.RefObject<HTMLElement> }> = ({ bornFr
         t = x * cz - y * sz; y = x * sz + y * cz; x = t; // z-axis + tilt
         t = y * lx - z * slx; z = y * slx + z * lx; y = t; // look up/down
         t = x * ly + z * sly; z = -x * sly + z * ly; x = t; // look left/right
-        const depth = CAM_Z - z;
+        const depth = camZ - z;
         if (depth < 0.2) continue;
         const px = half.x + (x * focal) / depth;
         const py = half.y - (y * focal) / depth;
@@ -143,12 +166,18 @@ const HeroSky: React.FC<{ bornFrom?: React.RefObject<HTMLElement> }> = ({ bornFr
         // Cap near points (they'd balloon into squares) and fade the very closest ones out.
         const size = Math.min(2.2, Math.max(0.7, (s.size * focal) / depth));
         const near = depth < 2.5 ? (depth - 0.2) / 2.3 : 1;
-        at(i, px, py, size, Math.min(1, 1.5 / Math.sqrt(depth)) * 0.75 * near);
+        at(i, px, py, size, Math.min(1, 1.5 / Math.sqrt(depth)) * 0.75 * near, depth);
       }
     };
 
     const drawShell = (s: Shell, born: Float32Array) => {
-      project(s, (i, px, py, size, alpha) => {
+      // While the camera moves, a point's image slides along the line from the screen's centre, by
+      // (its offset from the centre) × (distance travelled) / depth: that is its trail.
+      const trails = Math.abs(speed) > 0.4;
+      const cx = w / 2;
+      const cy = h / 2;
+      if (trails) ctx.beginPath();
+      project(s, (i, px, py, size, alpha, depth) => {
         const age = clock - born[i];
         if (age <= 0) return;
         ctx.globalAlpha = age < FADE ? (alpha * age) / FADE : alpha;
@@ -157,11 +186,49 @@ const HeroSky: React.FC<{ bornFrom?: React.RefObject<HTMLElement> }> = ({ bornFr
           ctx.fillRect(px - size / 2, py - size / 2, size, size);
           ctx.fillStyle = `rgb(${s.color})`;
         } else ctx.fillRect(px - size / 2, py - size / 2, size, size);
+        if (!trails || age < FADE) return;
+        const dx = px - cx;
+        const dy = py - cy;
+        let f = (speed * EXPOSURE) / depth;
+        const len = Math.hypot(dx, dy) * Math.abs(f);
+        if (len < 1.5) return;
+        if (len > TRAIL_MAX) f *= TRAIL_MAX / len;
+        ctx.moveTo(px, py);
+        ctx.lineTo(px - dx * f, py - dy * f);
       });
+      if (trails) {
+        ctx.globalAlpha = Math.min(0.32, Math.abs(speed) * 0.06);
+        ctx.strokeStyle = `rgb(${s.color})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    };
+
+    /** How far the reader has scrolled through the pinned band: 0 as it pins, 1 as it lets go. */
+    const flown = () => {
+      const el = flight?.current;
+      if (!el || reduce) return 0;
+      const r = el.getBoundingClientRect();
+      const travel = r.height - window.innerHeight;
+      return travel > 1 ? Math.min(1, Math.max(0, -r.top / travel)) : 0;
+    };
+
+    /** The origin is where a reader would see the first point: on screen, clear of the bottom edge. */
+    const originSeen = () => {
+      const o = bornFrom?.current?.getBoundingClientRect();
+      return !o || o.top + o.height / 2 <= window.innerHeight * 0.72;
     };
 
     /** Schedule every point's birth by its distance on screen from the origin element. */
-    const beginBirth = () => {
+    const beginBirth = (p: number) => {
+      pending = false;
+      // arrived past the birth (a jump, or from the page below): the sky is there, the camera in place
+      if (p > BIRTH_SHARE) {
+        whole = true;
+        from = BIRTH_SHARE;
+        fly = (p - from) / (1 - from);
+        return;
+      }
       const o = bornFrom?.current?.getBoundingClientRect();
       const r = host.getBoundingClientRect();
       const ox = o ? o.left + o.width / 2 - r.left : w / 2;
@@ -173,8 +240,8 @@ const HeroSky: React.FC<{ bornFrom?: React.RefObject<HTMLElement> }> = ({ bornFr
       });
       all.sort((a, b) => a.d - b.d);
       // the k-th nearest point is born at BIRTH·(k/N)^(1/3): one, two, four… then a sky
-      all.forEach((p, k) => (borns[p.s][p.i] = clock + BIRTH * Math.cbrt(k / all.length)));
-      pending = false;
+      all.forEach((q, k) => (borns[q.s][q.i] = clock + BIRTH * Math.cbrt(k / all.length)));
+      end = clock + BIRTH + FADE;
     };
 
     const frame = (now: number) => {
@@ -190,6 +257,25 @@ const HeroSky: React.FC<{ bornFrom?: React.RefObject<HTMLElement> }> = ({ bornFr
         }
         look.x += (look.tx - look.x) * Math.min(1, dt * 2.5);
         look.y += (look.ty - look.y) * Math.min(1, dt * 2.5);
+        const p = flown();
+        if (pending && originSeen()) beginBirth(p);
+        if (!pending && !whole) {
+          // the scroll pulls the birth along, so the page never leaves a half-born sky behind
+          const due = end - (BIRTH + FADE) * (1 - Math.min(1, p / BIRTH_SHARE));
+          if (due > clock) clock += (due - clock) * Math.min(1, dt * 6);
+          if (clock >= end - FADE) {
+            whole = true;
+            from = Math.min(p, BIRTH_SHARE);
+          }
+        }
+        // back above the band, the whole scroll is the flight again (nothing left to be born)
+        if (whole && p === 0) from = 0;
+        // the camera follows the scroll with a little weight, so a wheel's steps read as one glide
+        const to = whole ? Math.min(1, Math.max(0, (p - from) / (1 - from))) : 0;
+        const was = fly;
+        fly += (to - fly) * Math.min(1, dt * 6);
+        camZ = CAM_Z - fly * FLIGHT;
+        speed = dt > 0 ? ((fly - was) * FLIGHT) / dt : 0;
       }
       ctx.clearRect(0, 0, w, h);
       if (!pending)
@@ -220,11 +306,9 @@ const HeroSky: React.FC<{ bornFrom?: React.RefObject<HTMLElement> }> = ({ bornFr
     const io = new IntersectionObserver(
       ([e]) => {
         visible = e.isIntersecting;
-        // the birth waits until the band is well in view, so it is seen from its first point
-        if (pending && e.intersectionRatio >= 0.35) beginBirth();
         if (visible) restart();
       },
-      { threshold: [0, 0.35] }
+      { threshold: 0 }
     );
     io.observe(canvas);
     window.addEventListener('pointermove', onMove, { passive: true });
@@ -240,7 +324,7 @@ const HeroSky: React.FC<{ bornFrom?: React.RefObject<HTMLElement> }> = ({ bornFr
       window.removeEventListener('pointermove', onMove);
       document.removeEventListener('visibilitychange', restart);
     };
-  }, [bright, primary, secondary, highlight, on, bornFrom]);
+  }, [bright, primary, secondary, highlight, on, bornFrom, flight]);
 
   if (!on) return null;
   return (

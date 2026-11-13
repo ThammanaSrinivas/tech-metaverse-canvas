@@ -6,7 +6,7 @@ import Starfield from '@/components/Starfield';
 import { useBrandTheme } from '@/theme/runtime';
 import { SYSTEM, ZENMODE_COLORS } from '@/theme/palettes';
 import { MONOGRAM_DOT, MONOGRAM_PATH } from './monogramPath';
-import { parseLinks, parseRich } from '@/lib/rich';
+import { parseLinks, parseRich, plain } from '@/lib/rich';
 import { prefersReducedMotion, useFromServer, useReducedMotion } from '@/lib/hydration';
 import { Link } from './Link';
 
@@ -207,27 +207,38 @@ export const CopyEmail: React.FC = () => {
   );
 };
 
-/** Top of every inner page: the title, and one line on what the page is for. */
+/**
+ * Top of every inner page, set like a title page: the page's name at display size, ending in the
+ * logo's dot (it lands once the words have risen), then one line on what the page is for, which
+ * starts on the content column, where every chapter below starts.
+ */
 export const PageHeader: React.FC<{ title: string; lead: string; aside?: React.ReactNode; children?: React.ReactNode }> = ({
   title,
   lead,
   aside,
   children,
-}) => (
-  <header className="mx-auto w-full max-w-[1120px] px-5 pb-4 pt-32 md:pt-40">
-    {/* an aside (e.g. the portrait on /about) sits above the title on phones, to its right on wide screens */}
-    <div className={aside ? 'flex flex-col gap-6 md:flex-row md:items-center md:justify-between md:gap-10' : ''}>
-      <div>
-        <h1 className="max-w-4xl text-title">
-          <Rich text={title} />
+}) => {
+  const words = plain(title).split(' ').length;
+  return (
+    <header className="mx-auto w-full max-w-[1120px] px-5 pb-4 pt-28 md:pt-36">
+      {/* an aside (e.g. the portrait on /about) sits above the title on phones, to its right on wide screens */}
+      <div className={aside ? 'flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-10' : ''}>
+        <h1 className="-ml-[0.04em] text-display">
+          <MaskWords text={title} rise />
+          <FullStop land delay={+((words - 1) * WORD_STAGGER + 0.5).toFixed(2)} />
         </h1>
-        <p className="mt-5 max-w-2xl text-lead text-muted-foreground">{lead}</p>
+        {aside && <div className="order-first shrink-0 md:order-none">{aside}</div>}
       </div>
-      {aside && <div className="order-first shrink-0 md:order-none">{aside}</div>}
-    </div>
-    {children}
-  </header>
-);
+      <div className="mt-7 grid gap-6 md:mt-10 md:grid-cols-[200px_minmax(0,1fr)] md:gap-10">
+        <div aria-hidden className="hidden md:block" />
+        <div className="min-w-0">
+          <p className="max-w-[44ch] text-h3 leading-[1.4]">{lead}</p>
+          {children}
+        </div>
+      </div>
+    </header>
+  );
+};
 
 const JUMP = { duration: 0 } as const;
 
@@ -339,6 +350,55 @@ export const Reveal: React.FC<{ children: React.ReactNode; delay?: number; class
     >
       {children}
     </motion.div>
+  );
+};
+
+const CURTAIN = { duration: 0.85, ease: EASE } as const;
+const SETTLE = { duration: 1.2, ease: EASE } as const;
+
+/**
+ * A photo or screenshot in its frame. The first time it comes into view the frame's own colour
+ * lifts off it like a sheet and the picture settles back to its size (transform only). A picture
+ * that was in the page's HTML is simply there; static under reduced motion. `frame` styles the
+ * box (its proportions), `className` the image. Inside a `group` link, the picture leans in on hover.
+ * `media`: the picture only exists on screens that match (the home hero's portrait, wide screens
+ * only); elsewhere the file is never fetched, which hiding it or `loading="lazy"` did not ensure.
+ */
+export const Picture: React.FC<React.ImgHTMLAttributes<HTMLImageElement> & { frame?: string; media?: string }> = ({
+  frame = '',
+  className = '',
+  alt,
+  media,
+  src,
+  ...img
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const { arrived, from, instant } = useArrival(ref, '0px 0px -10% 0px');
+  return (
+    <div ref={ref} className={`relative overflow-hidden rounded-[20px] border bg-secondary ${frame}`}>
+      <motion.div
+        className="h-full w-full"
+        initial={from ? { scale: 1.08 } : false}
+        animate={{ scale: arrived ? 1 : 1.08 }}
+        transition={instant ? JUMP : SETTLE}
+      >
+        {media ? (
+          <picture className="contents">
+            <source media={media} srcSet={src} />
+            <img alt={alt} {...img} className={`block w-full transition-transform duration-700 ease-out group-hover:scale-[1.03] ${className}`} />
+          </picture>
+        ) : (
+          <img alt={alt} src={src} {...img} className={`block w-full transition-transform duration-700 ease-out group-hover:scale-[1.03] ${className}`} />
+        )}
+      </motion.div>
+      <motion.span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 origin-top bg-secondary"
+        initial={from ? { scaleY: 1 } : false}
+        animate={{ scaleY: arrived ? 0 : 1 }}
+        transition={instant ? JUMP : CURTAIN}
+      />
+    </div>
   );
 };
 

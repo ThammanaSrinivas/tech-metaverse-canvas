@@ -1,7 +1,8 @@
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { ArrowRight, ArrowUpRight, Mail } from 'lucide-react';
-import { Link } from '@/components/zen/Link';
-import { Chapter, DOT_AT, FullStop, LinkedText, MaskWords, Marker, Reveal, Rich, WORD_STAGGER } from '@/components/zen/primitives';
+import { useViewTransitionState } from 'react-router-dom';
+import { Link, POST_TITLE } from '@/components/zen/Link';
+import { Chapter, DOT_AT, FullStop, LinkedText, MaskWords, Marker, Picture, Reveal, Rich, WORD_STAGGER } from '@/components/zen/primitives';
 import { DIAGRAMS } from '@/components/diagrams';
 import HeroSky from '@/components/HeroSky';
 import PostList from '@/components/PostList';
@@ -32,6 +33,11 @@ let heroPlayed = false;
  * header logo's dot lands with it. The sentence and the links are there from the start. Nothing
  * loops afterwards. The entrance is CSS, so on a first visit it plays from the page's HTML, before
  * the app has loaded; under reduced motion it is static (index.css).
+ *
+ * On wide screens the paper to the right of the text was empty, so the portrait stands there, its
+ * foot level with the links (the owner picked it over a 3D mark from a three-way mock). It is
+ * placed over the layout, not in it: the name and the text sit exactly where they did, and phones,
+ * where the name fills the width, keep the page without it (and never fetch it: Picture `media`).
  */
 const Hero: React.FC = () => {
   const [play] = useState(() => !heroPlayed);
@@ -46,38 +52,53 @@ const Hero: React.FC = () => {
   const [first, ...rest] = PROFILE.name.split(' ');
   return (
     // a little shorter than the screen, so the first chapter's hairline peeks: there is more below
-    <section className="mx-auto flex min-h-[88svh] w-full max-w-[1120px] flex-col justify-end px-5 pb-[10svh] pt-28">
-      <h1 className="-ml-[0.04em] text-display">
-        <MaskWords text={first} rise={play} />
-        <br />
-        <MaskWords text={rest.join(' ')} rise={play} delay={WORD_STAGGER} />
-        <FullStop land={play} delay={DOT_AT} />
-      </h1>
-      <p className="mt-7 max-w-[24ch] overflow-hidden pb-[0.08em] font-display text-h2 font-medium">
-        <span className={`block ${play ? 'zen-rise' : ''}`} style={play ? { animationDelay: '0.18s' } : undefined}>
-          {PROFILE.line}
-        </span>
-      </p>
-      {/* the sentence a recruiter needs, and the ways to reach me, are there from the first frame */}
-      <p className="mt-6 max-w-[54ch] text-lead text-muted-foreground">
-        <LinkedText text={PROFILE.bio.intro} />
-      </p>
-      <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
-        <a
-          href={LINKS.email}
-          className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 font-semibold text-primary-foreground transition-transform active:scale-[.98]"
-        >
-          <Mail aria-hidden className="h-4 w-4" /> Email me
-        </a>
-        {/* the two links wrap together, never one alone on a line */}
-        <span className="flex items-center gap-x-6">
-          <a href={LINKS.resume} target="_blank" rel="noopener noreferrer" className="zen-link inline-flex items-center gap-1 font-semibold">
-            Résumé <ArrowUpRight aria-hidden className="h-4 w-4" />
+    <section className="mx-auto flex min-h-[88svh] w-full max-w-[1120px] flex-col justify-end px-5 pb-[8svh] pt-24">
+      {/* as the page scrolls on, the title page steps back (index.css, .zen-recede) */}
+      <div className="zen-recede relative">
+        <h1 className="zen-poster -ml-[0.05em]">
+          <MaskWords text={first} rise={play} />
+          <br />
+          <MaskWords text={rest.join(' ')} rise={play} delay={WORD_STAGGER} />
+          <FullStop land={play} delay={DOT_AT} />
+        </h1>
+        <p className="mt-7 max-w-[24ch] overflow-hidden pb-[0.08em] font-display text-h2 font-medium">
+          <span className={`block ${play ? 'zen-rise' : ''}`} style={play ? { animationDelay: '0.18s' } : undefined}>
+            {PROFILE.line}
+          </span>
+        </p>
+        {/* the sentence a recruiter needs, and the ways to reach me, are there from the first frame */}
+        <p className="mt-6 max-w-[54ch] text-lead text-muted-foreground">
+          <LinkedText text={PROFILE.bio.intro} />
+        </p>
+        <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
+          <a
+            href={LINKS.email}
+            className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 font-semibold text-primary-foreground transition-transform active:scale-[.98]"
+          >
+            <Mail aria-hidden className="h-4 w-4" /> Email me
           </a>
-          <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer" className="zen-link inline-flex items-center gap-1 font-semibold">
-            LinkedIn <ArrowUpRight aria-hidden className="h-4 w-4" />
-          </a>
-        </span>
+          {/* the two links wrap together, never one alone on a line */}
+          <span className="flex items-center gap-x-6">
+            <a href={LINKS.resume} target="_blank" rel="noopener noreferrer" className="zen-link inline-flex items-center gap-1 font-semibold">
+              Résumé <ArrowUpRight aria-hidden className="h-4 w-4" />
+            </a>
+            <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer" className="zen-link inline-flex items-center gap-1 font-semibold">
+              LinkedIn <ArrowUpRight aria-hidden className="h-4 w-4" />
+            </a>
+          </span>
+        </div>
+        <div className="absolute bottom-0 right-0 hidden w-[clamp(13rem,20vw,19rem)] lg:block">
+          <Picture
+            src={PROFILE.portraitHero}
+            media="(min-width: 1024px)"
+            alt={PROFILE.name}
+            width={384}
+            height={480}
+            decoding="async"
+            frame="aspect-[4/5]"
+            className="h-full object-cover"
+          />
+        </div>
       </div>
     </section>
   );
@@ -86,24 +107,31 @@ const Hero: React.FC = () => {
 /** The sky's title ends in the logo's dot, and the sky is born from it, one point at a time. */
 const SkyBand: React.FC = () => {
   const dot = useRef<HTMLSpanElement>(null);
+  const track = useRef<HTMLElement>(null);
   const title = SKY.title.replace(/\.$/, '');
   return (
-    <section className="dark relative overflow-hidden bg-background text-foreground" aria-labelledby="sky-title">
-      <HeroSky bornFrom={dot} />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{ background: 'radial-gradient(45% 55% at 50% 50%, hsl(var(--background) / .75), transparent 80%)' }}
-      />
-      <div className="relative mx-auto flex min-h-[100svh] max-w-[880px] flex-col items-center justify-center px-5 py-24 text-center">
-        <h2 id="sky-title" className="text-title">
-          <Rich text={title} />
-          <FullStop ref={dot} />
-        </h2>
-        <p className="mt-5 max-w-xl text-lead text-muted-foreground">{SKY.line}</p>
-        <p className="mt-8 hidden text-small text-muted-foreground md:block">
-          move your cursor · press <kbd>`</kbd> for the shell
-        </p>
+    // The band is taller than the screen and the sky is pinned inside it (sticky, never fixed): the
+    // extra scroll first carries the sky's birth, then flies the camera through the stars (HeroSky
+    // `flight`), so the band holds still until the sky is whole. Under reduced motion it is one
+    // screen tall and nothing pins. `overflow: clip` on the pinned box: `hidden` would unpin it.
+    <section ref={track} className="dark relative bg-background text-foreground motion-safe:h-[280svh]" aria-labelledby="sky-title">
+      <div className="sticky top-0 flex min-h-[100svh] flex-col justify-center overflow-clip">
+        <HeroSky bornFrom={dot} flight={track} />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{ background: 'radial-gradient(45% 55% at 50% 50%, hsl(var(--background) / .75), transparent 80%)' }}
+        />
+        <div className="relative mx-auto flex max-w-[980px] flex-col items-center px-5 py-24 text-center">
+          <h2 id="sky-title" className="text-display">
+            <Rich text={title} />
+            <FullStop ref={dot} />
+          </h2>
+          <p className="mt-6 max-w-xl text-lead text-muted-foreground">{SKY.line}</p>
+          <p className="mt-8 hidden text-small text-muted-foreground md:block">
+            scroll to fly through it · move your cursor · press <kbd>`</kbd> for the shell
+          </p>
+        </div>
       </div>
     </section>
   );
@@ -120,14 +148,14 @@ const Feature: React.FC<{ to: string; image: string; alt: string; aspect: string
   body,
 }) => (
   <Link to={to} className="group block">
-    <div className={`overflow-hidden rounded-[20px] border bg-secondary ${aspect}`}>
-      <img src={image} alt={alt} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
-    </div>
-    <p className="mt-4 text-small text-muted-foreground">{meta}</p>
-    <h3 className="mt-1 text-h3 transition-colors group-hover:text-primary">{title}</h3>
-    <p className="mt-2 max-w-md text-muted-foreground">{body}</p>
-    <span className="mt-3 inline-flex items-center gap-1 font-semibold">
-      More <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+    <Picture src={image} alt={alt} loading="lazy" frame={aspect} className="h-full object-cover" />
+    <p className="mt-5 text-small text-muted-foreground">{meta}</p>
+    <h3 className="mt-1 w-fit text-h2">
+      <span className="zen-draw">{title}</span>
+    </h3>
+    <p className="mt-3 max-w-md text-muted-foreground">{body}</p>
+    <span className="mt-4 inline-flex items-center gap-1.5 font-semibold">
+      More <ArrowRight aria-hidden className="h-4 w-4 transition-transform duration-500 ease-out group-hover:translate-x-1.5" />
     </span>
   </Link>
 );
@@ -135,6 +163,7 @@ const Feature: React.FC<{ to: string; image: string; alt: string; aspect: string
 const Home: React.FC = () => {
   usePageMeta(HOME_META);
   const { zoho } = PROFILE.bio;
+  const opening = useViewTransitionState(SCHEDULER_POST);
   return (
     <>
       <Hero />
@@ -145,7 +174,8 @@ const Home: React.FC = () => {
           <p className="text-small text-muted-foreground">
             Zoho · Catalyst{SCHEDULER && ` · ${minutesOf(SCHEDULER)} min read`}
           </p>
-          <h3 className="mt-2 max-w-3xl text-h1">
+          {/* opening the write-up, this headline travels to the article's title (POST_TITLE) */}
+          <h3 className="mt-3 w-fit max-w-3xl text-title" style={opening ? POST_TITLE : undefined}>
             <Link to={SCHEDULER_POST} className="transition-colors hover:text-primary">
               <Rich text={SCHEDULER?.title ?? 'Scheduling 10M cron jobs a day'} />
             </Link>
@@ -184,7 +214,7 @@ const Home: React.FC = () => {
 
       <Chapter id="outside-work" label="Outside work">
         <div className="grid gap-12 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:gap-10">
-          <Reveal>
+          <div>
             <Feature
               to="/zenmode"
               image="/zenmode-hero.webp"
@@ -194,8 +224,8 @@ const Home: React.FC = () => {
               title="ZenMode OS"
               body={ZENMODE.teaser}
             />
-          </Reveal>
-          <Reveal delay={0.08}>
+          </div>
+          <div>
             <Feature
               to="/about"
               image={SPEAKING.photo}
@@ -205,7 +235,7 @@ const Home: React.FC = () => {
               title={`${SPEAKING.mark} ${SPEAKING.title}`}
               body={SPEAKING.teaser}
             />
-          </Reveal>
+          </div>
         </div>
       </Chapter>
 

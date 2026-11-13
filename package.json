@@ -15,7 +15,7 @@
     "test:functional": "vitest run --passWithNoTests --reporter=verbose src/components/__tests__/*.functional.test.tsx",
     "test:performance": "vitest run --passWithNoTests --reporter=verbose src/components/__tests__/*.performance.test.tsx",
     "test:all": "npm run test:unit && npm run test:functional && npm run test:performance",
-    "test:coverage": "vitest run --coverage --reporter=verbose",
+    "test:coverage": "vitest run --coverage --reporter=verbose --reporter=json --outputFile.json=node_modules/.cache/vitest-results.json",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
     "fonts:subset": "node scripts/subset-fonts.mjs",
