@@ -52,7 +52,7 @@ export const PROFILE = {
   talk: 'Email is the quickest way to reach me. I’m always glad to talk about backend platforms, distributed systems and tools that make engineers faster.',
   email: 'srinivas@thammanasrinivas.com',
   location: 'Chennai, India',
-  /** Headshot (cropped like the LinkedIn photo): search results use the full one, the pages a 320px copy. */
+  /** Headshot (square, face centred; outdoors at work): search results use the full one, the pages a 320px copy. */
   portrait: '/about/srinivas.webp',
   portraitSmall: '/about/srinivas-320.webp',
 };
