@@ -78,7 +78,7 @@ another account is the default, else it fails with "Failed to get Firebase proje
   laptop, and the PDF (with a phone number) would land in this public repo. Source is the owner's
   `~/Downloads/thammana_srinivas_resume.tex` (Overleaf/pdfTeX; tectonic builds it too once
   `\input{glyphtounicode}` and `\pdfgentounicode=1` are stripped).
-- **Portrait:** `public/about/srinivas.webp` + `-320` (square crop, face centred, outdoors at work; shown round on /about and
+- **Portrait:** `public/about/srinivas.webp` + `-320` (square, face centred left to right, outdoors at work with the laptop in frame, not a passport headshot; shown round on /about and
   in the home page's schema.org Person JSON-LD, which `applyMetaToHtml` injects).
 - **Zoho internals:** publish only what is public (the Catalyst job-scheduling docs) or what the owner
   wrote for the article. The owner said Redis sorted sets must not be mentioned publicly.
