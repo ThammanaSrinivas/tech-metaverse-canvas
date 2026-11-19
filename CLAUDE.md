@@ -324,3 +324,8 @@ Vitest + jsdom (`src/test/setup.ts`). Brand, contrast, type-scale, sitemap and m
 tests, so `npm run build` refuses to ship a broken brand or SEO. TypeScript is relaxed
 (`noImplicitAny: false`, `strictNullChecks: false`); three unused shadcn files (`alert-dialog`,
 `calendar`, `pagination`) have pre-existing `buttonVariants` errors under `tsc`; Vite builds regardless.
+
+<!-- claude-reflect: learned rules (saved from the band; edit freely) -->
+## Learned rules
+- Commit changes directly to the main branch and avoid feature branches, following trunk-based development.
+<!-- end claude-reflect -->
