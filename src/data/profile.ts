@@ -54,7 +54,7 @@ export const PROFILE = {
   talk: 'Email is the quickest way to reach me. I’m always glad to talk about backend platforms, distributed systems and tools that make engineers faster.',
   email: 'srinivas@thammanasrinivas.com',
   location: 'Chennai, India',
-  /** Headshot (cropped like the LinkedIn photo): search results use the full one, the pages a 320px copy. */
+  /** Portrait (square, face centred left to right; outdoors at work, laptop in frame): search results use the full one, the pages a 320px copy. */
   portrait: '/about/srinivas.webp',
   portraitSmall: '/about/srinivas-320.webp',
   /** The same photo cut 4:5 (384 × 480) for the home hero on wide screens; no larger original is in the repo. */
